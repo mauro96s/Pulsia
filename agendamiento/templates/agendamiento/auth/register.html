@@ -1,0 +1,397 @@
+{% extends "agendamiento/base.html" %}
+
+{% block title %}Registro de Paciente — Pulsia{% endblock %}
+{% block meta_description %}Regístrate como paciente en el sistema de agendamiento médico Pulsia.{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex">
+
+    <!-- Panel izquierdo: branding -->
+    <div class="hidden lg:flex lg:w-5/12 relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-700 to-primary-600 flex-col justify-between p-12">
+        <div class="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+                        <circle cx="2" cy="2" r="1.5" fill="white"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+        </div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-900 rounded-full opacity-30 translate-y-1/2 -translate-x-1/2"></div>
+
+        <!-- Logo -->
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                </div>
+                <span class="text-white text-2xl font-bold tracking-tight">Pulsia</span>
+            </div>
+            <p class="text-primary-200 text-sm label-tech">Sistema de Agendamiento Médico</p>
+        </div>
+
+        <!-- Beneficios -->
+        <div class="relative z-10 space-y-5">
+            <h1 class="text-white text-3xl font-bold leading-tight">Agenda tus citas<br>desde cualquier lugar.</h1>
+            <div class="space-y-4">
+                {% for item in benefit_list %}{% endfor %}
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-white bg-opacity-15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-white text-sm font-semibold">Agenda en línea</p>
+                        <p class="text-primary-200 text-xs mt-0.5">Selecciona especialista, fecha y hora a tu conveniencia.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-white bg-opacity-15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-white text-sm font-semibold">Datos protegidos</p>
+                        <p class="text-primary-200 text-xs mt-0.5">Tu información médica es confidencial y está cifrada.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-white bg-opacity-15 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-white text-sm font-semibold">Notificaciones al instante</p>
+                        <p class="text-primary-200 text-xs mt-0.5">Recibe confirmaciones y recordatorios en tu correo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer branding -->
+        <div class="relative z-10">
+            <p class="text-primary-300 text-xs label-tech">© {% now "Y" %} Pulsia</p>
+        </div>
+    </div>
+
+    <!-- Panel derecho: formulario -->
+    <div class="flex-1 flex items-start justify-center p-6 lg:p-12 overflow-y-auto bg-white">
+        <div class="w-full max-w-lg animate-fade-in-up py-4">
+
+            <!-- Logo móvil -->
+            <div class="flex items-center gap-2 mb-8 lg:hidden">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <span class="text-ink text-xl font-bold">Pulsia</span>
+            </div>
+
+            <div class="mb-7">
+                <div class="inline-flex items-center gap-2 bg-primary-50 text-primary px-3 py-1 rounded-full text-xs font-semibold label-tech mb-3">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                    </svg>
+                    Registro de Paciente
+                </div>
+                <h2 class="text-2xl font-bold text-ink mb-1">Crea tu cuenta</h2>
+                <p class="text-muted text-sm">Completa el formulario para comenzar a gestionar tus citas médicas.</p>
+            </div>
+
+            <!-- Error banner -->
+            {% if error %}
+            <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm animate-fade-in-up">
+                <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form id="register-form" method="post" action="{% url 'register' %}" novalidate>
+                {% csrf_token %}
+
+                <!-- Progreso visual -->
+                <div class="flex items-center gap-2 mb-7">
+                    <div class="flex-1 h-1.5 bg-primary rounded-full"></div>
+                    <div class="flex-1 h-1.5 bg-primary rounded-full" id="prog-2"></div>
+                    <div class="flex-1 h-1.5 bg-gray-200 rounded-full" id="prog-3"></div>
+                    <p class="label-tech text-muted text-xs ml-2">Paso <span id="step-num">1</span> de 3</p>
+                </div>
+
+                <!-- ===== Sección 1: Datos personales ===== -->
+                <div id="section-1" class="space-y-4">
+                    <p class="label-tech text-primary text-xs mb-3">1 · Datos Personales</p>
+
+                    <!-- Nombre completo -->
+                    <div>
+                        <label for="nombre_completo" class="block label-tech text-muted mb-1.5">Nombre completo</label>
+                        <input id="nombre_completo" name="nombre_completo" type="text" required autocomplete="name"
+                               value="{{ form_data.nombre_completo|default:'' }}"
+                               placeholder="Ej: María Fernanda Gómez"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                      placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                    </div>
+
+                    <!-- Correo -->
+                    <div>
+                        <label for="correo" class="block label-tech text-muted mb-1.5">Correo electrónico</label>
+                        <input id="correo" name="correo" type="email" required autocomplete="email"
+                               value="{{ form_data.correo|default:'' }}"
+                               placeholder="tu.correo@ejemplo.com"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                      placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                        <p id="correo-error" class="text-red-500 text-xs mt-1 hidden">Ingresa un correo electrónico válido.</p>
+                    </div>
+
+                    <!-- Teléfono y fecha nacimiento -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="telefono" class="block label-tech text-muted mb-1.5">Teléfono</label>
+                            <input id="telefono" name="telefono" type="tel"
+                                   value="{{ form_data.telefono|default:'' }}"
+                                   placeholder="300 000 0000"
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                        </div>
+                        <div>
+                            <label for="fecha_nacimiento" class="block label-tech text-muted mb-1.5">Fecha de nacimiento</label>
+                            <input id="fecha_nacimiento" name="fecha_nacimiento" type="date" required
+                                   value="{{ form_data.fecha_nacimiento|default:'' }}"
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Separador sección 2 -->
+                <div class="h-px bg-gray-100 my-6"></div>
+
+                <!-- ===== Sección 2: Contraseña ===== -->
+                <div id="section-2" class="space-y-4">
+                    <p class="label-tech text-primary text-xs mb-3">2 · Seguridad</p>
+
+                    <div>
+                        <label for="password1" class="block label-tech text-muted mb-1.5">Contraseña</label>
+                        <div class="relative">
+                            <input id="password1" name="password1" type="password" required autocomplete="new-password"
+                                   placeholder="Mínimo 8 caracteres"
+                                   class="w-full px-4 pr-12 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                            <button type="button" onclick="togglePw('password1', this)"
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted hover:text-ink">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Indicador de fuerza -->
+                        <div class="mt-2 flex gap-1">
+                            <div class="flex-1 h-1 rounded-full bg-gray-200" id="strength-1"></div>
+                            <div class="flex-1 h-1 rounded-full bg-gray-200" id="strength-2"></div>
+                            <div class="flex-1 h-1 rounded-full bg-gray-200" id="strength-3"></div>
+                            <div class="flex-1 h-1 rounded-full bg-gray-200" id="strength-4"></div>
+                        </div>
+                        <p id="strength-label" class="text-xs text-muted mt-1"></p>
+                    </div>
+
+                    <div>
+                        <label for="password2" class="block label-tech text-muted mb-1.5">Confirmar contraseña</label>
+                        <div class="relative">
+                            <input id="password2" name="password2" type="password" required autocomplete="new-password"
+                                   placeholder="Repite tu contraseña"
+                                   class="w-full px-4 pr-12 py-3 rounded-xl border border-gray-200 bg-surface text-ink text-sm
+                                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent hover:border-primary-300"/>
+                            <button type="button" onclick="togglePw('password2', this)"
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted hover:text-ink">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p id="pw-match-error" class="text-red-500 text-xs mt-1 hidden">Las contraseñas no coinciden.</p>
+                    </div>
+                </div>
+
+                <!-- Separador sección 3 -->
+                <div class="h-px bg-gray-100 my-6"></div>
+
+                <!-- ===== Sección 3: Habeas Data ===== -->
+                <div id="section-3" class="space-y-4">
+                    <p class="label-tech text-primary text-xs mb-3">3 · Autorización de Datos</p>
+                    <div class="bg-primary-50 border border-primary-100 rounded-xl p-4">
+                        <p class="text-ink text-sm font-semibold mb-2">Tratamiento de Datos Personales (Habeas Data)</p>
+                        <p class="text-muted text-xs leading-relaxed mb-4">
+                            De conformidad con la Ley 1581 de 2012, al registrarte autorizas a <strong>Pulsia</strong>
+                            para recopilar, almacenar y tratar tus datos personales con el propósito exclusivo de gestionar
+                            tu historial médico y citas de consulta externa. Tus datos no serán compartidos con terceros sin
+                            tu consentimiento explícito.
+                        </p>
+                        <label class="flex items-start gap-3 cursor-pointer group" id="habeas-label">
+                            <input id="acepta_habeas_data" name="acepta_habeas_data" type="checkbox" required
+                                   class="mt-0.5 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer flex-shrink-0"/>
+                            <span class="text-ink text-sm group-hover:text-primary font-medium">
+                                Acepto el tratamiento de mis datos personales según la política de privacidad de Pulsia.
+                            </span>
+                        </label>
+                        <p id="habeas-error" class="text-red-500 text-xs mt-2 hidden">Debes aceptar el tratamiento de datos para continuar.</p>
+                    </div>
+                </div>
+
+                <!-- Botón submit -->
+                <button id="register-btn" type="submit"
+                        class="mt-7 w-full py-3 px-6 bg-primary hover:bg-primary-600 active:bg-primary-700 text-white font-semibold
+                               rounded-xl shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                               flex items-center justify-center gap-2 group">
+                    <span id="reg-btn-text">Crear mi cuenta</span>
+                    <svg id="reg-btn-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    <svg class="w-4 h-4 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Ya tienes cuenta -->
+            <p class="text-center text-sm text-muted mt-6">
+                ¿Ya tienes cuenta?
+                <a href="{% url 'login' %}" class="text-primary font-semibold hover:text-primary-700 ml-1">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Toggle password visibility
+    function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isVisible = input.type === 'text';
+        input.type = isVisible ? 'password' : 'text';
+        btn.innerHTML = isVisible
+            ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+               </svg>`
+            : `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+               </svg>`;
+    }
+
+    // Indicador de fuerza de contraseña
+    const pw1 = document.getElementById('password1');
+    const strengthBars = [1,2,3,4].map(i => document.getElementById('strength-' + i));
+    const strengthLabel = document.getElementById('strength-label');
+    const strengthColors = ['bg-red-400','bg-orange-400','bg-yellow-400','bg-emerald-500'];
+    const strengthTexts = ['','Débil','Regular','Fuerte','Muy fuerte'];
+
+    pw1.addEventListener('input', () => {
+        const val = pw1.value;
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        strengthBars.forEach((bar, i) => {
+            bar.className = 'flex-1 h-1 rounded-full ' + (i < score ? strengthColors[score - 1] : 'bg-gray-200');
+        });
+        strengthLabel.textContent = val.length ? strengthTexts[score] : '';
+        strengthLabel.className = 'text-xs mt-1 ' + (score >= 3 ? 'text-emerald-600' : score >= 2 ? 'text-yellow-600' : 'text-red-500');
+    });
+
+    // Validación match contraseñas
+    const pw2 = document.getElementById('password2');
+    const pwMatchError = document.getElementById('pw-match-error');
+    pw2.addEventListener('input', () => {
+        if (pw2.value && pw1.value !== pw2.value) {
+            pwMatchError.classList.remove('hidden');
+        } else {
+            pwMatchError.classList.add('hidden');
+        }
+    });
+
+    // Validación correo
+    const correoInput = document.getElementById('correo');
+    const correoError = document.getElementById('correo-error');
+    correoInput.addEventListener('blur', () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (correoInput.value && !emailRegex.test(correoInput.value)) {
+            correoError.classList.remove('hidden');
+        } else {
+            correoError.classList.add('hidden');
+        }
+    });
+
+    // Submit validation
+    const form = document.getElementById('register-form');
+    form.addEventListener('submit', (e) => {
+        let valid = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const habeas = document.getElementById('acepta_habeas_data');
+        const habeasError = document.getElementById('habeas-error');
+
+        if (!emailRegex.test(correoInput.value)) {
+            correoError.classList.remove('hidden');
+            valid = false;
+        }
+        if (pw1.value !== pw2.value) {
+            pwMatchError.classList.remove('hidden');
+            valid = false;
+        }
+        if (!habeas.checked) {
+            habeasError.classList.remove('hidden');
+            valid = false;
+        } else {
+            habeasError.classList.add('hidden');
+        }
+
+        if (!valid) { e.preventDefault(); return; }
+
+        const btnText = document.getElementById('reg-btn-text');
+        const spinner = document.getElementById('reg-btn-spinner');
+        btnText.textContent = 'Creando cuenta...';
+        spinner.classList.remove('hidden');
+    });
+
+    // Barra de progreso según scroll / campos completados
+    const prog2 = document.getElementById('prog-2');
+    const prog3 = document.getElementById('prog-3');
+    const stepNum = document.getElementById('step-num');
+    function updateProgress() {
+        const s1Done = document.getElementById('nombre_completo').value && correoInput.value;
+        const s2Done = pw1.value && pw2.value;
+        if (s1Done && s2Done) {
+            prog3.className = 'flex-1 h-1.5 bg-primary rounded-full';
+            stepNum.textContent = '3';
+        } else if (s1Done) {
+            stepNum.textContent = '2';
+        } else {
+            stepNum.textContent = '1';
+        }
+    }
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', updateProgress));
+</script>
+{% endblock %}

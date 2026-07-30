@@ -1,0 +1,191 @@
+{% extends "agendamiento/base.html" %}
+
+{% block title %}Mi Agenda — Especialista · Pulsia{% endblock %}
+
+{% block body %}
+<div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 flex-shrink-0 bg-primary-800 flex flex-col overflow-y-auto">
+        <div class="flex items-center gap-3 px-6 py-5 border-b border-white border-opacity-10">
+            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
+            <span class="text-white font-bold text-lg">Pulsia</span>
+        </div>
+        <!-- Perfil y estado turno -->
+        <div class="px-5 py-4 border-b border-white border-opacity-10">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
+                    {{ user.nombre_completo|first|upper }}
+                </div>
+                <div>
+                    <p class="text-white text-sm font-semibold truncate">{{ user.nombre_completo }}</p>
+                    <p class="text-primary-300 text-xs label-tech">Especialista</p>
+                </div>
+            </div>
+            <!-- Estado turno -->
+            <div id="estado-turno-badge"
+                 class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold
+                        {% if turno_activo %}bg-emerald-500 bg-opacity-20 text-emerald-300 border border-emerald-500 border-opacity-30
+                        {% else %}bg-red-500 bg-opacity-20 text-red-300 border border-red-500 border-opacity-30{% endif %}">
+                <span id="turno-dot"
+                      class="w-2 h-2 rounded-full {% if turno_activo %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
+                <span id="turno-label">{% if turno_activo %}Turno Activo{% else %}Sin Iniciar{% endif %}</span>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-1">
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-white bg-opacity-15 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                Mi Agenda
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Historial Clínico
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Solicitar Ausencia
+            </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-white border-opacity-10">
+            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 overflow-y-auto bg-surface">
+        <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+            <div>
+                <h1 class="text-lg font-bold text-ink">Mi Agenda</h1>
+                <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
+            </div>
+            <!-- Botón CHECK-IN -->
+            <button id="checkin-btn" onclick="toggleCheckin()"
+                    class="flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg focus:outline-none transition-all
+                           {% if turno_activo %}bg-gray-100 text-gray-600 hover:bg-gray-200{% else %}bg-primary hover:bg-primary-600 text-white{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span id="checkin-label">{% if turno_activo %}Turno en curso{% else %}Iniciar Turno{% endif %}</span>
+            </button>
+        </header>
+
+        <div class="p-6 animate-fade-in-up">
+            <!-- Resumen del día -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
+                    <p class="text-3xl font-bold text-primary">{{ citas_programadas|default:0 }}</p>
+                    <p class="text-xs text-muted label-tech mt-1">Programadas</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
+                    <p class="text-3xl font-bold text-emerald-600">{{ citas_atendidas|default:0 }}</p>
+                    <p class="text-xs text-muted label-tech mt-1">Atendidas</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
+                    <p class="text-3xl font-bold text-amber-600">{{ citas_pendientes|default:0 }}</p>
+                    <p class="text-xs text-muted label-tech mt-1">Por atender</p>
+                </div>
+            </div>
+
+            <!-- Línea de tiempo de citas -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-sm font-semibold text-ink">Citas de hoy</h3>
+                    <span class="label-tech text-xs text-muted">Consulta {{ user.especialidad|default:"General" }}</span>
+                </div>
+
+                <div class="divide-y divide-gray-50" id="agenda-list">
+                    <!-- Cita ejemplo -->
+                    <div class="flex items-start gap-4 px-6 py-4 hover:bg-surface transition-colors group">
+                        <div class="text-center flex-shrink-0 w-12">
+                            <p class="text-sm font-bold text-ink">08:00</p>
+                            <p class="text-xs text-muted">AM</p>
+                        </div>
+                        <div class="w-px bg-gray-200 self-stretch mx-1"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-ink">Sin citas agendadas</p>
+                            </div>
+                            <p class="text-xs text-muted mt-0.5">Tu agenda de hoy aparecerá aquí una vez se registren citas.</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+                                Disponible
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Check-in -->
+<div id="checkin-modal" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 animate-fade-in-up">
+        <div class="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-bold text-ink text-center mb-1">Iniciar Turno</h3>
+        <p class="text-muted text-sm text-center mb-6">
+            Al confirmar, tu estado cambiará a <strong class="text-emerald-600">Presente</strong> y la recepción podrá llamar pacientes.
+        </p>
+        <div class="flex gap-3">
+            <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">
+                Cancelar
+            </button>
+            <button onclick="confirmCheckin()" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let turnoActivo = {{ turno_activo|yesno:"true,false" }};
+
+    function toggleCheckin() {
+        if (!turnoActivo) {
+            document.getElementById('checkin-modal').classList.remove('hidden');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('checkin-modal').classList.add('hidden');
+    }
+
+    function confirmCheckin() {
+        // Aquí se hará la llamada AJAX/form POST real al backend
+        turnoActivo = true;
+        closeModal();
+
+        // Actualizar UI
+        const btn = document.getElementById('checkin-btn');
+        const label = document.getElementById('checkin-label');
+        const badge = document.getElementById('estado-turno-badge');
+        const dot = document.getElementById('turno-dot');
+        const turnoLabel = document.getElementById('turno-label');
+
+        btn.className = btn.className.replace('bg-primary hover:bg-primary-600 text-white', 'bg-gray-100 text-gray-600 hover:bg-gray-200');
+        label.textContent = 'Turno en curso';
+        badge.className = badge.className.replace(/bg-red-\d+ bg-opacity-20 text-red-\d+ border border-red-\d+ border-opacity-30/g, 'bg-emerald-500 bg-opacity-20 text-emerald-300 border border-emerald-500 border-opacity-30');
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        turnoLabel.textContent = 'Turno Activo';
+    }
+
+    // Cerrar modal al click fuera
+    document.getElementById('checkin-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+{% endblock %}

@@ -128,3 +128,12 @@ STATICFILES_DIRS = [
 
 # Modelo de Usuario Personalizado
 AUTH_USER_MODEL = 'agendamiento.CustomUser'
+
+# Auth URLs
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+# Auto field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

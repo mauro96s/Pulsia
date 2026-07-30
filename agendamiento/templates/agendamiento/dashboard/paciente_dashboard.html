@@ -1,0 +1,225 @@
+{% extends "agendamiento/base.html" %}
+
+{% block title %}Mi Portal — Paciente · Pulsia{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-surface">
+
+    <!-- TOPBAR / NAV -->
+    <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <span class="text-ink text-lg font-bold">Pulsia</span>
+            </div>
+
+            <!-- Nav tabs -->
+            <nav class="hidden md:flex items-center gap-1">
+                <button onclick="showTab('tab-inicio')" id="btn-inicio"
+                        class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-primary bg-primary-50 active">
+                    Inicio
+                </button>
+                <button onclick="showTab('tab-citas')" id="btn-citas"
+                        class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-muted hover:bg-surface">
+                    Mis Citas
+                </button>
+                <button onclick="showTab('tab-historial')" id="btn-historial"
+                        class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-muted hover:bg-surface">
+                    Historial
+                </button>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <div class="hidden sm:flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                        {{ user.nombre_completo|first|upper }}
+                    </div>
+                    <span class="text-sm font-medium text-ink">{{ user.nombre_completo|truncatechars:20 }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="text-xs text-muted hover:text-red-500 font-medium">Salir</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-6 py-8">
+
+        <!-- ALERTA PENALIZACIÓN (RN04) -->
+        {% if paciente_penalizado %}
+        <div class="mb-6 flex items-start gap-4 bg-red-50 border border-red-200 rounded-2xl p-5 animate-fade-in-up">
+            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-red-700 font-semibold text-sm">Autogestión web deshabilitada</p>
+                <p class="text-red-600 text-xs mt-0.5">
+                    Has acumulado 3 inasistencias. Para agendar citas comunícate con recepción al
+                    <strong>tel. 600 000 0000</strong> o visita la clínica.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ======= TAB INICIO ======= -->
+        <div id="tab-inicio" class="tab-content animate-fade-in-up">
+            <!-- Saludo -->
+            <div class="mb-7">
+                <h1 class="text-2xl font-bold text-ink">Hola, {{ user.nombre_completo|default:"Paciente" }} 👋</h1>
+                <p class="text-muted text-sm mt-1">Gestiona tus citas médicas desde aquí.</p>
+            </div>
+
+            <!-- Próxima cita destacada -->
+            <div class="bg-gradient-to-br from-primary-700 to-primary-600 rounded-2xl p-6 mb-7 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-white bg-opacity-10 rounded-full"></div>
+                <div class="absolute -right-4 bottom-0 w-20 h-20 bg-white bg-opacity-5 rounded-full"></div>
+                <div class="relative z-10">
+                    <p class="label-tech text-primary-200 text-xs mb-2">Próxima Cita</p>
+                    {% if proxima_cita %}
+                    <h2 class="text-xl font-bold mb-1">{{ proxima_cita.especialista }}</h2>
+                    <div class="flex items-center gap-3 text-primary-100 text-sm">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            {{ proxima_cita.fecha }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {{ proxima_cita.hora }}
+                        </span>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <button class="bg-white text-primary text-sm font-semibold px-4 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+                            Ver detalle
+                        </button>
+                        <button class="border border-white border-opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-white hover:bg-opacity-10 transition-colors">
+                            Reprogramar
+                        </button>
+                    </div>
+                    {% else %}
+                    <p class="text-white text-sm opacity-80">No tienes citas próximas agendadas.</p>
+                    <button onclick="showTab('tab-citas')"
+                            class="mt-4 bg-white text-primary text-sm font-semibold px-4 py-2 rounded-xl hover:bg-primary-50">
+                        Agendar ahora
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Accesos rápidos -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <button {% if paciente_penalizado %}disabled{% endif %}
+                        onclick="showTab('tab-citas')"
+                        class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all
+                               {% if paciente_penalizado %}opacity-50 cursor-not-allowed{% endif %}">
+                    <div class="w-10 h-10 bg-primary-50 group-hover:bg-primary rounded-xl flex items-center justify-center mb-3 transition-colors">
+                        <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-ink">Agendar Cita</p>
+                    <p class="text-xs text-muted mt-0.5">Busca disponibilidad</p>
+                </button>
+
+                <button onclick="showTab('tab-historial')"
+                        class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all">
+                    <div class="w-10 h-10 bg-violet-50 group-hover:bg-violet-500 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                        <svg class="w-5 h-5 text-violet-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-ink">Mi Historial</p>
+                    <p class="text-xs text-muted mt-0.5">Consultas anteriores</p>
+                </button>
+
+                <button {% if paciente_penalizado %}disabled{% endif %}
+                        class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all
+                               {% if paciente_penalizado %}opacity-50 cursor-not-allowed{% endif %}">
+                    <div class="w-10 h-10 bg-teal-50 group-hover:bg-teal-500 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                        <svg class="w-5 h-5 text-teal-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-ink">Lista de Espera</p>
+                    <p class="text-xs text-muted mt-0.5">Inscribirme si no hay cupos</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- ======= TAB MIS CITAS ======= -->
+        <div id="tab-citas" class="tab-content hidden animate-fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-ink">Mis Citas</h2>
+                {% if not paciente_penalizado %}
+                <button class="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:bg-primary-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Nueva Cita
+                </button>
+                {% endif %}
+            </div>
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                <div class="flex border-b border-gray-100">
+                    <button onclick="filterCitas('todas')" id="filter-todas"
+                            class="cita-filter px-5 py-3 text-sm font-semibold text-primary border-b-2 border-primary">Todas</button>
+                    <button onclick="filterCitas('programada')" id="filter-programada"
+                            class="cita-filter px-5 py-3 text-sm font-medium text-muted hover:text-ink border-b-2 border-transparent">Programadas</button>
+                    <button onclick="filterCitas('atendida')" id="filter-atendida"
+                            class="cita-filter px-5 py-3 text-sm font-medium text-muted hover:text-ink border-b-2 border-transparent">Atendidas</button>
+                </div>
+                <div id="citas-list" class="divide-y divide-gray-50">
+                    <div class="px-6 py-10 text-center text-muted text-sm">
+                        <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="font-medium">No hay citas registradas</p>
+                        <p class="text-xs mt-1">Tus citas médicas aparecerán aquí.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======= TAB HISTORIAL ======= -->
+        <div id="tab-historial" class="tab-content hidden animate-fade-in-up">
+            <h2 class="text-xl font-bold text-ink mb-6">Historial Médico</h2>
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                <div class="px-6 py-10 text-center text-muted text-sm">
+                    <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="font-medium">Sin historial disponible</p>
+                    <p class="text-xs mt-1">Las notas clínicas de tus consultas aparecerán aquí.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Tab switching
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+
+        // Update button styles
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.className = 'tab-btn px-4 py-2 rounded-xl text-sm font-medium text-muted hover:bg-surface';
+        });
+        const tabMap = { 'tab-inicio': 'btn-inicio', 'tab-citas': 'btn-citas', 'tab-historial': 'btn-historial' };
+        const activeBtn = document.getElementById(tabMap[tabId]);
+        if (activeBtn) {
+            activeBtn.className = 'tab-btn px-4 py-2 rounded-xl text-sm font-medium text-primary bg-primary-50 active';
+        }
+    }
+
+    // Filtro de citas
+    function filterCitas(tipo) {
+        document.querySelectorAll('.cita-filter').forEach(btn => {
+            btn.className = 'cita-filter px-5 py-3 text-sm font-medium text-muted hover:text-ink border-b-2 border-transparent';
+        });
+        document.getElementById('filter-' + tipo).className =
+            'cita-filter px-5 py-3 text-sm font-semibold text-primary border-b-2 border-primary';
+    }
+</script>
+{% endblock %}
