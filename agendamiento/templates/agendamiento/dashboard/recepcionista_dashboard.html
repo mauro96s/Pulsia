@@ -20,7 +20,7 @@
                 <div class="w-9 h-9 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-sm">
                     {{ user.nombre_completo|first|upper }}
                 </div>
-                <div>
+                <div class="min-w-0">
                     <p class="text-white text-sm font-semibold truncate">{{ user.nombre_completo }}</p>
                     <p class="text-primary-300 text-xs label-tech">Recepcionista</p>
                 </div>
@@ -29,21 +29,16 @@
         <nav class="flex-1 px-4 py-4 space-y-1">
             <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-white bg-opacity-15 text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                Vista Global
+                Agenda Global
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Agendar Cita
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
+            <button onclick="openAgendarModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Agendar Cita (Sin 24h)
+            </button>
+            <button onclick="openContingenciaModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Contingencias
-                <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">!</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                Lista de Espera
-            </a>
+                Contingencia Emergencia (HU14)
+            </button>
         </nav>
         <div class="px-4 py-4 border-t border-white border-opacity-10">
             <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200">
@@ -55,109 +50,281 @@
 
     <!-- MAIN -->
     <main class="flex-1 overflow-y-auto bg-surface">
-        <!-- Topbar -->
         <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
             <div>
-                <h1 class="text-lg font-bold text-ink">Vista de Recepción</h1>
+                <h1 class="text-lg font-bold text-ink">Vista de Recepción — Agenda Global</h1>
                 <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Botón nueva cita destacado -->
-                <button class="flex items-center gap-2 bg-primary hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-md hover:shadow-lg">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Nueva Cita
+                <button onclick="openContingenciaModal()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-sm">
+                    ⚠️ Ausencia Emergencia
                 </button>
-                <div class="w-9 h-9 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-sm">
-                    {{ user.nombre_completo|first|upper }}
-                </div>
+                <button onclick="openAgendarModal()" class="flex items-center gap-2 bg-primary hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-md">
+                    + Nueva Cita Presencial/Tel
+                </button>
             </div>
         </header>
 
         <div class="p-6 animate-fade-in-up">
-            <!-- Estado de especialistas hoy -->
-            <h2 class="label-tech text-muted text-xs mb-3">Estado de Especialistas — Hoy</h2>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
-                <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-card flex items-center gap-3">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold text-sm">E</div>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-ink truncate">Dr. Ejemplo</p>
-                        <p class="text-xs text-emerald-600 font-medium">Presente</p>
-                    </div>
-                </div>
-                <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-card flex items-center gap-3 opacity-60">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">M</div>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-red-400 rounded-full border-2 border-white"></span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-ink truncate">Dra. Médica</p>
-                        <p class="text-xs text-red-500 font-medium">Ausente</p>
-                    </div>
-                </div>
-                <!-- Placeholder -->
-                {% for i in "12" %}
-                <div class="bg-white border border-dashed border-gray-200 rounded-2xl p-4 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    </div>
-                    <p class="text-xs text-gray-300">Sin asignar</p>
+
+            <!-- MENSAJES DE FLASH -->
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between
+                            {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+                            {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
                 </div>
                 {% endfor %}
             </div>
+            {% endif %}
 
-            <!-- Tabla de citas del día -->
-            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-sm font-semibold text-ink">Citas del día</h3>
-                    <div class="flex items-center gap-2">
-                        <div class="relative">
-                            <input type="text" placeholder="Buscar paciente..." id="search-citas"
-                                   class="text-sm border border-gray-200 rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-surface w-48"/>
-                            <svg class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <!-- Estado de especialistas hoy (HU13) -->
+            <h2 class="label-tech text-muted text-xs mb-3">Estado de Asistencia de Médicos — Hoy (HU13)</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+                {% for esp in especialistas_hoy %}
+                <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-card flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold text-sm">
+                            {{ esp.usuario.nombre_completo|first }}
                         </div>
-                        <select class="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-surface text-muted">
-                            <option value="">Todos los estados</option>
-                            <option>Programada</option>
-                            <option>En Sala</option>
-                            <option>Atendida</option>
-                            <option>No Asistió</option>
-                        </select>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white
+                                     {% if esp.estado_turno == 'Presente' %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
                     </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-ink truncate">Dr/Dra. {{ esp.usuario.nombre_completo }}</p>
+                        <p class="text-xs {% if esp.estado_turno == 'Presente' %}text-emerald-600{% else %}text-red-500{% endif %} font-medium">
+                            {{ esp.estado_turno }}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-xs text-muted col-span-4">No hay especialistas registrados en el sistema.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Tabla de Citas del Día (HU06 / HU07) -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden mb-8">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-sm font-semibold text-ink">Citas del Día</h3>
+                    <input type="text" placeholder="Buscar paciente..." id="search-citas"
+                           class="text-sm border border-gray-200 rounded-xl pl-3 pr-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary bg-surface w-48"/>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="bg-surface">
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Hora</th>
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Paciente</th>
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Especialista</th>
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Consultorio</th>
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Estado</th>
-                                <th class="px-6 py-3 text-left label-tech text-muted text-xs">Acciones</th>
+                            <tr class="bg-surface border-b border-gray-100 text-left label-tech text-muted text-xs">
+                                <th class="px-6 py-3">Hora</th>
+                                <th class="px-6 py-3">Paciente</th>
+                                <th class="px-6 py-3">Especialista</th>
+                                <th class="px-6 py-3">Consultorio</th>
+                                <th class="px-6 py-3">Estado</th>
+                                <th class="px-6 py-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-citas" class="divide-y divide-gray-50">
-                            <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-muted text-sm">
-                                    <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    No hay citas registradas para hoy.
+                            {% for c in citas_hoy %}
+                            <tr class="hover:bg-surface transition-colors">
+                                <td class="px-6 py-4 font-bold text-ink whitespace-nowrap">{{ c.fecha_hora_inicio|date:"h:i A" }}</td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-ink">{{ c.paciente.usuario.nombre_completo }}</p>
+                                    <p class="text-xs text-muted">Inasistencias previas: {{ c.paciente.contador_inasistencias }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-ink">Dr/Dra. {{ c.especialista.usuario.nombre_completo }}</p>
+                                    <p class="text-xs text-muted">{{ c.especialista.especialidad.nombre_especialidad }}</p>
+                                </td>
+                                <td class="px-6 py-4 font-medium text-ink">{{ c.consultorio.nombre_codigo }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold
+                                                 {% if c.estado_cita == 'Programada' %}bg-blue-50 text-blue-600 border border-blue-200
+                                                 {% elif c.estado_cita == 'En_Sala' %}bg-amber-50 text-amber-600 border border-amber-200
+                                                 {% elif c.estado_cita == 'Atendida' %}bg-emerald-50 text-emerald-600 border border-emerald-200
+                                                 {% elif c.estado_cita == 'No_Asistio' %}bg-red-50 text-red-600 border border-red-200
+                                                 {% elif c.estado_cita == 'Pendiente_Reubicacion' %}bg-purple-50 text-purple-700 border border-purple-200
+                                                 {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                        {{ c.get_estado_cita_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right space-x-2">
+                                    <!-- Formulario rápido de cambio de estado -->
+                                    <form method="POST" action="{% url 'recepcionista_cambiar_estado' c.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <select name="nuevo_estado" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-surface font-semibold text-muted">
+                                            <option value="">Cambiar Estado...</option>
+                                            {% for code, label in estados_cita %}
+                                            <option value="{{ code }}" {% if c.estado_cita == code %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+
+                                    <button onclick="openReprogramarModal({{ c.id }}, '{{ c.paciente.usuario.nombre_completo }}')" class="text-xs text-primary font-bold hover:underline">
+                                        Reprogramar
+                                    </button>
                                 </td>
                             </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-10 text-center text-muted text-sm">
+                                    No hay citas registradas para el día de hoy.
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- Pacientes en Lista de Espera (HU09) -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+                <h3 class="text-sm font-bold text-ink mb-4">Pacientes en Lista de Espera (HU09)</h3>
+                <div class="divide-y divide-gray-50">
+                    {% for item in listas_espera %}
+                    <div class="py-3 flex items-center justify-between text-sm">
+                        <div>
+                            <p class="font-bold text-ink">{{ item.paciente.usuario.nombre_completo }}</p>
+                            <p class="text-xs text-muted">
+                                {% if item.especialista %}Médico: Dr/Dra. {{ item.especialista.usuario.nombre_completo }}{% endif %}
+                                {% if item.especialidad %}Especialidad: {{ item.especialidad.nombre_especialidad }}{% endif %}
+                                — Solicitado: {{ item.fecha_registro|date:"d/m/Y h:i A" }}
+                            </p>
+                        </div>
+                        <span class="bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">Pendiente</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-muted text-center py-4">No hay pacientes esperando cupo en este momento.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </main>
+</div>
+
+<!-- MODAL AGENDAR RECEPCIÓN (HU06 - Sin restricción 24h) -->
+<div id="modal-agendar-rec" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Agendamiento Administrativo de Cita</h3>
+        <p class="text-xs text-muted mb-4">Como recepcionista puedes agendar ignorando el límite de 24h (**HU06**).</p>
+        <form method="POST" action="{% url 'recepcionista_agendar' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Paciente</label>
+                <select name="paciente_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+                    <option value="">-- Selecciona paciente --</option>
+                    {% for p in pacientes %}
+                    <option value="{{ p.id }}">{{ p.usuario.nombre_completo }} ({{ p.usuario.correo }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Especialista</label>
+                <select name="especialista_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+                    <option value="">-- Selecciona especialista --</option>
+                    {% for esp in especialistas_hoy %}
+                    <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Consultorio</label>
+                <select name="consultorio_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+                    {% for cons in consultorios %}
+                    <option value="{{ cons.id }}">Consultorio {{ cons.nombre_codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Fecha</label>
+                    <input type="date" name="fecha" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Hora</label>
+                    <input type="time" name="hora" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-agendar-rec')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Agendar Cita</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CONTINGENCIA EMERGENCIA (HU14 / RN08) -->
+<div id="modal-contingencia" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up border-t-4 border-red-600">
+        <h3 class="text-lg font-bold text-red-700 mb-1">⚠️ Contingencia por Ausencia de Emergencia</h3>
+        <p class="text-xs text-muted mb-4">Esta acción marcará al médico como **Ausente**, pasará todas sus citas de hoy a **Pendiente de Reubicación** y enviará correos de disculpa sin consumir la reprogramación del paciente (**RN08**).</p>
+        <form method="POST" action="{% url 'recepcionista_contingencia_emergencia' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Médico Ausente</label>
+                <select name="especialista_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-surface">
+                    <option value="">-- Selecciona médico ausente --</option>
+                    {% for esp in especialistas_hoy %}
+                    <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-contingencia')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-md">Activar Contingencia</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL REPROGRAMAR RECEPCIÓN (HU06) -->
+<div id="modal-reprogramar-rec" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Reprogramar Cita (Recepción)</h3>
+        <p id="rec-reprogramar-info" class="text-xs text-primary font-semibold mb-4"></p>
+        <form id="form-reprogramar-rec" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Nueva Fecha</label>
+                    <input type="date" name="nueva_fecha" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Nueva Hora</label>
+                    <input type="time" name="nueva_hora" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-reprogramar-rec')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Guardar Cambio</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    // Filtro de búsqueda en tabla
+    function openAgendarModal() {
+        document.getElementById('modal-agendar-rec').classList.remove('hidden');
+    }
+
+    function openContingenciaModal() {
+        document.getElementById('modal-contingencia').classList.remove('hidden');
+    }
+
+    function openReprogramarModal(citaId, pacienteNombre) {
+        document.getElementById('form-reprogramar-rec').action = `/recepcionista/cita/${citaId}/reprogramar/`;
+        document.getElementById('rec-reprogramar-info').textContent = `Paciente: ${pacienteNombre}`;
+        document.getElementById('modal-reprogramar-rec').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
     document.getElementById('search-citas').addEventListener('input', function() {
         const query = this.value.toLowerCase();
         document.querySelectorAll('#tabla-citas tr').forEach(row => {

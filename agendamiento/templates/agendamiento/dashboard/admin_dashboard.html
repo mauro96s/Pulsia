@@ -4,10 +4,9 @@
 
 {% block extra_head %}
 <style>
-    .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all; }
+    .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all cursor-pointer; }
     .sidebar-link.active { @apply bg-white bg-opacity-15 text-white; }
     .stat-card { @apply bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all border border-gray-100; }
-    .quick-action { @apply flex flex-col items-start gap-2 p-5 bg-white rounded-2xl shadow-card hover:shadow-card-hover border border-gray-100 cursor-pointer group transition-all; }
 </style>
 {% endblock %}
 
@@ -42,33 +41,23 @@
 
         <!-- Navegación -->
         <nav class="flex-1 px-4 py-4 space-y-1">
-            <p class="label-tech text-primary-400 text-xs px-4 mb-2 mt-1">Principal</p>
-            <a href="#" class="sidebar-link active" id="nav-dashboard">
+            <p class="label-tech text-primary-400 text-xs px-4 mb-2 mt-1">Gestión Principal</p>
+            <button onclick="showTab('tab-dashboard')" class="sidebar-link w-full text-left active" id="nav-dashboard">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                Dashboard
-            </a>
-            <a href="#" class="sidebar-link" id="nav-empleados">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Empleados
-            </a>
-            <a href="#" class="sidebar-link" id="nav-especialidades">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                Especialidades
-            </a>
-            <a href="#" class="sidebar-link">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Festivos y Horarios
-            </a>
-            <a href="#" class="sidebar-link">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Ausencias Pendientes
-            </a>
-
-            <p class="label-tech text-primary-400 text-xs px-4 mb-2 mt-4">Análisis</p>
-            <a href="#" class="sidebar-link">
+                Dashboard y KPIs
+            </button>
+            <button onclick="showTab('tab-bi')" class="sidebar-link w-full text-left" id="nav-bi">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                Reportes BI
-            </a>
+                Reportes BI (HU11)
+            </button>
+            <button onclick="showTab('tab-crud')" class="sidebar-link w-full text-left" id="nav-crud">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                CRUD Estructura (HU12)
+            </button>
+            <button onclick="showTab('tab-ausencias')" class="sidebar-link w-full text-left" id="nav-ausencias">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Aprobar Ausencias (HU04)
+            </button>
         </nav>
 
         <!-- Cerrar sesión -->
@@ -82,161 +71,306 @@
 
     <!-- ===== CONTENIDO PRINCIPAL ===== -->
     <main class="flex-1 overflow-y-auto bg-surface">
-        <!-- Topbar -->
         <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
             <div>
-                <h1 class="text-lg font-bold text-ink">Panel de Administración</h1>
+                <h1 class="text-lg font-bold text-ink">Panel General de Administración</h1>
                 <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Notificación -->
-                <button class="relative w-9 h-9 rounded-xl bg-surface hover:bg-card flex items-center justify-center text-muted hover:text-ink border border-gray-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
+                <button onclick="openEmpleadoModal()" class="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md hover:bg-primary-600">
+                    + Nuevo Especialista
                 </button>
-                <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-                    {{ user.nombre_completo|first|upper }}
-                </div>
             </div>
         </header>
 
         <div class="p-6 animate-fade-in-up">
-            <!-- Bienvenida -->
-            <div class="mb-6">
-                <h2 class="text-xl font-bold text-ink">Hola, {{ user.nombre_completo|default:"Administrador" }} 👋</h2>
-                <p class="text-muted text-sm mt-0.5">Aquí tienes el resumen de actividad del sistema.</p>
-            </div>
 
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <!-- Citas hoy -->
-                <div class="stat-card">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        </div>
-                        <span class="text-xs label-tech text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Hoy</span>
-                    </div>
-                    <p class="text-3xl font-bold text-ink" id="kpi-citas">—</p>
-                    <p class="text-xs text-muted mt-1">Citas programadas</p>
+            <!-- MENSAJES -->
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between
+                            {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+                            {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
                 </div>
-                <!-- Especialistas -->
-                <div class="stat-card">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <span class="w-2 h-2 rounded-full bg-emerald-400" title="Activos"></span>
-                    </div>
-                    <p class="text-3xl font-bold text-ink" id="kpi-especialistas">—</p>
-                    <p class="text-xs text-muted mt-1">Especialistas activos</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- ======= TAB DASHBOARD / KPIS ======= -->
+            <div id="tab-dashboard" class="tab-content space-y-8">
+                <!-- Bienvenida -->
+                <div>
+                    <h2 class="text-xl font-bold text-ink">Hola, {{ user.nombre_completo|default:"Administrador" }} 👋</h2>
+                    <p class="text-muted text-sm mt-0.5">Resumen de actividad operativa y métricas clave del centro médico.</p>
                 </div>
-                <!-- Pacientes -->
-                <div class="stat-card">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        </div>
+
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="stat-card">
+                        <p class="text-xs label-tech text-muted mb-1">Citas Agendadas Hoy</p>
+                        <p class="text-3xl font-bold text-ink">{{ kpi_citas }}</p>
                     </div>
-                    <p class="text-3xl font-bold text-ink" id="kpi-pacientes">—</p>
-                    <p class="text-xs text-muted mt-1">Pacientes registrados</p>
-                </div>
-                <!-- Ausencias pendientes -->
-                <div class="stat-card">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        </div>
-                        <span class="text-xs label-tech text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Revisar</span>
+                    <div class="stat-card">
+                        <p class="text-xs label-tech text-muted mb-1">Especialistas Activos</p>
+                        <p class="text-3xl font-bold text-ink">{{ kpi_especialistas }}</p>
                     </div>
-                    <p class="text-3xl font-bold text-ink" id="kpi-ausencias">—</p>
-                    <p class="text-xs text-muted mt-1">Ausencias pendientes</p>
+                    <div class="stat-card">
+                        <p class="text-xs label-tech text-muted mb-1">Pacientes Registrados</p>
+                        <p class="text-3xl font-bold text-ink">{{ kpi_pacientes }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-xs label-tech text-amber-600 mb-1">Ausencias Pendientes</p>
+                        <p class="text-3xl font-bold text-amber-600">{{ kpi_ausencias }}</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Acciones rápidas + Actividad reciente -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Acciones rápidas -->
-                <div class="lg:col-span-1">
-                    <h3 class="text-sm font-semibold text-ink mb-3 label-tech">Acciones Rápidas</h3>
-                    <div class="grid grid-cols-1 gap-3">
-                        <div class="quick-action" onclick="location.href='#'">
-                            <div class="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                                <svg class="w-5 h-5 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-ink">Nuevo empleado</p>
-                                <p class="text-xs text-muted">Crear usuario de personal</p>
-                            </div>
-                        </div>
-                        <div class="quick-action" onclick="location.href='#'">
-                            <div class="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-ink">Ver reportes</p>
-                                <p class="text-xs text-muted">BI: inasistencias y demanda</p>
-                            </div>
-                        </div>
-                        <div class="quick-action" onclick="location.href='#'">
-                            <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-ink">Aprobar ausencias</p>
-                                <p class="text-xs text-muted">Solicitudes de médicos</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- ======= TAB REPORTES BI (HU11) ======= -->
+            <div id="tab-bi" class="tab-content hidden space-y-6">
+                <h2 class="text-xl font-bold text-ink">Reportes de Business Intelligence (HU11)</h2>
 
-                <!-- Actividad reciente -->
-                <div class="lg:col-span-2">
-                    <h3 class="text-sm font-semibold text-ink mb-3 label-tech">Actividad Reciente</h3>
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-                        <div class="divide-y divide-gray-50" id="activity-list">
-                            <!-- Placeholder skeleton -->
-                            {% for i in "12345" %}
-                            <div class="flex items-center gap-4 px-5 py-3.5 animate-pulse">
-                                <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0"></div>
-                                <div class="flex-1 space-y-1.5">
-                                    <div class="h-2.5 bg-gray-100 rounded w-3/4"></div>
-                                    <div class="h-2 bg-gray-100 rounded w-1/2"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Tasa inasistencia -->
+                    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 text-center">
+                        <p class="text-xs font-bold text-muted uppercase tracking-wider mb-2">Tasa Global de Inasistencias (*No-Show*)</p>
+                        <p class="text-4xl font-extrabold text-red-600">{{ tasa_inasistencia }}%</p>
+                        <p class="text-xs text-muted mt-2">Citas No Asistidas ({{ total_no_asistio }}) vs Total Citas ({{ total_citas }})</p>
+                    </div>
+
+                    <!-- Demanda por especialidad -->
+                    <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+                        <h3 class="text-sm font-bold text-ink mb-4">Demanda Comparativa por Especialidad</h3>
+                        <div class="space-y-3">
+                            {% for esp in demandas_especialidad %}
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span>{{ esp.nombre_especialidad }}</span>
+                                    <span>{{ esp.num_citas }} citas</span>
                                 </div>
-                                <div class="h-2 bg-gray-100 rounded w-16"></div>
+                                <div class="w-full bg-gray-100 rounded-full h-2">
+                                    <div class="bg-primary h-2 rounded-full" style="width: {% if total_citas > 0 %}{% widthratio esp.num_citas total_citas 100 %}{% else %}0{% endif %}%"></div>
+                                </div>
                             </div>
+                            {% empty %}
+                            <p class="text-xs text-muted text-center py-4">Sin datos suficientes para generar reporte de especialidades.</p>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- ======= TAB CRUD ESTRUCTURA (HU12) ======= -->
+            <div id="tab-crud" class="tab-content hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-ink">Gestión de Empleados, Especialidades y Consultorios (HU12)</h2>
+                    <div class="flex gap-2">
+                        <button onclick="openEspecialidadModal()" class="bg-surface text-ink text-xs font-bold px-3 py-2 rounded-xl border border-gray-200 hover:bg-card">
+                            + Especialidad
+                        </button>
+                        <button onclick="openConsultorioModal()" class="bg-surface text-ink text-xs font-bold px-3 py-2 rounded-xl border border-gray-200 hover:bg-card">
+                            + Consultorio
+                        </button>
+                        <button onclick="openEmpleadoModal()" class="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm hover:bg-primary-600">
+                            + Especialista
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Tabla Especialistas -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+                        <h3 class="text-sm font-bold text-ink mb-4">Personal Médico Registrado</h3>
+                        <div class="divide-y divide-gray-50">
+                            {% for e in especialistas %}
+                            <div class="py-3 flex items-center justify-between text-sm">
+                                <div>
+                                    <p class="font-bold text-ink">Dr/Dra. {{ e.usuario.nombre_completo }}</p>
+                                    <p class="text-xs text-muted">{{ e.especialidad.nombre_especialidad }} — {{ e.usuario.correo }}</p>
+                                </div>
+                                <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-full border border-emerald-200">Activo</span>
+                            </div>
+                            {% empty %}
+                            <p class="text-xs text-muted py-4 text-center">No hay especialistas en el catálogo.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Especialidades y Consultorios -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
+                            <h3 class="text-sm font-bold text-ink mb-3">Especialidades</h3>
+                            <div class="space-y-2">
+                                {% for esp in especialidades %}
+                                <div class="p-2.5 bg-surface rounded-xl flex items-center justify-between text-xs font-semibold">
+                                    <span>{{ esp.nombre_especialidad }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
+                            <h3 class="text-sm font-bold text-ink mb-3">Consultorios</h3>
+                            <div class="space-y-2">
+                                {% for cons in consultorios %}
+                                <div class="p-2.5 bg-surface rounded-xl flex items-center justify-between text-xs font-semibold">
+                                    <span>Consultorio {{ cons.nombre_codigo }}</span>
+                                    <span class="text-emerald-600">Operativo</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= TAB APROBAR AUSENCIAS (HU04 / RN05) ======= -->
+            <div id="tab-ausencias" class="tab-content hidden space-y-6">
+                <h2 class="text-xl font-bold text-ink">Aprobación de Permisos y Ausencias (HU04 / RN05)</h2>
+                <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 divide-y divide-gray-50">
+                    {% for p in ausencias_pendientes %}
+                    <div class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-bold text-ink">Dr/Dra. {{ p.especialista.usuario.nombre_completo }} ({{ p.especialista.especialidad.nombre_especialidad }})</p>
+                            <p class="text-xs text-muted font-medium mt-0.5">Motivo: {{ p.motivo_solicitud }}</p>
+                            <p class="text-xs text-primary font-semibold mt-1">
+                                Desde: {{ p.fecha_hora_inicio|date:"d/m/Y h:i A" }} — Hasta: {{ p.fecha_hora_fin|date:"d/m/Y h:i A" }}
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <form method="POST" action="{% url 'admin_gestionar_ausencia' p.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="aprobar"/>
+                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">
+                                    ✓ Aprobar (Notificar Cruces)
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'admin_gestionar_ausencia' p.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="rechazar"/>
+                                <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold px-4 py-2 rounded-xl">
+                                    ✕ Rechazar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="py-10 text-center text-muted text-sm">
+                        No hay solicitudes de ausencia pendientes de revisión.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </main>
+</div>
+
+<!-- MODAL CREAR ESPECIALISTA (HU12) -->
+<div id="modal-empleado" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Registrar Nuevo Especialista Médico</h3>
+        <p class="text-xs text-muted mb-4">Se creará su cuenta de usuario y se asignará su horario laboral base (**HU12 / HU08**).</p>
+        <form method="POST" action="{% url 'admin_crear_empleado' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Nombre Completo</label>
+                <input type="text" name="nombre_completo" required placeholder="Ej: Dr. Roberto Gómez" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Correo Electrónico</label>
+                <input type="email" name="correo" required placeholder="medico@pulsia.com" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Contraseña</label>
+                <input type="password" name="password" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Especialidad</label>
+                <select name="especialidad_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+                    {% for esp in especialidades %}
+                    <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-empleado')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Crear Especialista</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CREAR ESPECIALIDAD -->
+<div id="modal-especialidad" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-3">Nueva Especialidad</h3>
+        <form method="POST" action="{% url 'admin_crear_especialidad' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Nombre Especialidad</label>
+                <input type="text" name="nombre_especialidad" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Descripción</label>
+                <textarea name="descripcion" rows="2" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-especialidad')" class="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-muted">Cancelar</button>
+                <button type="submit" class="flex-1 py-2 rounded-xl bg-primary text-white text-sm font-semibold shadow-md">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CREAR CONSULTORIO -->
+<div id="modal-consultorio" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-3">Nuevo Consultorio</h3>
+        <form method="POST" action="{% url 'admin_crear_consultorio' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Código / Número (Ej: 101, B-02)</label>
+                <input type="text" name="nombre_codigo" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-consultorio')" class="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-muted">Cancelar</button>
+                <button type="submit" class="flex-1 py-2 rounded-xl bg-primary text-white text-sm font-semibold shadow-md">Guardar</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    // Animación de contadores
-    function animateCount(id, target) {
-        const el = document.getElementById(id);
-        let current = 0;
-        const step = Math.ceil(target / 30);
-        const timer = setInterval(() => {
-            current = Math.min(current + step, target);
-            el.textContent = current;
-            if (current >= target) clearInterval(timer);
-        }, 40);
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+
+        document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
+        const navMap = { 'tab-dashboard': 'nav-dashboard', 'tab-bi': 'nav-bi', 'tab-crud': 'nav-crud', 'tab-ausencias': 'nav-ausencias' };
+        const activeNav = document.getElementById(navMap[tabId]);
+        if (activeNav) activeNav.classList.add('active');
     }
 
-    // Simular datos (reemplazar con llamadas AJAX reales)
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            animateCount('kpi-citas', {{ kpi_citas|default:0 }});
-            animateCount('kpi-especialistas', {{ kpi_especialistas|default:0 }});
-            animateCount('kpi-pacientes', {{ kpi_pacientes|default:0 }});
-            animateCount('kpi-ausencias', {{ kpi_ausencias|default:0 }});
-        }, 300);
-    });
+    function openEmpleadoModal() {
+        document.getElementById('modal-empleado').classList.remove('hidden');
+    }
+
+    function openEspecialidadModal() {
+        document.getElementById('modal-especialidad').classList.remove('hidden');
+    }
+
+    function openConsultorioModal() {
+        document.getElementById('modal-consultorio').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
 </script>
 {% endblock %}

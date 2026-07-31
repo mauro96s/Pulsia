@@ -21,34 +21,29 @@
                 <div class="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
                     {{ user.nombre_completo|first|upper }}
                 </div>
-                <div>
+                <div class="min-w-0">
                     <p class="text-white text-sm font-semibold truncate">{{ user.nombre_completo }}</p>
-                    <p class="text-primary-300 text-xs label-tech">Especialista</p>
+                    <p class="text-primary-300 text-xs label-tech truncate">{{ especialista.especialidad.nombre_especialidad|default:"Especialista" }}</p>
                 </div>
             </div>
-            <!-- Estado turno -->
+            <!-- Estado turno (HU13) -->
             <div id="estado-turno-badge"
                  class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold
                         {% if turno_activo %}bg-emerald-500 bg-opacity-20 text-emerald-300 border border-emerald-500 border-opacity-30
                         {% else %}bg-red-500 bg-opacity-20 text-red-300 border border-red-500 border-opacity-30{% endif %}">
-                <span id="turno-dot"
-                      class="w-2 h-2 rounded-full {% if turno_activo %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
-                <span id="turno-label">{% if turno_activo %}Turno Activo{% else %}Sin Iniciar{% endif %}</span>
+                <span class="w-2 h-2 rounded-full {% if turno_activo %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
+                <span>{% if turno_activo %}Turno Activo (Presente){% else %}Sin Iniciar (Ausente){% endif %}</span>
             </div>
         </div>
         <nav class="flex-1 px-4 py-4 space-y-1">
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-white bg-opacity-15 text-white">
+            <button onclick="showTab('tab-agenda')" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-white bg-opacity-15 text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                Mi Agenda
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Historial Clínico
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
+                Mi Agenda del Día
+            </button>
+            <button onclick="openAusenciaModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                Solicitar Ausencia
-            </a>
+                Solicitar Ausencia (HU04)
+            </button>
         </nav>
         <div class="px-4 py-4 border-t border-white border-opacity-10">
             <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200">
@@ -62,130 +57,224 @@
     <main class="flex-1 overflow-y-auto bg-surface">
         <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
             <div>
-                <h1 class="text-lg font-bold text-ink">Mi Agenda</h1>
+                <h1 class="text-lg font-bold text-ink">Mi Agenda de Consultas</h1>
                 <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
             </div>
-            <!-- Botón CHECK-IN -->
-            <button id="checkin-btn" onclick="toggleCheckin()"
-                    class="flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg focus:outline-none transition-all
-                           {% if turno_activo %}bg-gray-100 text-gray-600 hover:bg-gray-200{% else %}bg-primary hover:bg-primary-600 text-white{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span id="checkin-label">{% if turno_activo %}Turno en curso{% else %}Iniciar Turno{% endif %}</span>
-            </button>
+            <!-- Botón CHECK-IN (HU13) -->
+            <form method="POST" action="{% url 'especialista_checkin' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md transition-all
+                               {% if turno_activo %}bg-emerald-600 hover:bg-emerald-700 text-white{% else %}bg-primary hover:bg-primary-600 text-white{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>{% if turno_activo %}Turno Activo (Check-out){% else %}Iniciar Turno (Check-in){% endif %}</span>
+                </button>
+            </form>
         </header>
 
         <div class="p-6 animate-fade-in-up">
+
+            <!-- MENSAJES -->
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between
+                            {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+                            {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <!-- Resumen del día -->
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
-                    <p class="text-3xl font-bold text-primary">{{ citas_programadas|default:0 }}</p>
+                    <p class="text-3xl font-bold text-primary">{{ citas_programadas }}</p>
                     <p class="text-xs text-muted label-tech mt-1">Programadas</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
-                    <p class="text-3xl font-bold text-emerald-600">{{ citas_atendidas|default:0 }}</p>
+                    <p class="text-3xl font-bold text-emerald-600">{{ citas_atendidas }}</p>
                     <p class="text-xs text-muted label-tech mt-1">Atendidas</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
-                    <p class="text-3xl font-bold text-amber-600">{{ citas_pendientes|default:0 }}</p>
-                    <p class="text-xs text-muted label-tech mt-1">Por atender</p>
+                    <p class="text-3xl font-bold text-amber-600">{{ citas_pendientes }}</p>
+                    <p class="text-xs text-muted label-tech mt-1">Por Atender / En Sala</p>
                 </div>
             </div>
 
             <!-- Línea de tiempo de citas -->
-            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden mb-8">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-sm font-semibold text-ink">Citas de hoy</h3>
-                    <span class="label-tech text-xs text-muted">Consulta {{ user.especialidad|default:"General" }}</span>
+                    <h3 class="text-sm font-semibold text-ink">Pacientes del Día</h3>
+                    <span class="label-tech text-xs text-muted">Especialidad: {{ especialista.especialidad.nombre_especialidad }}</span>
                 </div>
 
                 <div class="divide-y divide-gray-50" id="agenda-list">
-                    <!-- Cita ejemplo -->
-                    <div class="flex items-start gap-4 px-6 py-4 hover:bg-surface transition-colors group">
-                        <div class="text-center flex-shrink-0 w-12">
-                            <p class="text-sm font-bold text-ink">08:00</p>
-                            <p class="text-xs text-muted">AM</p>
-                        </div>
-                        <div class="w-px bg-gray-200 self-stretch mx-1"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold text-ink">Sin citas agendadas</p>
+                    {% for c in citas_hoy %}
+                    <div class="flex flex-col md:flex-row md:items-center justify-between p-5 gap-4 hover:bg-surface transition-colors">
+                        <div class="flex items-start gap-4">
+                            <div class="text-center flex-shrink-0 w-16 bg-surface p-2 rounded-xl border border-gray-100">
+                                <p class="text-sm font-bold text-ink">{{ c.fecha_hora_inicio|date:"h:i" }}</p>
+                                <p class="text-xs text-muted uppercase">{{ c.fecha_hora_inicio|date:"A" }}</p>
                             </div>
-                            <p class="text-xs text-muted mt-0.5">Tu agenda de hoy aparecerá aquí una vez se registren citas.</p>
+                            <div>
+                                <p class="text-sm font-bold text-ink">{{ c.paciente.usuario.nombre_completo }}</p>
+                                <p class="text-xs text-muted">Consultorio {{ c.consultorio.nombre_codigo }} — Tel: {{ c.paciente.usuario.telefono|default:"N/A" }}</p>
+                                {% if c.notas_clinicas %}
+                                <span class="inline-block mt-1 text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-md border border-emerald-200">
+                                    ✓ Notas Clínicas Registradas
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="flex-shrink-0">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
-                                Disponible
+
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold
+                                         {% if c.estado_cita == 'Programada' %}bg-blue-50 text-blue-600 border border-blue-200
+                                         {% elif c.estado_cita == 'En_Sala' %}bg-amber-50 text-amber-600 border border-amber-200
+                                         {% elif c.estado_cita == 'Atendida' %}bg-emerald-50 text-emerald-600 border border-emerald-200
+                                         {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ c.get_estado_cita_display }}
                             </span>
+
+                            {% if c.estado_cita == 'Programada' %}
+                            <form method="POST" action="{% url 'especialista_cambiar_estado' c.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="nuevo_estado" value="En_Sala"/>
+                                <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
+                                    Llamar a Sala
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if c.estado_cita == 'En_Sala' or c.estado_cita == 'Programada' %}
+                            <form method="POST" action="{% url 'especialista_cambiar_estado' c.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="nuevo_estado" value="Atendida"/>
+                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
+                                    Marcar Atendida
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if c.estado_cita == 'Atendida' %}
+                            <button onclick="openNotasModal({{ c.id }}, '{{ c.paciente.usuario.nombre_completo }}', `{{ c.notas_clinicas|default:''|escapejs }}`)"
+                                    class="bg-primary hover:bg-primary-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
+                                {% if c.notas_clinicas %}Editar Notas{% else %}Agregar Notas (HU05){% endif %}
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="px-6 py-12 text-center text-muted text-sm">
+                        <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="font-medium text-ink">Sin citas agendadas para el día de hoy</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
+
+            <!-- Mis Permisos y Solicitudes -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-ink">Mis Solicitudes de Ausencia y Bloqueo de Agenda (HU04)</h3>
+                    <button onclick="openAusenciaModal()" class="bg-primary text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm hover:bg-primary-600">
+                        + Nueva Solicitud
+                    </button>
+                </div>
+                <div class="divide-y divide-gray-50">
+                    {% for p in mis_permisos %}
+                    <div class="py-3 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-ink">{{ p.motivo_solicitud }}</p>
+                            <p class="text-xs text-muted">Desde: {{ p.fecha_hora_inicio|date:"d/m/Y h:i A" }} — Hasta: {{ p.fecha_hora_fin|date:"d/m/Y h:i A" }}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold
+                                     {% if p.estado_aprobacion == 'Aprobado' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                     {% elif p.estado_aprobacion == 'Rechazado' %}bg-red-50 text-red-700 border border-red-200
+                                     {% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                            {{ p.estado_aprobacion }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-muted py-4 text-center">No has registrado solicitudes de permisos o ausencias.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </main>
 </div>
 
-<!-- Modal Check-in -->
-<div id="checkin-modal" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 animate-fade-in-up">
-        <div class="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-bold text-ink text-center mb-1">Iniciar Turno</h3>
-        <p class="text-muted text-sm text-center mb-6">
-            Al confirmar, tu estado cambiará a <strong class="text-emerald-600">Presente</strong> y la recepción podrá llamar pacientes.
-        </p>
-        <div class="flex gap-3">
-            <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">
-                Cancelar
-            </button>
-            <button onclick="confirmCheckin()" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">
-                Confirmar
-            </button>
-        </div>
+<!-- MODAL NOTAS CLÍNICAS (HU05 / RN06) -->
+<div id="modal-notas" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Notas Clínicas y Recomendaciones</h3>
+        <p id="paciente-nombre-modal" class="text-xs font-semibold text-primary mb-4"></p>
+        <form id="form-notas" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Observaciones / Diagnóstico / Recomendaciones</label>
+                <textarea id="textarea-notas" name="notas_clinicas" rows="5" required
+                          placeholder="Escribe aquí las recomendaciones que el paciente podrá consultar desde su portal web..."
+                          class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-notas')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Guardar en Historia</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL SOLICITAR AUSENCIA (HU04) -->
+<div id="modal-ausencia" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Solicitar Ausencia / Bloqueo Temporal</h3>
+        <p class="text-xs text-muted mb-4">La solicitud ingresará con estado 'Pendiente' para aprobación administrativa (**HU04**).</p>
+        <form method="POST" action="{% url 'especialista_solicitar_ausencia' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Fecha y Hora Inicio</label>
+                <input type="datetime-local" name="fecha_inicio" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Fecha y Hora Fin</label>
+                <input type="datetime-local" name="fecha_fin" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Motivo / Justificación</label>
+                <textarea name="motivo" rows="3" required placeholder="Vacaciones, imprevisto personal, etc." class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-ausencia')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Enviar Solicitud</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    let turnoActivo = {{ turno_activo|yesno:"true,false" }};
-
-    function toggleCheckin() {
-        if (!turnoActivo) {
-            document.getElementById('checkin-modal').classList.remove('hidden');
-        }
+    function openNotasModal(citaId, pacienteNombre, notasExistentes) {
+        document.getElementById('form-notas').action = `/especialista/cita/${citaId}/notas/`;
+        document.getElementById('paciente-nombre-modal').textContent = `Paciente: ${pacienteNombre}`;
+        document.getElementById('textarea-notas').value = notasExistentes || '';
+        document.getElementById('modal-notas').classList.remove('hidden');
     }
 
-    function closeModal() {
-        document.getElementById('checkin-modal').classList.add('hidden');
+    function openAusenciaModal() {
+        document.getElementById('modal-ausencia').classList.remove('hidden');
     }
 
-    function confirmCheckin() {
-        // Aquí se hará la llamada AJAX/form POST real al backend
-        turnoActivo = true;
-        closeModal();
-
-        // Actualizar UI
-        const btn = document.getElementById('checkin-btn');
-        const label = document.getElementById('checkin-label');
-        const badge = document.getElementById('estado-turno-badge');
-        const dot = document.getElementById('turno-dot');
-        const turnoLabel = document.getElementById('turno-label');
-
-        btn.className = btn.className.replace('bg-primary hover:bg-primary-600 text-white', 'bg-gray-100 text-gray-600 hover:bg-gray-200');
-        label.textContent = 'Turno en curso';
-        badge.className = badge.className.replace(/bg-red-\d+ bg-opacity-20 text-red-\d+ border border-red-\d+ border-opacity-30/g, 'bg-emerald-500 bg-opacity-20 text-emerald-300 border border-emerald-500 border-opacity-30');
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-        turnoLabel.textContent = 'Turno Activo';
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
     }
-
-    // Cerrar modal al click fuera
-    document.getElementById('checkin-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
 </script>
 {% endblock %}

@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Count, Q
 
-from ..models.usuarios import RolUsuario
+from ..models.usuarios import CustomUser, RolUsuario
+from ..models.pacientes import Paciente
+from ..models.especialistas import Especialidad, Consultorio, Especialista, EstadoTurno
+from ..models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion, ListaEspera
 
 
 def dashboard_view(request):
@@ -24,20 +29,45 @@ def dashboard_view(request):
 
 @login_required(login_url='login')
 def admin_dashboard_view(request):
-    """Panel del Administrador — HU11, HU12."""
+    """Panel del Administrador — HU08, HU11 (BI), HU12 (CRUD)."""
     if request.user.rol != RolUsuario.ADMINISTRADOR:
         messages.error(request, 'No tienes permiso para acceder a esa página.')
         return redirect('login')
 
-    # KPIs — se pueden reemplazar con queries reales
-    from ..models.usuarios import CustomUser
-    from ..models.pacientes import Paciente
+    hoy = timezone.now().date()
+
+    # KPIs
+    kpi_citas = Cita.objects.filter(fecha_hora_inicio__date=hoy).count()
+    kpi_especialistas = Especialista.objects.filter(usuario__estado_cuenta=True).count()
+    kpi_pacientes = Paciente.objects.count()
+    kpi_ausencias = AusenciasPermisos.objects.filter(estado_aprobacion=EstadoAprobacion.PENDIENTE).count()
+
+    # Reportes BI (HU11)
+    total_citas = Cita.objects.count()
+    total_no_asistio = Cita.objects.filter(estado_cita=EstadoCita.NO_ASISTIO).count()
+    tasa_inasistencia = round((total_no_asistio / total_citas * 100), 1) if total_citas > 0 else 0.0
+
+    demandas_especialidad = Especialidad.objects.annotate(
+        num_citas=Count('especialistas__citas')
+    ).order_by('-num_citas')
+
+    ausencias_pendientes = AusenciasPermisos.objects.filter(
+        estado_aprobacion=EstadoAprobacion.PENDIENTE
+    ).order_by('fecha_hora_inicio')
 
     context = {
-        'kpi_citas': 0,           # TODO: Cita.objects.filter(fecha=today).count()
-        'kpi_especialistas': CustomUser.objects.filter(rol=RolUsuario.ESPECIALISTA, estado_cuenta=True).count(),
-        'kpi_pacientes': Paciente.objects.count(),
-        'kpi_ausencias': 0,       # TODO: AusenciaPermiso.objects.filter(estado='Pendiente').count()
+        'kpi_citas': kpi_citas,
+        'kpi_especialistas': kpi_especialistas,
+        'kpi_pacientes': kpi_pacientes,
+        'kpi_ausencias': kpi_ausencias,
+        'tasa_inasistencia': tasa_inasistencia,
+        'total_citas': total_citas,
+        'total_no_asistio': total_no_asistio,
+        'demandas_especialidad': demandas_especialidad,
+        'ausencias_pendientes': ausencias_pendientes,
+        'especialidades': Especialidad.objects.all(),
+        'consultorios': Consultorio.objects.all(),
+        'especialistas': Especialista.objects.select_related('usuario', 'especialidad').all(),
     }
     return render(request, 'agendamiento/dashboard/admin_dashboard.html', context)
 
@@ -50,7 +80,24 @@ def recepcionista_dashboard_view(request):
         messages.error(request, 'No tienes permiso para acceder a esa página.')
         return redirect('login')
 
-    context = {}
+    hoy = timezone.now().date()
+    citas_hoy = Cita.objects.filter(
+        fecha_hora_inicio__date=hoy
+    ).select_related('paciente__usuario', 'especialista__usuario', 'especialista__especialidad', 'consultorio').order_by('fecha_hora_inicio')
+
+    especialistas_hoy = Especialista.objects.select_related('usuario', 'especialidad').all()
+    pacientes = Paciente.objects.select_related('usuario').all()
+    consultorios = Consultorio.objects.filter(estado_operativo=True)
+    listas_espera = ListaEspera.objects.select_related('paciente__usuario', 'especialista__usuario').filter(estado='Pendiente')
+
+    context = {
+        'citas_hoy': citas_hoy,
+        'especialistas_hoy': especialistas_hoy,
+        'pacientes': pacientes,
+        'consultorios': consultorios,
+        'listas_espera': listas_espera,
+        'estados_cita': EstadoCita.choices,
+    }
     return render(request, 'agendamiento/dashboard/recepcionista_dashboard.html', context)
 
 
@@ -61,11 +108,44 @@ def especialista_dashboard_view(request):
         messages.error(request, 'No tienes permiso para acceder a esa página.')
         return redirect('login')
 
+    especialista = getattr(request.user, 'perfil_especialista', None)
+    hoy = timezone.now().date()
+
+    if especialista:
+        turno_activo = (especialista.estado_turno == EstadoTurno.PRESENTE)
+        citas_hoy = Cita.objects.filter(
+            especialista=especialista,
+            fecha_hora_inicio__date=hoy
+        ).select_related('paciente__usuario', 'consultorio').order_by('fecha_hora_inicio')
+
+        citas_programadas = citas_hoy.filter(estado_cita=EstadoCita.PROGRAMADA).count()
+        citas_atendidas = citas_hoy.filter(estado_cita=EstadoCita.ATENDIDA).count()
+        citas_pendientes = citas_hoy.filter(estado_cita__in=[EstadoCita.PROGRAMADA, EstadoCita.EN_SALA]).count()
+
+        mis_permisos = AusenciasPermisos.objects.filter(especialista=especialista).order_by('-fecha_hora_inicio')
+        # RN06: Historial de pacientes atendidos por este médico
+        historial_atendidas = Cita.objects.filter(
+            especialista=especialista,
+            estado_cita=EstadoCita.ATENDIDA
+        ).select_related('paciente__usuario').order_by('-fecha_hora_inicio')
+    else:
+        turno_activo = False
+        citas_hoy = []
+        citas_programadas = 0
+        citas_atendidas = 0
+        citas_pendientes = 0
+        mis_permisos = []
+        historial_atendidas = []
+
     context = {
-        'turno_activo': False,    # TODO: Turno.objects.filter(especialista=user, fecha=today, estado='Presente').exists()
-        'citas_programadas': 0,
-        'citas_atendidas': 0,
-        'citas_pendientes': 0,
+        'especialista': especialista,
+        'turno_activo': turno_activo,
+        'citas_hoy': citas_hoy,
+        'citas_programadas': citas_programadas,
+        'citas_atendidas': citas_atendidas,
+        'citas_pendientes': citas_pendientes,
+        'mis_permisos': mis_permisos,
+        'historial_atendidas': historial_atendidas,
     }
     return render(request, 'agendamiento/dashboard/especialista_dashboard.html', context)
 
@@ -84,8 +164,32 @@ def paciente_dashboard_view(request):
         perfil = None
         penalizado = False
 
+    ahora = timezone.now()
+    if perfil:
+        citas = Cita.objects.filter(
+            paciente=perfil
+        ).select_related('especialista__usuario', 'especialista__especialidad', 'consultorio').order_by('-fecha_hora_inicio')
+
+        proxima_cita = citas.filter(
+            estado_cita=EstadoCita.PROGRAMADA,
+            fecha_hora_inicio__gte=ahora
+        ).first()
+
+        historial_notas = citas.filter(
+            estado_cita=EstadoCita.ATENDIDA
+        ).exclude(notas_clinicas__isnull=True).exclude(notas_clinicas__exact='')
+    else:
+        citas = []
+        proxima_cita = None
+        historial_notas = []
+
     context = {
+        'paciente': perfil,
         'paciente_penalizado': penalizado,
-        'proxima_cita': None,     # TODO: Cita.objects.filter(paciente=perfil, estado='Programada').order_by('fecha_hora').first()
+        'proxima_cita': proxima_cita,
+        'citas': citas,
+        'historial_notas': historial_notas,
+        'especialidades': Especialidad.objects.all(),
+        'especialistas': Especialista.objects.select_related('usuario', 'especialidad').all(),
     }
     return render(request, 'agendamiento/dashboard/paciente_dashboard.html', context)

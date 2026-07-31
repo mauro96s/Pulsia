@@ -25,6 +25,9 @@ class Cita(models.Model):
     contador_reprogramacion = models.IntegerField(default=0)
     notas_clinicas = models.TextField(blank=True, null=True)
 
+    class Meta:
+        app_label = 'agendamiento'
+
     def __str__(self):
         return f"Cita {self.id}: {self.paciente.usuario.nombre_completo} con {self.especialista}"
 
@@ -44,5 +47,29 @@ class AusenciasPermisos(models.Model):
         default=EstadoAprobacion.PENDIENTE
     )
 
+    class Meta:
+        app_label = 'agendamiento'
+
     def __str__(self):
         return f"Permiso {self.estado_aprobacion} - {self.especialista}"
+
+class EstadoListaEspera(models.TextChoices):
+    PENDIENTE = 'Pendiente', 'Pendiente'
+    NOTIFICADO = 'Notificado', 'Notificado'
+    ATENDIDO = 'Atendido', 'Atendido'
+    CANCELADO = 'Cancelado', 'Cancelado'
+
+class ListaEspera(models.Model):
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='listas_espera')
+    especialista = models.ForeignKey(Especialista, on_delete=models.CASCADE, related_name='listas_espera', null=True, blank=True)
+    especialidad = models.ForeignKey('Especialidad', on_delete=models.CASCADE, related_name='listas_espera', null=True, blank=True)
+    fecha_solicitada = models.DateField(null=True, blank=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=EstadoListaEspera.choices, default=EstadoListaEspera.PENDIENTE)
+
+    class Meta:
+        app_label = 'agendamiento'
+
+    def __str__(self):
+        return f"Lista Espera: {self.paciente.usuario.nombre_completo} ({self.estado})"
+

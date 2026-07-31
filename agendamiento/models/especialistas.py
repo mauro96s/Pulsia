@@ -5,12 +5,18 @@ class Especialidad(models.Model):
     nombre_especialidad = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
 
+    class Meta:
+        app_label = 'agendamiento'
+
     def __str__(self):
         return self.nombre_especialidad
 
 class Consultorio(models.Model):
     nombre_codigo = models.CharField(max_length=50, unique=True)
     estado_operativo = models.BooleanField(default=True)
+
+    class Meta:
+        app_label = 'agendamiento'
 
     def __str__(self):
         return f"Consultorio {self.nombre_codigo}"
@@ -36,6 +42,9 @@ class Especialista(models.Model):
         default=EstadoTurno.AUSENTE
     )
 
+    class Meta:
+        app_label = 'agendamiento'
+
     def __str__(self):
         return f"Dr/Dra. {self.usuario.nombre_completo} - {self.especialidad.nombre_especialidad}"
 
@@ -51,6 +60,7 @@ class HorarioLaboral(models.Model):
     hora_fin_descanso = models.TimeField(blank=True, null=True)
 
     class Meta:
+        app_label = 'agendamiento'
         unique_together = ('especialista', 'dia_semana')
 
     def __str__(self):

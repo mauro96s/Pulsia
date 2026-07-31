@@ -17,5 +17,8 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'correo'
     REQUIRED_FIELDS = ['username', 'nombre_completo', 'rol']
 
+    class Meta:
+        app_label = 'agendamiento'
+
     def __str__(self):
         return f"{self.nombre_completo} ({self.rol})"
