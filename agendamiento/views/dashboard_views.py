@@ -193,3 +193,22 @@ def paciente_dashboard_view(request):
         'especialistas': Especialista.objects.select_related('usuario', 'especialidad').all(),
     }
     return render(request, 'agendamiento/dashboard/paciente_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def paciente_agendar_cita_web_view(request):
+    """Vista del flujo completo de agendamiento web con 4 pasos (HU02)."""
+    if request.user.rol != RolUsuario.PACIENTE:
+        messages.error(request, 'No tienes permiso para acceder a esa página.')
+        return redirect('login')
+    
+    from ..models.especialistas import Especialidad, Especialista
+    especialidades = Especialidad.objects.all()
+    especialistas_list = Especialista.objects.select_related('usuario', 'especialidad').all()
+    
+    context = {
+        'especialidades': especialidades,
+        'especialistas_list': especialistas_list,
+    }
+    
+    return render(request, 'agendamiento/paciente/agendar_cita_web.html', context)

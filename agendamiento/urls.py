@@ -9,6 +9,7 @@ from .views import (
     recepcionista_dashboard_view,
     especialista_dashboard_view,
     paciente_dashboard_view,
+    paciente_agendar_cita_web_view,
 
     # Paciente
     paciente_agendar_view,
@@ -49,6 +50,9 @@ urlpatterns = [
     path('dashboard/recepcionista/',  recepcionista_dashboard_view,  name='dashboard_recepcionista'),
     path('dashboard/especialista/',   especialista_dashboard_view,   name='dashboard_especialista'),
     path('dashboard/paciente/',       paciente_dashboard_view,       name='dashboard_paciente'),
+
+    # Flujo de agendamiento web
+    path('paciente/agendar-cita-web/', paciente_agendar_cita_web_view, name='paciente_agendar_cita_web'),
 
     # Acciones Paciente
     path('paciente/agendar/',               paciente_agendar_view,       name='paciente_agendar'),

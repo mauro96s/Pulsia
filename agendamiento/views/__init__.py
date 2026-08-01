@@ -5,6 +5,7 @@ from .dashboard_views import (
     recepcionista_dashboard_view,
     especialista_dashboard_view,
     paciente_dashboard_view,
+    paciente_agendar_cita_web_view,
 )
 from .paciente_views import (
     paciente_agendar_view,
@@ -40,6 +41,7 @@ __all__ = [
     'recepcionista_dashboard_view',
     'especialista_dashboard_view',
     'paciente_dashboard_view',
+    'paciente_agendar_cita_web_view',
     'paciente_agendar_view',
     'paciente_reprogramar_view',
     'paciente_cancelar_view',

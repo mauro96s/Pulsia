@@ -37,3 +37,6 @@ db.sqlite3-journal
 .vscode/
 .idea/
 *.swp
+
+# Carpetas de diseño/stitch temporales
+stitch_section_appointment_scheduler/
