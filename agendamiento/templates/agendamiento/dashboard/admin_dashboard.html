@@ -11,79 +11,61 @@
 {% endblock %}
 
 {% block body %}
-<div class="flex h-screen overflow-hidden">
+<div class="min-h-screen bg-surface">
 
-    <!-- ===== SIDEBAR ===== -->
-    <aside id="sidebar" class="w-64 flex-shrink-0 bg-primary-800 flex flex-col overflow-y-auto transition-all duration-300">
-        <!-- Logo -->
-        <div class="flex items-center gap-3 px-6 py-5 border-b border-white border-opacity-10">
-            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-            </div>
-            <span class="text-white font-bold text-lg tracking-tight">Pulsia</span>
-        </div>
-
-        <!-- Perfil -->
-        <div class="px-5 py-4 border-b border-white border-opacity-10">
+    <!-- TOPBAR / NAVBAR (Diseño Paciente) -->
+    <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {{ user.nombre_completo|first|upper }}
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-white text-sm font-semibold truncate">{{ user.nombre_completo }}</p>
-                    <p class="text-primary-300 text-xs label-tech truncate">Administrador</p>
-                </div>
+                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <span class="text-xs label-tech text-muted">/ Administrador</span>
             </div>
-        </div>
 
-        <!-- Navegación -->
-        <nav class="flex-1 px-4 py-4 space-y-1">
-            <p class="label-tech text-primary-400 text-xs px-4 mb-2 mt-1">Gestión Principal</p>
-            <button onclick="showTab('tab-dashboard')" class="sidebar-link w-full text-left active" id="nav-dashboard">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                Dashboard y KPIs
-            </button>
-            <button onclick="showTab('tab-bi')" class="sidebar-link w-full text-left" id="nav-bi">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                Reportes BI (HU11)
-            </button>
-            <button onclick="showTab('tab-crud')" class="sidebar-link w-full text-left" id="nav-crud">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                CRUD Estructura (HU12)
-            </button>
-            <button onclick="showTab('tab-ausencias')" class="sidebar-link w-full text-left" id="nav-ausencias">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Aprobar Ausencias (HU04)
-            </button>
-        </nav>
-
-        <!-- Cerrar sesión -->
-        <div class="px-4 py-4 border-t border-white border-opacity-10">
-            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200 transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                Cerrar Sesión
-            </a>
-        </div>
-    </aside>
-
-    <!-- ===== CONTENIDO PRINCIPAL ===== -->
-    <main class="flex-1 overflow-y-auto bg-surface">
-        <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-            <div>
-                <h1 class="text-lg font-bold text-ink">Panel General de Administración</h1>
-                <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="openEmpleadoModal()" class="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md hover:bg-primary-600">
-                    + Nuevo Especialista
+            <!-- Nav tabs horizontales -->
+            <nav class="hidden lg:flex items-center gap-1">
+                <button onclick="showTab('tab-dashboard')" id="nav-dashboard"
+                        class="sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-primary bg-primary-50 active">
+                    Dashboard & KPIs
                 </button>
-            </div>
-        </header>
+                <button onclick="showTab('tab-bi')" id="nav-bi"
+                        class="sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-muted hover:bg-surface">
+                    Reportes BI
+                </button>
+                <button onclick="showTab('tab-crud')" id="nav-crud"
+                        class="sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-muted hover:bg-surface">
+                    Gestión de Personal
+                </button>
+                <button onclick="showTab('tab-ausencias')" id="nav-ausencias"
+                        class="sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-muted hover:bg-surface">
+                    Permisos y Ausencias
+                </button>
+                <button onclick="showTab('tab-parametros')" id="nav-parametros"
+                        class="sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-muted hover:bg-surface">
+                    Parámetros & Festivos
+                </button>
+            </nav>
 
-        <div class="p-6 animate-fade-in-up">
+            <div class="flex items-center gap-3">
+                <button onclick="openEmpleadoModal()" class="bg-primary hover:bg-primary-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-sm">
+                    + Nuevo Empleado
+                </button>
+                <div class="hidden sm:flex items-center gap-2 border-l border-gray-200 pl-3">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                        {{ user.nombre_completo|first|upper }}
+                    </div>
+                    <span class="text-sm font-medium text-ink">{{ user.nombre_completo|truncatechars:18 }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="text-xs text-muted hover:text-red-500 font-medium">Salir</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 py-8">
 
             <!-- MENSAJES -->
             {% if messages %}
@@ -127,6 +109,17 @@
                         <p class="text-3xl font-bold text-amber-600">{{ kpi_ausencias }}</p>
                     </div>
                 </div>
+
+                <!-- CALENDARIO INSTITUCIONAL FULLCALENDAR -->
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Supervisión de Calendario Institucional (FullCalendar)</h3>
+                            <p class="text-xs text-muted">Vista general de la ocupación del centro médico</p>
+                        </div>
+                    </div>
+                    <div id="fullcalendar-admin" class="min-h-[450px]"></div>
+                </div>
             </div>
 
             <!-- ======= TAB REPORTES BI (HU11) ======= -->
@@ -163,10 +156,10 @@
                 </div>
             </div>
 
-            <!-- ======= TAB CRUD ESTRUCTURA (HU12) ======= -->
+            <!-- ======= TAB CRUD ESTRUCTURA ======= -->
             <div id="tab-crud" class="tab-content hidden space-y-6">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-ink">Gestión de Empleados, Especialidades y Consultorios (HU12)</h2>
+                    <h2 class="text-xl font-bold text-ink">Gestión de Empleados, Especialidades y Consultorios</h2>
                     <div class="flex gap-2">
                         <button onclick="openEspecialidadModal()" class="bg-surface text-ink text-xs font-bold px-3 py-2 rounded-xl border border-gray-200 hover:bg-card">
                             + Especialidad
@@ -175,7 +168,7 @@
                             + Consultorio
                         </button>
                         <button onclick="openEmpleadoModal()" class="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm hover:bg-primary-600">
-                            + Especialista
+                            + Empleado / Especialista
                         </button>
                     </div>
                 </div>
@@ -227,9 +220,9 @@
                 </div>
             </div>
 
-            <!-- ======= TAB APROBAR AUSENCIAS (HU04 / RN05) ======= -->
+            <!-- ======= TAB APROBAR AUSENCIAS ======= -->
             <div id="tab-ausencias" class="tab-content hidden space-y-6">
-                <h2 class="text-xl font-bold text-ink">Aprobación de Permisos y Ausencias (HU04 / RN05)</h2>
+                <h2 class="text-xl font-bold text-ink">Aprobación de Permisos y Ausencias Médicas</h2>
                 <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 divide-y divide-gray-50">
                     {% for p in ausencias_pendientes %}
                     <div class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -265,32 +258,109 @@
                 </div>
             </div>
 
+            <!-- ======= TAB PARÁMETROS GLOBALES Y FESTIVOS ======= -->
+            <div id="tab-parametros" class="tab-content hidden space-y-6">
+                <h2 class="text-xl font-bold text-ink">Parámetros Globales del Sistema y Festivos</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Reglas Institucionales Configuradas -->
+                    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-4">
+                        <h3 class="text-sm font-bold text-ink border-b border-gray-100 pb-2">Reglas de Negocio Institucionales Activas</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-surface rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-ink">RN01 - Límite de Reprogramaciones Web</p>
+                                    <p class="text-muted">Máximo de 1 reprogramación autónoma por cita desde el portal del paciente.</p>
+                                </div>
+                                <span class="bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-lg">1 Vez</span>
+                            </div>
+                            <div class="p-3 bg-surface rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-ink">RN02 - Anticipación de Cambios</p>
+                                    <p class="text-muted">No se permite cancelar ni reprogramar si faltan menos de 24h.</p>
+                                </div>
+                                <span class="bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-lg">24 Horas</span>
+                            </div>
+                            <div class="p-3 bg-surface rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-ink">RN03 / RN04 - Penalización por Inasistencia</p>
+                                    <p class="text-muted">Margen de tolerancia 15-20m. 3 fallas (*No-Show*) bloquean agendamiento web.</p>
+                                </div>
+                                <span class="bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-lg">3 Inasistencias</span>
+                            </div>
+                            <div class="p-3 bg-surface rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-ink">RN07 - Inactividad de Sesión</p>
+                                    <p class="text-muted">Cierre automático de sesión laboral tras inactividad prolongada.</p>
+                                </div>
+                                <span class="bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-lg">15 Minutos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Festivos Nacionales Ley Emiliani -->
+                    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-4">
+                        <h3 class="text-sm font-bold text-ink border-b border-gray-100 pb-2">Calendario de Festivos Nacionales (Ley Emiliani)</h3>
+                        <p class="text-xs text-muted">El sistema inhabilita automáticamente estas fechas en el calendario de agendamiento para evitar reservas en días cerrados.</p>
+                        
+                        <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                            <p class="text-xs font-bold text-primary">Festivos Fijos:</p>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">1 Ene (Año Nuevo)</span>
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">1 May (Día Trabajo)</span>
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">20 Jul (Independencia)</span>
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">7 Ago (Batalla Boyacá)</span>
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">8 Dic (Inmaculada)</span>
+                                <span class="bg-primary-50 text-primary-700 text-xs font-semibold px-2.5 py-1 rounded-lg">25 Dic (Navidad)</span>
+                            </div>
+
+                            <p class="text-xs font-bold text-violet-700">Festivos Trasladables (Ley Emiliani - Lunes):</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Reyes Magos (Ene)</span>
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">San José (Mar)</span>
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">San Pedro (Jun)</span>
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Asunción Virgen (Ago)</span>
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Día Raza (Oct)</span>
+                                <span class="bg-violet-50 text-violet-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Todos los Santos (Nov)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 </div>
 
-<!-- MODAL CREAR ESPECIALISTA (HU12) -->
+<!-- MODAL CREAR EMPLEADO / ESPECIALISTA (HU12) -->
 <div id="modal-empleado" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
-        <h3 class="text-lg font-bold text-ink mb-1">Registrar Nuevo Especialista Médico</h3>
-        <p class="text-xs text-muted mb-4">Se creará su cuenta de usuario y se asignará su horario laboral base (**HU12 / HU08**).</p>
+        <h3 class="text-lg font-bold text-ink mb-1">Registrar Nuevo Empleado / Usuario</h3>
+        <p class="text-xs text-muted mb-4">Crea una cuenta para Especialista Médico o Recepcionista (**HU12**).</p>
         <form method="POST" action="{% url 'admin_crear_empleado' %}" class="space-y-4">
             {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Rol de Empleado</label>
+                <select name="rol_empleado" id="select-rol-empleado" onchange="toggleEspecialidadSelect()" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface font-semibold">
+                    <option value="Especialista">Especialista Médico</option>
+                    <option value="Recepcionista">Recepcionista</option>
+                </select>
+            </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Nombre Completo</label>
                 <input type="text" name="nombre_completo" required placeholder="Ej: Dr. Roberto Gómez" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Correo Electrónico</label>
-                <input type="email" name="correo" required placeholder="medico@pulsia.com" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
+                <input type="email" name="correo" required placeholder="empleado@pulsia.com" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Contraseña</label>
                 <input type="password" name="password" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface"/>
             </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Especialidad</label>
-                <select name="especialidad_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+            <div id="div-especialidad-select">
+                <label class="block text-xs font-bold text-gray-600 mb-1">Especialidad (Sólo Médicos)</label>
+                <select name="especialidad_id" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
                     {% for esp in especialidades %}
                     <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
                     {% endfor %}
@@ -298,7 +368,7 @@
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeModal('modal-empleado')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
-                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Crear Especialista</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-semibold shadow-md">Crear Cuenta</button>
             </div>
         </form>
     </div>
@@ -338,23 +408,67 @@
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeModal('modal-consultorio')" class="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-muted">Cancelar</button>
-                <button type="submit" class="flex-1 py-2 rounded-xl bg-primary text-white text-sm font-semibold shadow-md">Guardar</button>
-            </div>
-        </form>
-    </div>
+</div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('fullcalendar-admin');
+        if (calendarEl) {
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                firstDay: 1,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana',
+                    list: 'Lista'
+                },
+                events: {{ fullcalendar_events_json|safe }},
+                eventClick: function(info) {
+                    const p = info.event.extendedProps;
+                    alert(`Supervisión de Cita\nPaciente: ${p.paciente}\nMédico: ${p.especialista}\nEstado: ${p.estado}\nConsultorio: ${p.consultorio}`);
+                }
+            });
+            calendar.render();
+        }
+    });
+
     function showTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById(tabId).classList.remove('hidden');
 
-        document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
-        const navMap = { 'tab-dashboard': 'nav-dashboard', 'tab-bi': 'nav-bi', 'tab-crud': 'nav-crud', 'tab-ausencias': 'nav-ausencias' };
+        document.querySelectorAll('.sidebar-link').forEach(btn => {
+            btn.className = 'sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-muted hover:bg-surface';
+        });
+        const navMap = { 
+            'tab-dashboard': 'nav-dashboard', 
+            'tab-bi': 'nav-bi', 
+            'tab-crud': 'nav-crud', 
+            'tab-ausencias': 'nav-ausencias',
+            'tab-parametros': 'nav-parametros'
+        };
         const activeNav = document.getElementById(navMap[tabId]);
-        if (activeNav) activeNav.classList.add('active');
+        if (activeNav) activeNav.className = 'sidebar-link px-3.5 py-2 rounded-xl text-sm font-semibold text-primary bg-primary-50 active';
+    }
+
+    function toggleEspecialidadSelect() {
+        const rol = document.getElementById('select-rol-empleado').value;
+        const div = document.getElementById('div-especialidad-select');
+        if (rol === 'Recepcionista') {
+            div.classList.add('hidden');
+        } else {
+            div.classList.remove('hidden');
+        }
     }
 
     function openEmpleadoModal() {

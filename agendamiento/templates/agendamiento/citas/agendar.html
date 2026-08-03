@@ -1,0 +1,398 @@
+{% extends "agendamiento/base.html" %}
+
+{% block title %}Agendar Cita Médica · Pulsia{% endblock %}
+
+{% block extra_head %}
+<style>
+    .day-pill {
+        @apply flex flex-col items-center justify-center px-4 py-2.5 rounded-xl border border-gray-200 cursor-pointer transition-all min-w-[95px] select-none bg-white hover:border-primary hover:text-primary;
+    }
+    .day-pill.active {
+        @apply border-primary bg-primary-50 text-primary font-bold shadow-sm;
+    }
+    .time-slot {
+        @apply px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer select-none text-center;
+    }
+    .time-slot.selected {
+        @apply bg-primary text-white border-primary shadow-md;
+    }
+    .time-slot.disabled {
+        @apply bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed hover:bg-gray-100 hover:text-gray-400 hover:border-gray-200 opacity-60;
+    }
+    .doctor-chip {
+        @apply flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:border-primary hover:bg-primary-50 transition-all cursor-pointer shadow-sm;
+    }
+    .doctor-chip.selected {
+        @apply border-primary bg-primary-50 ring-2 ring-primary ring-opacity-50;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-surface">
+
+    <!-- HEADER / TOPBAR -->
+    <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'dashboard_paciente' %}" class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold hover:bg-primary-600 transition-colors">
+                    ←
+                </a>
+                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <span class="text-xs label-tech text-muted">/ Agendamiento Web</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-ink hidden sm:inline">{{ user.nombre_completo }}</span>
+                <a href="{% url 'dashboard_paciente' %}" class="text-xs bg-surface text-ink px-3 py-1.5 rounded-xl border border-gray-200 font-semibold hover:bg-card">
+                    Volver al Portal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+
+        <!-- MENSAJES -->
+        {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+            <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between
+                        {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                        {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+                        {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                <span>{{ message }}</span>
+                <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- BANNER DE ENCABEZADO ESTILO CARTELERA -->
+        <div class="relative rounded-2xl overflow-hidden shadow-lg bg-gradient-to-r from-slate-900 via-primary-900 to-slate-900 text-white p-8">
+            <div class="relative z-10 max-w-2xl">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-primary text-white text-xs font-black px-2.5 py-1 rounded-md tracking-wider">CONSULTA EXTERNA</span>
+                    {% if es_paciente_frecuente %}
+                    <span class="bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-1 rounded-md">⭐ PACIENTE FRECUENTE</span>
+                    {% else %}
+                    <span class="bg-white bg-opacity-20 text-white text-xs font-bold px-2.5 py-1 rounded-md">USUARIO NUEVO · PASO A PASO</span>
+                    {% endif %}
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight mb-2">Reserva de Cita Médica</h1>
+                <p class="text-slate-300 text-sm">
+                    {% if es_paciente_frecuente %}
+                    Selecciona tu médico preferido o sigue el flujo por especialidad y horarios disponibles.
+                    {% else %}
+                    Sigue los 3 sencillos pasos: filtra la especialidad, selecciona tu médico especialista y escoge tu horario de preferencia.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN PARA PACIENTE FRECUENTE: MIS MÉDICOS PREFERIDOS -->
+        {% if es_paciente_frecuente %}
+        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                    <span>⭐ Tus Médicos de Preferencia (Consultados Anteriormente)</span>
+                </h2>
+                <span class="text-xs text-muted">Selección rápida en 1 clic</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {% for f in especialistas_frecuentes %}
+                <div class="doctor-chip" onclick="seleccionarMedicoFrecuente('{{ f.id }}', '{{ f.especialidad.id }}', 'Dr/Dra. {{ f.usuario.nombre_completo }}')" id="chip-doc-{{ f.id }}">
+                    <div class="w-10 h-10 rounded-full bg-primary-100 text-primary font-bold flex items-center justify-center text-sm flex-shrink-0">
+                        {{ f.usuario.nombre_completo|first }}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-ink truncate">Dr/Dra. {{ f.usuario.nombre_completo }}</p>
+                        <p class="text-xs text-muted truncate">{{ f.especialidad.nombre_especialidad }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- BARRA DE FILTROS PASO A PASO (PASO 1 & PASO 2) -->
+        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100 space-y-4">
+            <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
+                <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">1</span>
+                <h2 class="text-sm font-bold text-ink uppercase tracking-wider">Flujo de Agendamiento: Especialidad y Médico</h2>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 1: ESPECIALIDAD</span>
+                    <select id="select-especialidad" onchange="filtrarPorEspecialidad()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">-- Todas las Especialidades --</option>
+                        {% for esp in especialidades %}
+                        <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 2: MÉDICO ESPECIALISTA</span>
+                    <select id="select-especialista" onchange="filtrarPorEspecialista()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">-- Seleccionar Especialista --</option>
+                        {% for e in especialistas %}
+                        <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">Dr/Dra. {{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIRA HORIZONTAL DE DÍAS DISPONIBLES (PASO 3) -->
+        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">2</span>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">PASO 3: SELECCIONAR FECHA DISPONIBLE</p>
+            </div>
+            <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin" id="days-container">
+                <!-- Generado dinámicamente con JavaScript -->
+            </div>
+        </div>
+
+        <!-- TARJETA DE SEDE / CONSULTORIO Y FRANJAS DE HORARIOS -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-6" id="horarios-card">
+            <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-xl font-extrabold text-primary-700 tracking-tight uppercase" id="card-consultorio-title">SEDE QUINTA VÉLEZ — CONSULTORIO 101</h2>
+                    <p class="text-xs text-muted font-medium mt-0.5" id="card-consultorio-address">CALLE 10 Y 11 DIAGONAL SANTANDER SECTOR QUINTA VÉLEZ LOCAL 325</p>
+                </div>
+                <div class="text-left sm:text-right">
+                    <span class="text-xs font-bold bg-primary-50 text-primary border border-primary-200 px-3 py-1 rounded-full" id="selected-day-label">LUN. 03 AGO. 2026</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-ink uppercase tracking-wider">HORARIOS DISPONIBLES</h3>
+                    <p class="text-xs text-muted italic">* Los horarios aquí expuestos representan el inicio de cada consulta *</p>
+                </div>
+
+                <!-- Grid de Franjas Horarias (Pills de Horas) -->
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3" id="time-slots-grid">
+                    <!-- Pills generados por JS -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN DE CITA SELECCIONADA (PASO 4) -->
+<div id="modal-confirmar-cita" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up border-t-4 border-primary">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">3</span>
+            <h3 class="text-lg font-extrabold text-ink">PASO 4: Confirmar Reserva de Cita</h3>
+        </div>
+        <p class="text-xs text-muted mb-4">Verifica los detalles de la consulta elegida antes de procesar tu reserva.</p>
+        
+        <form method="POST" action="{% url 'paciente_agendar' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="especialista_id" id="form-especialista-id"/>
+            <input type="hidden" name="fecha" id="form-fecha"/>
+            <input type="hidden" name="hora" id="form-hora"/>
+
+            <div class="bg-surface rounded-xl p-4 border border-gray-200 space-y-2 text-xs">
+                <div class="flex justify-between border-b border-gray-100 pb-1.5">
+                    <span class="text-muted font-semibold">Médico:</span>
+                    <span class="font-bold text-ink" id="confirm-medico-name">-</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-1.5">
+                    <span class="text-muted font-semibold">Fecha:</span>
+                    <span class="font-bold text-primary" id="confirm-fecha-val">-</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-1.5">
+                    <span class="text-muted font-semibold">Hora de Inicio:</span>
+                    <span class="font-bold text-primary" id="confirm-hora-val">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted font-semibold">Consultorio:</span>
+                    <span class="font-bold text-ink">101 Sede Quinta Vélez</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 flex items-start gap-3">
+                <input type="checkbox" name="acepta_habeas_data" id="habeas-confirm" required class="mt-1 rounded text-primary focus:ring-primary"/>
+                <label for="habeas-confirm" class="text-xs text-muted">
+                    Acepto el tratamiento de mis datos personales en salud de acuerdo con la política de privacidad (*Habeas Data*).
+                </label>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-muted hover:bg-surface">Cancelar</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-600 text-white text-sm font-bold shadow-md">Confirmar Cita</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const hoy = new Date();
+    let selectedDate = new Date();
+    let selectedTime = null;
+    let selectedEspecialistaId = null;
+
+    const HORARIOS_BASE = [
+        "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+        "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "18:00", "18:30", "20:25", "20:45"
+    ];
+
+    const DIAS_SEMANA = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+    const MESES = ["AGO", "SEP", "OCT", "NOV", "DIC", "ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL"];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        renderDaysStrip();
+        renderTimeSlots();
+        
+        // Seleccionar primer especialista si existe
+        const specSelect = document.getElementById("select-especialista");
+        if (specSelect.options.length > 1) {
+            specSelect.selectedIndex = 1;
+            selectedEspecialistaId = specSelect.value;
+        }
+    });
+
+    function seleccionarMedicoFrecuente(medicoId, especialidadId, medicoNombre) {
+        // Highlight chip
+        document.querySelectorAll(".doctor-chip").forEach(c => c.classList.remove("selected"));
+        const chip = document.getElementById(`chip-doc-${medicoId}`);
+        if (chip) chip.classList.add("selected");
+
+        // Set especialidad
+        const espSelect = document.getElementById("select-especialidad");
+        espSelect.value = especialidadId;
+        filtrarPorEspecialidad();
+
+        // Set especialista
+        const specSelect = document.getElementById("select-especialista");
+        specSelect.value = medicoId;
+        selectedEspecialistaId = medicoId;
+
+        // Render slots
+        renderTimeSlots();
+    }
+
+    function renderDaysStrip() {
+        const container = document.getElementById("days-container");
+        container.innerHTML = "";
+
+        for (let i = 0; i < 12; i++) {
+            const d = new Date();
+            d.setDate(hoy.getDate() + i);
+
+            const dayName = DIAS_SEMANA[d.getDay()];
+            const dayNum = String(d.getDate()).padStart(2, '0');
+            const monthName = MESES[d.getMonth() % 12];
+            const yearNum = d.getFullYear();
+
+            const isSelected = (d.toDateString() === selectedDate.toDateString());
+
+            const div = document.createElement("div");
+            div.className = `day-pill ${isSelected ? 'active' : ''}`;
+            div.onclick = function() {
+                selectedDate = d;
+                renderDaysStrip();
+                updateSelectedDayLabel(dayName, dayNum, monthName, yearNum);
+                renderTimeSlots();
+            };
+
+            div.innerHTML = `
+                <span class="text-xs font-bold uppercase tracking-wider">${dayName}.</span>
+                <span class="text-xs font-extrabold mt-0.5">${dayNum} ${monthName}. ${yearNum}</span>
+            `;
+            container.appendChild(div);
+        }
+        updateSelectedDayLabel(DIAS_SEMANA[selectedDate.getDay()], String(selectedDate.getDate()).padStart(2, '0'), MESES[selectedDate.getMonth() % 12], selectedDate.getFullYear());
+    }
+
+    function updateSelectedDayLabel(dayName, dayNum, monthName, yearNum) {
+        document.getElementById("selected-day-label").textContent = `${dayName}. ${dayNum} ${monthName}. ${yearNum}`;
+    }
+
+    function renderTimeSlots() {
+        const grid = document.getElementById("time-slots-grid");
+        grid.innerHTML = "";
+
+        HORARIOS_BASE.forEach(hora => {
+            const button = document.createElement("button");
+            // Franja de descanso 12:00 a 14:00 inhabilitada
+            const esDescanso = (hora >= "12:00" && hora < "14:00");
+            
+            if (esDescanso) {
+                button.className = "time-slot disabled";
+                button.disabled = true;
+                button.textContent = hora;
+            } else {
+                button.className = "time-slot";
+                button.textContent = hora;
+                button.onclick = function() {
+                    document.querySelectorAll(".time-slot").forEach(b => b.classList.remove("selected"));
+                    button.classList.add("selected");
+                    selectedTime = hora;
+                    openConfirmModal(hora);
+                };
+            }
+            grid.appendChild(button);
+        });
+    }
+
+    function filtrarPorEspecialidad() {
+        const espId = document.getElementById("select-especialidad").value;
+        const specSelect = document.getElementById("select-especialista");
+        
+        Array.from(specSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            if (!espId || opt.getAttribute("data-esp") === espId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+        specSelect.selectedIndex = 0;
+        selectedEspecialistaId = null;
+    }
+
+    function filtrarPorEspecialista() {
+        selectedEspecialistaId = document.getElementById("select-especialista").value;
+    }
+
+    function openConfirmModal(hora) {
+        const specSelect = document.getElementById("select-especialista");
+        const medicoNombre = specSelect.options[specSelect.selectedIndex]?.text || "Especialista Seleccionado";
+        selectedEspecialistaId = specSelect.value;
+
+        if (!selectedEspecialistaId) {
+            alert("Por favor selecciona un médico especialista antes de elegir la hora.");
+            return;
+        }
+
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(selectedDate.getDate()).padStart(2, '0');
+        const fechaStr = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById("form-especialista-id").value = selectedEspecialistaId;
+        document.getElementById("form-fecha").value = fechaStr;
+        document.getElementById("form-hora").value = hora;
+
+        document.getElementById("confirm-medico-name").textContent = medicoNombre;
+        document.getElementById("confirm-fecha-val").textContent = `${dd}/${mm}/${yyyy}`;
+        document.getElementById("confirm-hora-val").textContent = hora;
+
+        document.getElementById("modal-confirmar-cita").classList.remove("hidden");
+    }
+
+    function closeConfirmModal() {
+        document.getElementById("modal-confirmar-cita").classList.add("hidden");
+    }
+</script>
+{% endblock %}

@@ -122,37 +122,47 @@
                                 Cancelar
                             </button>
                         </form>
-                    </div>
-                    {% else %}
+                         {% else %}
                     <p class="text-white text-sm opacity-90 mb-4">No tienes citas próximas agendadas en este momento.</p>
-                    <button onclick="openAgendarModal()"
-                            {% if paciente_penalizado %}disabled{% endif %}
-                            class="bg-white text-primary text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all shadow-md">
+                    {% if not paciente_penalizado %}
+                    <a href="{% url 'paciente_agendar' %}"
+                       class="inline-block bg-white text-primary text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all shadow-md">
                         Agendar Nueva Cita
-                    </button>
+                    </a>
+                    {% endif %}
                     {% endif %}
                 </div>
             </div>
 
             <!-- Accesos rápidos -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button {% if paciente_penalizado %}disabled{% else %}onclick="openAgendarModal()"{% endif %}
-                        class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all
-                               {% if paciente_penalizado %}opacity-50 cursor-not-allowed{% endif %}">
+                {% if paciente_penalizado %}
+                <button disabled
+                        class="group bg-white rounded-2xl p-5 shadow-card border border-gray-100 text-left opacity-50 cursor-not-allowed">
+                    <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-ink">Agendar Cita Web</p>
+                    <p class="text-xs text-muted mt-0.5">Bloqueado por penalización (RN04)</p>
+                </button>
+                {% else %}
+                <a href="{% url 'paciente_agendar' %}"
+                   class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all">
                     <div class="w-10 h-10 bg-primary-50 group-hover:bg-primary rounded-xl flex items-center justify-center mb-3 transition-colors">
                         <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                     </div>
                     <p class="text-sm font-semibold text-ink">Agendar Cita Web</p>
-                    <p class="text-xs text-muted mt-0.5">Selecciona especialista y horario libre</p>
-                </button>
+                    <p class="text-xs text-muted mt-0.5">Selecciona especialidad y horario libre</p>
+                </a>
+                {% endif %}
 
                 <button onclick="showTab('tab-historial')"
                         class="group bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 text-left transition-all">
                     <div class="w-10 h-10 bg-violet-50 group-hover:bg-violet-500 rounded-xl flex items-center justify-center mb-3 transition-colors">
                         <svg class="w-5 h-5 text-violet-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
                     <p class="text-sm font-semibold text-ink">Historial y Notas Clínicas</p>
@@ -178,10 +188,10 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-ink">Mis Citas Agendadas</h2>
                 {% if not paciente_penalizado %}
-                <button onclick="openAgendarModal()" class="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:bg-primary-600">
+                <a href="{% url 'paciente_agendar' %}" class="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:bg-primary-600">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Nueva Cita
-                </button>
+                </a>
                 {% endif %}
             </div>
             <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
@@ -234,7 +244,7 @@
 
         <!-- ======= TAB HISTORIAL ======= -->
         <div id="tab-historial" class="tab-content hidden animate-fade-in-up">
-            <h2 class="text-xl font-bold text-ink mb-6">Historial Médico y Observaciones (HU05)</h2>
+            <h2 class="text-xl font-bold text-ink mb-6">Historial Médico y Observaciones</h2>
             <div class="space-y-4">
                 {% for c in historial_notas %}
                 <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
@@ -254,7 +264,7 @@
                 <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-10 text-center text-muted text-sm">
                     <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <p class="font-medium text-ink">Sin observaciones de historial registradas</p>
-                    <p class="text-xs text-muted mt-1">Una vez tus especialistas registren notas clínicas en tus consultas finalizadas, aparecerán en este panel (RN06).</p>
+                    <p class="text-xs text-muted mt-1">Una vez tus especialistas registren notas clínicas en tus consultas finalizadas, aparecerán en este panel.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -263,7 +273,7 @@
     </div>
 </div>
 
-<!-- MODAL AGENDAR CITA (HU02) -->
+<!-- MODAL AGENDAR CITA -->
 <div id="modal-agendar" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-7 animate-fade-in-up">
         <h3 class="text-lg font-bold text-ink mb-1">Agendar Cita Médica</h3>
@@ -303,11 +313,11 @@
     </div>
 </div>
 
-<!-- MODAL REPROGRAMAR CITA (HU03 / RN01 / RN02) -->
+<!-- MODAL REPROGRAMAR CITA -->
 <div id="modal-reprogramar" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
         <h3 class="text-lg font-bold text-ink mb-1">Reprogramar Cita Web</h3>
-        <p class="text-xs text-muted mb-4">Recuerda: Máximo 1 reprogramación autorizada desde la web (**RN01**) y con más de 24h de anticipación (**RN02**).</p>
+        <p class="text-xs text-muted mb-4">Recuerda: Máximo 1 reprogramación autorizada desde la web y con más de 24h de anticipación.</p>
         <form id="form-reprogramar" method="POST" action="" class="space-y-4">
             {% csrf_token %}
             <p id="reprogramar-medico-info" class="text-sm font-semibold text-primary"></p>

@@ -90,7 +90,7 @@ def admin_crear_consultorio_view(request):
 
 @login_required(login_url='login')
 def admin_crear_empleado_view(request):
-    """HU12: Crear un especialista médico con su cuenta de usuario y asignación."""
+    """HU12: Crear un empleado (Especialista o Recepcionista) con su cuenta de usuario."""
     if request.user.rol != RolUsuario.ADMINISTRADOR:
         return redirect('login')
 
@@ -98,10 +98,11 @@ def admin_crear_empleado_view(request):
         nombre = request.POST.get('nombre_completo', '').strip()
         correo = request.POST.get('correo', '').strip().lower()
         password = request.POST.get('password', '')
+        rol_solicitado = request.POST.get('rol_empleado', RolUsuario.ESPECIALISTA)
         especialidad_id = request.POST.get('especialidad_id')
 
-        if not all([nombre, correo, password, especialidad_id]):
-            messages.error(request, "Todos los campos del nuevo empleado son obligatorios.")
+        if not all([nombre, correo, password]):
+            messages.error(request, "Los campos Nombre, Correo y Contraseña son obligatorios.")
             return redirect('dashboard_admin')
 
         if CustomUser.objects.filter(correo=correo).exists():
@@ -109,30 +110,39 @@ def admin_crear_empleado_view(request):
             return redirect('dashboard_admin')
 
         try:
+            rol_final = RolUsuario.RECEPCIONISTA if rol_solicitado == RolUsuario.RECEPCIONISTA else RolUsuario.ESPECIALISTA
             user = CustomUser.objects.create_user(
                 username=correo,
                 correo=correo,
                 email=correo,
                 nombre_completo=nombre,
-                rol=RolUsuario.ESPECIALISTA,
+                rol=rol_final,
                 password=password
             )
-            especialidad = get_object_or_404(Especialidad, id=especialidad_id)
-            especialista = Especialista.objects.create(usuario=user, especialidad=especialidad)
 
-            # Asignar horario base de Lunes a Viernes de 8:00 a 17:00 con descanso de 12:00 a 13:00 (HU08)
-            for dia in range(1, 6): # Lunes a Viernes
-                HorarioLaboral.objects.create(
-                    especialista=especialista,
-                    dia_semana=dia,
-                    hora_inicio="08:00",
-                    hora_fin="17:00",
-                    hora_inicio_descanso="12:00",
-                    hora_fin_descanso="13:00"
-                )
+            if rol_final == RolUsuario.ESPECIALISTA:
+                if not especialidad_id:
+                    messages.error(request, "Debes seleccionar una especialidad para el especialista.")
+                    return redirect('dashboard_admin')
 
-            messages.success(request, f"Especialista Dr/Dra. {nombre} creado exitosamente.")
+                especialidad = get_object_or_404(Especialidad, id=especialidad_id)
+                especialista = Especialista.objects.create(usuario=user, especialidad=especialidad)
+
+                # Asignar horario base de Lunes a Viernes de 8:00 a 17:00 con descanso de 12:00 a 13:00 (HU08)
+                for dia in range(1, 6):  # Lunes a Viernes
+                    HorarioLaboral.objects.create(
+                        especialista=especialista,
+                        dia_semana=dia,
+                        hora_inicio="08:00",
+                        hora_fin="17:00",
+                        hora_inicio_descanso="12:00",
+                        hora_fin_descanso="13:00"
+                    )
+                messages.success(request, f"Especialista Dr/Dra. {nombre} creado exitosamente con horario base de descanso (HU08).")
+            else:
+                messages.success(request, f"Recepcionista {nombre} creado(a) exitosamente.")
+
         except Exception as e:
-            messages.error(request, f"Error al crear especialista: {e}")
+            messages.error(request, f"Error al crear empleado: {e}")
 
     return redirect('dashboard_admin')

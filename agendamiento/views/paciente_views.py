@@ -18,7 +18,7 @@ from ..services.citas_service import (
 
 @login_required(login_url='login')
 def paciente_agendar_view(request):
-    """Acción de agendamiento web autónomo del paciente (HU02)."""
+    """Acción y vista de agendamiento web autónomo del paciente estilo cine (HU02)."""
     if request.user.rol != RolUsuario.PACIENTE:
         messages.error(request, "Acceso no autorizado.")
         return redirect('login')
@@ -36,7 +36,7 @@ def paciente_agendar_view(request):
 
         if not acepta_habeas:
             messages.error(request, "Debes aceptar la política de tratamiento de datos (Habeas Data).")
-            return redirect('dashboard_paciente')
+            return redirect('paciente_agendar')
 
         try:
             especialista = get_object_or_404(Especialista, id=especialista_id)
@@ -44,7 +44,7 @@ def paciente_agendar_view(request):
             consultorio = Consultorio.objects.filter(estado_operativo=True).first()
             if not consultorio:
                 messages.error(request, "No hay consultorios disponibles en el sistema.")
-                return redirect('dashboard_paciente')
+                return redirect('paciente_agendar')
 
             dt_str = f"{fecha_str} {hora_str}"
             fecha_hora = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
@@ -57,12 +57,25 @@ def paciente_agendar_view(request):
                 fecha_hora_inicio=fecha_hora
             )
             messages.success(request, "¡Tu cita médica ha sido agendada con éxito!")
+            return redirect('dashboard_paciente')
         except ValidationError as ve:
             messages.error(request, str(ve.message if hasattr(ve, 'message') else ve))
+            return redirect('paciente_agendar')
         except Exception as e:
             messages.error(request, f"Error al procesar el agendamiento: {e}")
+            return redirect('paciente_agendar')
 
-    return redirect('dashboard_paciente')
+    especialistas_frecuentes = Especialista.objects.filter(
+        citas__paciente=paciente
+    ).select_related('usuario', 'especialidad').distinct()
+
+    context = {
+        'especialidades': Especialidad.objects.all(),
+        'especialistas': Especialista.objects.select_related('usuario', 'especialidad').all(),
+        'especialistas_frecuentes': especialistas_frecuentes,
+        'es_paciente_frecuente': especialistas_frecuentes.exists(),
+    }
+    return render(request, 'agendamiento/citas/agendar.html', context)
 
 
 @login_required(login_url='login')

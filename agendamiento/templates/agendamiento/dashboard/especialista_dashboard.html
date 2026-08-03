@@ -3,78 +3,45 @@
 {% block title %}Mi Agenda — Especialista · Pulsia{% endblock %}
 
 {% block body %}
-<div class="flex h-screen overflow-hidden">
+<div class="min-h-screen bg-surface">
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 flex-shrink-0 bg-primary-800 flex flex-col overflow-y-auto">
-        <div class="flex items-center gap-3 px-6 py-5 border-b border-white border-opacity-10">
-            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-            </div>
-            <span class="text-white font-bold text-lg">Pulsia</span>
-        </div>
-        <!-- Perfil y estado turno -->
-        <div class="px-5 py-4 border-b border-white border-opacity-10">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
-                    {{ user.nombre_completo|first|upper }}
-                </div>
-                <div class="min-w-0">
-                    <p class="text-white text-sm font-semibold truncate">{{ user.nombre_completo }}</p>
-                    <p class="text-primary-300 text-xs label-tech truncate">{{ especialista.especialidad.nombre_especialidad|default:"Especialista" }}</p>
-                </div>
-            </div>
-            <!-- Estado turno (HU13) -->
-            <div id="estado-turno-badge"
-                 class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold
-                        {% if turno_activo %}bg-emerald-500 bg-opacity-20 text-emerald-300 border border-emerald-500 border-opacity-30
-                        {% else %}bg-red-500 bg-opacity-20 text-red-300 border border-red-500 border-opacity-30{% endif %}">
-                <span class="w-2 h-2 rounded-full {% if turno_activo %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
-                <span>{% if turno_activo %}Turno Activo (Presente){% else %}Sin Iniciar (Ausente){% endif %}</span>
-            </div>
-        </div>
-        <nav class="flex-1 px-4 py-4 space-y-1">
-            <button onclick="showTab('tab-agenda')" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-white bg-opacity-15 text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                Mi Agenda del Día
-            </button>
-            <button onclick="openAusenciaModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                Solicitar Ausencia (HU04)
-            </button>
-        </nav>
-        <div class="px-4 py-4 border-t border-white border-opacity-10">
-            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                Cerrar Sesión
-            </a>
-        </div>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="flex-1 overflow-y-auto bg-surface">
-        <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-            <div>
-                <h1 class="text-lg font-bold text-ink">Mi Agenda de Consultas</h1>
-                <p class="text-xs text-muted">{% now "l, j \d\e N \d\e Y" %}</p>
-            </div>
-            <!-- Botón CHECK-IN (HU13) -->
-            <form method="POST" action="{% url 'especialista_checkin' %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md transition-all
-                               {% if turno_activo %}bg-emerald-600 hover:bg-emerald-700 text-white{% else %}bg-primary hover:bg-primary-600 text-white{% endif %}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    <!-- TOPBAR / NAVBAR (Diseño Paciente) -->
+    <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
-                    <span>{% if turno_activo %}Turno Activo (Check-out){% else %}Iniciar Turno (Check-in){% endif %}</span>
-                </button>
-            </form>
-        </header>
+                </div>
+                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <span class="text-xs label-tech text-muted">/ {{ especialista.especialidad.nombre_especialidad|default:"Especialista" }}</span>
+            </div>
 
-        <div class="p-6 animate-fade-in-up">
+            <!-- Botón Check-in de Turno (HU13) -->
+            <div class="flex items-center gap-3">
+                <form method="POST" action="{% url 'especialista_checkin' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="flex items-center gap-2 font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all
+                                   {% if turno_activo %}bg-emerald-600 hover:bg-emerald-700 text-white{% else %}bg-primary hover:bg-primary-600 text-white{% endif %}">
+                        <span class="w-2 h-2 rounded-full {% if turno_activo %}bg-emerald-200 animate-pulse{% else %}bg-white{% endif %}"></span>
+                        <span>{% if turno_activo %}Turno Activo (Check-out){% else %}Iniciar Turno (Check-in){% endif %}</span>
+                    </button>
+                </form>
+
+                <div class="hidden sm:flex items-center gap-2 border-l border-gray-200 pl-3">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                        {{ user.nombre_completo|first|upper }}
+                    </div>
+                    <span class="text-sm font-medium text-ink">{{ user.nombre_completo|truncatechars:18 }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="text-xs text-muted hover:text-red-500 font-medium">Salir</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 py-8">
 
             <!-- MENSAJES -->
             {% if messages %}
@@ -95,11 +62,11 @@
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
                     <p class="text-3xl font-bold text-primary">{{ citas_programadas }}</p>
-                    <p class="text-xs text-muted label-tech mt-1">Programadas</p>
+                    <p class="text-xs text-muted label-tech mt-1">Programadas Hoy</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
                     <p class="text-3xl font-bold text-emerald-600">{{ citas_atendidas }}</p>
-                    <p class="text-xs text-muted label-tech mt-1">Atendidas</p>
+                    <p class="text-xs text-muted label-tech mt-1">Atendidas Hoy</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 text-center">
                     <p class="text-3xl font-bold text-amber-600">{{ citas_pendientes }}</p>
@@ -107,14 +74,33 @@
                 </div>
             </div>
 
-            <!-- Línea de tiempo de citas -->
+            <!-- CALENDARIO INTERACTIVO FULLCALENDAR -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Mi Agenda Médica Interactiva (FullCalendar)</h3>
+                        <p class="text-xs text-muted">Visualización completa de consultas asignadas por día, semana o mes con filtrado interactivo</p>
+                    </div>
+                </div>
+                <div id="fullcalendar-especialista" class="min-h-[450px]"></div>
+            </div>
+
+            <!-- RESUMEN EN LISTA -->
             <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden mb-8">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-sm font-semibold text-ink">Pacientes del Día</h3>
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-surface">
+                    <div class="flex items-center gap-2">
+                        <button onclick="switchAgendaView('diaria')" id="btn-view-diaria" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-primary text-white shadow-sm transition-all">
+                            📅 Agenda de Hoy
+                        </button>
+                        <button onclick="switchAgendaView('semanal')" id="btn-view-semanal" class="px-4 py-1.5 rounded-xl text-xs font-bold text-muted hover:bg-card transition-all">
+                            🗓️ Vista Semanal
+                        </button>
+                    </div>
                     <span class="label-tech text-xs text-muted">Especialidad: {{ especialista.especialidad.nombre_especialidad }}</span>
                 </div>
 
-                <div class="divide-y divide-gray-50" id="agenda-list">
+                <!-- VISTA DIARIA -->
+                <div id="view-agenda-diaria" class="divide-y divide-gray-50">
                     {% for c in citas_hoy %}
                     <div class="flex flex-col md:flex-row md:items-center justify-between p-5 gap-4 hover:bg-surface transition-colors">
                         <div class="flex items-start gap-4">
@@ -165,7 +151,7 @@
                             {% if c.estado_cita == 'Atendida' %}
                             <button onclick="openNotasModal({{ c.id }}, '{{ c.paciente.usuario.nombre_completo }}', `{{ c.notas_clinicas|default:''|escapejs }}`)"
                                     class="bg-primary hover:bg-primary-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
-                                {% if c.notas_clinicas %}Editar Notas{% else %}Agregar Notas (HU05){% endif %}
+                                {% if c.notas_clinicas %}Editar Notas{% else %}Agregar Notas{% endif %}
                             </button>
                             {% endif %}
                         </div>
@@ -177,33 +163,85 @@
                     </div>
                     {% endfor %}
                 </div>
-            </div>
 
-            <!-- Mis Permisos y Solicitudes -->
-            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-ink">Mis Solicitudes de Ausencia y Bloqueo de Agenda (HU04)</h3>
-                    <button onclick="openAusenciaModal()" class="bg-primary text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm hover:bg-primary-600">
-                        + Nueva Solicitud
-                    </button>
-                </div>
-                <div class="divide-y divide-gray-50">
-                    {% for p in mis_permisos %}
-                    <div class="py-3 flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-semibold text-ink">{{ p.motivo_solicitud }}</p>
-                            <p class="text-xs text-muted">Desde: {{ p.fecha_hora_inicio|date:"d/m/Y h:i A" }} — Hasta: {{ p.fecha_hora_fin|date:"d/m/Y h:i A" }}</p>
+                <!-- VISTA SEMANAL -->
+                <div id="view-agenda-semanal" class="hidden divide-y divide-gray-50">
+                    {% for c in citas_semana %}
+                    <div class="p-5 flex items-center justify-between hover:bg-surface transition-colors text-sm">
+                        <div class="flex items-center gap-4">
+                            <span class="bg-primary-50 text-primary-700 font-bold px-3 py-1.5 rounded-xl text-xs">
+                                {{ c.fecha_hora_inicio|date:"D d/m — h:i A" }}
+                            </span>
+                            <div>
+                                <p class="font-bold text-ink">{{ c.paciente.usuario.nombre_completo }}</p>
+                                <p class="text-xs text-muted">Consultorio {{ c.consultorio.nombre_codigo }}</p>
+                            </div>
                         </div>
                         <span class="px-3 py-1 rounded-full text-xs font-bold
-                                     {% if p.estado_aprobacion == 'Aprobado' %}bg-emerald-50 text-emerald-700 border border-emerald-200
-                                     {% elif p.estado_aprobacion == 'Rechazado' %}bg-red-50 text-red-700 border border-red-200
-                                     {% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
-                            {{ p.estado_aprobacion }}
+                                     {% if c.estado_cita == 'Programada' %}bg-blue-50 text-blue-600 border border-blue-200
+                                     {% elif c.estado_cita == 'Atendida' %}bg-emerald-50 text-emerald-600 border border-emerald-200
+                                     {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ c.get_estado_cita_display }}
                         </span>
                     </div>
                     {% empty %}
-                    <p class="text-xs text-muted py-4 text-center">No has registrado solicitudes de permisos o ausencias.</p>
+                    <div class="px-6 py-12 text-center text-muted text-sm">
+                        <p class="font-medium text-ink">Sin citas registradas durante esta semana</p>
+                    </div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <!-- Mis Permisos y Historial Atendido -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Mis Permisos -->
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-ink">Mis Ausencias y Permisos</h3>
+                        <button onclick="openAusenciaModal()" class="bg-primary text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm hover:bg-primary-600">
+                            + Solicitar Bloqueo
+                        </button>
+                    </div>
+                    <div class="divide-y divide-gray-50 max-h-60 overflow-y-auto pr-1">
+                        {% for p in mis_permisos %}
+                        <div class="py-3 flex items-center justify-between text-xs">
+                            <div>
+                                <p class="font-semibold text-ink">{{ p.motivo_solicitud }}</p>
+                                <p class="text-muted">{{ p.fecha_hora_inicio|date:"d/m/Y h:i A" }} — {{ p.fecha_hora_fin|date:"d/m/Y h:i A" }}</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full font-bold
+                                         {% if p.estado_aprobacion == 'Aprobado' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                         {% elif p.estado_aprobacion == 'Rechazado' %}bg-red-50 text-red-700 border border-red-200
+                                         {% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                                {{ p.estado_aprobacion }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-muted py-4 text-center">Sin solicitudes registradas.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Historial de Pacientes Atendidos -->
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+                    <h3 class="text-sm font-bold text-ink mb-4">Historial de Mis Pacientes Atendidos</h3>
+                    <div class="divide-y divide-gray-50 max-h-60 overflow-y-auto pr-1">
+                        {% for h in historial_atendidas %}
+                        <div class="py-3 text-xs">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="font-bold text-ink">{{ h.paciente.usuario.nombre_completo }}</p>
+                                <span class="text-muted">{{ h.fecha_hora_inicio|date:"d/m/Y" }}</span>
+                            </div>
+                            {% if h.notas_clinicas %}
+                            <p class="text-muted italic bg-surface p-2 rounded-lg border border-gray-100 truncate">"{{ h.notas_clinicas }}"</p>
+                            {% else %}
+                            <p class="text-muted italic">Sin notas clínicas asociadas.</p>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-muted py-4 text-center">No has atendido pacientes aún.</p>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -211,7 +249,7 @@
     </main>
 </div>
 
-<!-- MODAL NOTAS CLÍNICAS (HU05 / RN06) -->
+<!-- MODAL NOTAS CLÍNICAS -->
 <div id="modal-notas" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-7 animate-fade-in-up">
         <h3 class="text-lg font-bold text-ink mb-1">Notas Clínicas y Recomendaciones</h3>
@@ -232,11 +270,11 @@
     </div>
 </div>
 
-<!-- MODAL SOLICITAR AUSENCIA (HU04) -->
+<!-- MODAL SOLICITAR AUSENCIA -->
 <div id="modal-ausencia" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
         <h3 class="text-lg font-bold text-ink mb-1">Solicitar Ausencia / Bloqueo Temporal</h3>
-        <p class="text-xs text-muted mb-4">La solicitud ingresará con estado 'Pendiente' para aprobación administrativa (**HU04**).</p>
+        <p class="text-xs text-muted mb-4">La solicitud ingresará con estado 'Pendiente' para aprobación administrativa.</p>
         <form method="POST" action="{% url 'especialista_solicitar_ausencia' %}" class="space-y-4">
             {% csrf_token %}
             <div>
@@ -258,10 +296,67 @@
         </form>
     </div>
 </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('fullcalendar-especialista');
+        if (calendarEl) {
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'es',
+                firstDay: 1,
+                slotMinTime: '07:00:00',
+                slotMaxTime: '21:00:00',
+                allDaySlot: false,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana',
+                    day: 'Día',
+                    list: 'Lista'
+                },
+                events: {{ fullcalendar_events_json|safe }},
+                eventClick: function(info) {
+                    const p = info.event.extendedProps;
+                    if (p.estado_code === 'Atendida') {
+                        openNotasModal(info.event.id, p.paciente, p.notas);
+                    } else {
+                        alert(`Consulta Médica\nPaciente: ${p.paciente}\nEstado: ${p.estado}\nConsultorio: ${p.consultorio}`);
+                    }
+                }
+            });
+            calendar.render();
+        }
+    });
+
+    function switchAgendaView(mode) {
+        const diariaDiv = document.getElementById('view-agenda-diaria');
+        const semanalDiv = document.getElementById('view-agenda-semanal');
+        const btnDiaria = document.getElementById('btn-view-diaria');
+        const btnSemanal = document.getElementById('btn-view-semanal');
+
+        if (mode === 'semanal') {
+            diariaDiv.classList.add('hidden');
+            semanalDiv.classList.remove('hidden');
+            btnSemanal.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-primary text-white shadow-sm transition-all';
+            btnDiaria.className = 'px-4 py-1.5 rounded-xl text-xs font-bold text-muted hover:bg-card transition-all';
+        } else {
+            semanalDiv.classList.add('hidden');
+            diariaDiv.classList.remove('hidden');
+            btnDiaria.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-primary text-white shadow-sm transition-all';
+            btnSemanal.className = 'px-4 py-1.5 rounded-xl text-xs font-bold text-muted hover:bg-card transition-all';
+        }
+    }
+
     function openNotasModal(citaId, pacienteNombre, notasExistentes) {
         document.getElementById('form-notas').action = `/especialista/cita/${citaId}/notas/`;
         document.getElementById('paciente-nombre-modal').textContent = `Paciente: ${pacienteNombre}`;
