@@ -5,10 +5,10 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Q
 
-from ..models.usuarios import CustomUser, RolUsuario
-from ..models.pacientes import Paciente
-from ..models.especialistas import Especialidad, Consultorio, Especialista, EstadoTurno
-from ..models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion, ListaEspera
+from agendamiento.models.usuarios import CustomUser, RolUsuario
+from agendamiento.models.pacientes import Paciente
+from agendamiento.models.especialistas import Especialidad, Consultorio, Especialista, EstadoTurno
+from agendamiento.models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion, ListaEspera
 
 
 STATUS_COLORS = {
@@ -73,7 +73,7 @@ def admin_dashboard_view(request):
         return redirect('login')
 
     hoy = timezone.now().date()
-    from ..services.festivos_service import FESTIVOS_FIJOS, FESTIVOS_EMILIANI
+    from agendamiento.services.festivos_service import FESTIVOS_FIJOS, FESTIVOS_EMILIANI
 
     # KPIs
     kpi_citas = Cita.objects.filter(fecha_hora_inicio__date=hoy).count()

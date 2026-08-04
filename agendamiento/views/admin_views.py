@@ -4,9 +4,9 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.core.exceptions import ValidationError
 
-from ..models.usuarios import CustomUser, RolUsuario
-from ..models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion
-from ..models.especialistas import Especialidad, Consultorio, Especialista, HorarioLaboral
+from agendamiento.models.usuarios import CustomUser, RolUsuario
+from agendamiento.models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion
+from agendamiento.models.especialistas import Especialidad, Consultorio, Especialista, HorarioLaboral
 
 
 @login_required(login_url='login')

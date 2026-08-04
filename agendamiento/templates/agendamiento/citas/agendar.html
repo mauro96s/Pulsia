@@ -1,25 +1,18 @@
 {% extends "agendamiento/base.html" %}
 {% load static %}
 
-
 {% block title %}Agendar Cita Médica · Pulsia{% endblock %}
 
 {% block extra_head %}
 <style type="text/tailwindcss">
-    .day-pill {
-        @apply flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all min-w-[100px] select-none bg-white hover:border-primary hover:bg-primary-50 hover:shadow-md flex-1 text-center shadow-sm;
-    }
-    .day-pill.active {
-        @apply border-primary bg-primary text-white font-bold shadow-lg ring-4 ring-primary ring-opacity-30 scale-105;
-    }
     .time-slot {
-        @apply px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer select-none text-center;
+        @apply px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer select-none text-center shadow-sm;
     }
     .time-slot.selected {
-        @apply bg-primary text-white border-primary shadow-md;
+        @apply bg-primary text-white border-primary shadow-md ring-2 ring-primary ring-opacity-50;
     }
     .time-slot.disabled {
-        @apply bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed hover:bg-gray-100 hover:text-gray-400 hover:border-gray-200 opacity-60;
+        @apply bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60;
     }
     .doctor-chip {
         @apply flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:border-primary hover:bg-primary-50 transition-all cursor-pointer shadow-sm;
@@ -35,12 +28,15 @@
 
     <!-- HEADER / TOPBAR -->
     <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <a href="{% url 'dashboard_paciente' %}" class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold hover:bg-primary-600 transition-colors">
                     ←
                 </a>
-                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto"><span class="text-ink text-lg font-bold">Pulsia</span></div>
+                <div class="flex items-center gap-2">
+                    <img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto">
+                    <span class="text-ink text-lg font-bold">Pulsia</span>
+                </div>
                 <span class="text-xs label-tech text-muted">/ Agendamiento Web</span>
             </div>
 
@@ -53,7 +49,7 @@
         </div>
     </header>
 
-    <div class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-6 py-8 space-y-7">
 
         <!-- MENSAJES DE ALERTAS -->
         {% if messages %}
@@ -70,16 +66,16 @@
         </div>
         {% endif %}
 
-        <!-- SECCIÓN PARA PACIENTE FRECUENTE: MIS MÉDICOS PREFERIDOS -->
+        <!-- SECCIÓN: TUS MÉDICOS DE PREFERENCIA (ACCESO RÁPIDO) -->
         {% if es_paciente_frecuente %}
         <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                    <span> Tus Médicos de Preferencia (Consultados Anteriormente)</span>
+                    <span>Tus Médicos de Preferencia (Consultados Anteriormente)</span>
                 </h2>
                 <span class="text-xs text-muted">Selección rápida en 1 clic</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {% for f in especialistas_frecuentes %}
                 <div class="doctor-chip" onclick="seleccionarMedicoFrecuente('{{ f.id }}', '{{ f.especialidad.id }}', '{{ f.usuario.nombre_completo }}')" id="chip-doc-{{ f.id }}">
                     <div class="w-10 h-10 rounded-full bg-primary-100 text-primary font-bold flex items-center justify-center text-sm flex-shrink-0">
@@ -95,108 +91,146 @@
         </div>
         {% endif %}
 
-        <!-- BARRA DE FILTROS PASO A PASO (PASO 1 & PASO 2) -->
-        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100 space-y-4">
-            <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
-                <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">1</span>
-                <h2 class="text-sm font-bold text-ink uppercase tracking-wider">Flujo de Agendamiento: Especialidad y Médico</h2>
-            </div>
+        <!-- CONTENEDOR PRINCIPAL: SPLIT 50% CALENDARIO / 50% COMBOBOXES -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 1: ESPECIALIDAD *</span>
-                    <select id="select-especialidad" onchange="filtrarPorEspecialidad()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Seleccionar Especialidad --</option>
-                        {% for esp in especialidades %}
-                        <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
-                        {% endfor %}
-                    </select>
+            <!-- LADO IZQUIERDO: CALENDARIO MENSUAL COMPLETO -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">1</span>
+                        <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Seleccionar Fecha en el Calendario</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="cambiarMes(-1)" class="w-8 h-8 rounded-xl bg-surface hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-sm font-bold text-primary transition-colors">
+                            ‹
+                        </button>
+                        <span id="calendar-month-year" class="text-sm font-bold text-ink min-w-[110px] text-center">-- ----</span>
+                        <button onclick="cambiarMes(1)" class="w-8 h-8 rounded-xl bg-surface hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-sm font-bold text-primary transition-colors">
+                            ›
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 2: MÉDICO (OPCIONAL)</span>
-                    <select id="select-especialista" onchange="filtrarPorEspecialista()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Cualquier Médico Disponible --</option>
-                        {% for e in especialistas %}
-                        <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">{{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
-                        {% endfor %}
-                    </select>
+                <!-- Cabecera Días de la Semana -->
+                <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Lun</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Mar</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Mié</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Jue</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Vie</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Sáb</span>
+                    <span class="text-[11px] font-bold text-gray-400 uppercase py-1">Dom</span>
+                </div>
+
+                <!-- Grilla de Días del Mes -->
+                <div class="grid grid-cols-7 gap-1.5" id="calendar-days-grid"></div>
+
+                <!-- Leyenda de colores del calendario -->
+                <div class="flex items-center justify-center gap-4 mt-5 text-[11px] text-muted border-t border-gray-100 pt-3">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-primary"></span> Seleccionado</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-primary-100 border border-primary"></span> Hoy</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-100 border border-gray-200"></span> Pasado</span>
                 </div>
             </div>
+
+            <!-- LADO DERECHO: SELECCIÓN DE ESPECIALIDAD Y ESPECIALISTA -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 flex flex-col justify-between space-y-5">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
+                        <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">2</span>
+                        <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Especialidad y Médico</h3>
+                    </div>
+
+                    <!-- PASO 1: ESPECIALIDAD -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">Paso 1: Especialidad Médica *</label>
+                        <select id="select-especialidad" onchange="filtrarPorEspecialidad()" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                            <option value="">-- Seleccionar Especialidad --</option>
+                            {% for esp in especialidades %}
+                            <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- PASO 2: ESPECIALISTA -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">Paso 2: Médico Especialista (Opcional)</label>
+                        <select id="select-especialista" onchange="filtrarPorEspecialista()" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                            <option value="">-- Cualquier Médico Disponible --</option>
+                            {% for e in especialistas %}
+                            <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">{{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- FICHA RESUMEN DE LA SELECCIÓN -->
+                <div class="bg-primary-50 border border-primary-100 rounded-2xl p-4 space-y-2 mt-auto">
+                    <p class="text-[11px] font-bold text-primary uppercase tracking-wider">Resumen de Reserva:</p>
+                    <div class="text-xs text-ink space-y-1">
+                        <p><strong>Fecha Elegida:</strong> <span id="summary-date" class="font-bold text-primary-700">--</span></p>
+                        <p><strong>Médico:</strong> <span id="summary-doctor" class="font-bold">Por seleccionar</span></p>
+                        <p><strong>Consultorio:</strong> <span id="summary-consultorio" class="font-bold text-teal-700">Por asignar</span></p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- PASO 3: TARJETAS DESTACADAS DE DÍAS Y HORARIOS DISPONIBLES (LUNES A SÁBADO) -->
-        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+        <!-- SECCIÓN INFERIOR: HORARIOS DISPONIBLES -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">2</span>
-                    <h3 class="text-sm font-bold text-ink uppercase tracking-wider">PASO 3: SELECCIONAR DÍA Y HORA DISPONIBLE</h3>
+                    <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Seleccionar Hora de Atención</h3>
                 </div>
-
-                <!-- Botones de Navegación por Semanas -->
-                <div class="flex items-center gap-2">
-                    <button onclick="cambiarSemana(-1)" id="btn-prev-week" class="flex items-center gap-1 text-xs font-bold text-primary bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                        ‹ Semana Anterior
-                    </button>
-                    <span id="range-semana-label" class="text-xs font-extrabold text-ink px-2">SEMANA ACTUAL</span>
-                    <button onclick="cambiarSemana(1)" id="btn-next-week" class="flex items-center gap-1 text-xs font-bold text-primary bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-1.5 rounded-xl transition-all">
-                        Semana Siguiente ›
-                    </button>
-                </div>
+                <span id="selected-day-label" class="text-xs font-extrabold text-primary bg-primary-50 px-3 py-1 rounded-xl border border-primary-100">
+                    Selecciona una fecha y especialidad
+                </span>
             </div>
 
-            <!-- TARJETAS DESTACADAS DE 6 DÍAS (LUNES A SÁBADO) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="days-container"></div>
-
-            <!-- FRANJAS HORARIAS DINÁMICAS SEAGÚN DÍA Y ESPECIALISTA -->
-            <div class="pt-4 border-t border-gray-100">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                    <h4 class="text-xs font-bold text-ink uppercase tracking-wider">HORARIOS DISPONIBLES DE ATENCIÓN</h4>
-                    <span class="text-xs text-primary font-bold bg-primary-50 px-3 py-1 rounded-full border border-primary-200" id="selected-day-label">LUN. 03 AGO. 2026</span>
-                </div>
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3" id="time-slots-grid"></div>
-            </div>
+            <!-- Grilla de Horarios Dinámicos -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="time-slots-grid"></div>
         </div>
 
     </div>
 </div>
 
-<!-- MODAL DE CONFIRMACIÓN DE CITA SELECCIONADA (PASO 4) -->
+<!-- MODAL CONFIRMAR CITA -->
 <div id="modal-confirmar-cita" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up border-t-4 border-primary">
-        <div class="flex items-center gap-2 mb-1">
-            <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">3</span>
-            <h3 class="text-lg font-extrabold text-ink">PASO 4: Confirmar Reserva de Cita</h3>
-        </div>
-        <p class="text-xs text-muted mb-4">Verifica los detalles de la consulta elegida antes de procesar tu reserva.</p>
-        
-        <form method="POST" action="{% url 'paciente_agendar' %}" class="space-y-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-ink mb-1">Confirmar Cita Médica</h3>
+        <p class="text-xs text-muted mb-4">Revisa los datos de tu reserva antes de finalizar.</p>
+
+        <form id="form-confirmar-cita" method="POST" action="{% url 'paciente_agendar' %}" class="space-y-4">
             {% csrf_token %}
             <input type="hidden" name="especialidad_id" id="form-especialidad-id"/>
             <input type="hidden" name="especialista_id" id="form-especialista-id"/>
             <input type="hidden" name="fecha" id="form-fecha"/>
             <input type="hidden" name="hora" id="form-hora"/>
 
-            <div class="bg-surface rounded-xl p-4 border border-gray-200 space-y-2 text-xs">
-                <div class="flex justify-between border-b border-gray-100 pb-1.5">
-                    <span class="text-muted font-semibold">Médico:</span>
-                    <span class="font-bold text-ink" id="confirm-medico-name">-</span>
+            <div class="bg-surface p-4 rounded-xl space-y-2 border border-gray-100 text-sm">
+                <div class="flex justify-between border-b border-gray-200 pb-2">
+                    <span class="text-muted text-xs">Especialista:</span>
+                    <span id="confirm-medico-name" class="font-bold text-ink text-right text-xs"></span>
                 </div>
-                <div class="flex justify-between border-b border-gray-100 pb-1.5">
-                    <span class="text-muted font-semibold">Fecha:</span>
-                    <span class="font-bold text-primary" id="confirm-fecha-val">-</span>
+                <div class="flex justify-between border-b border-gray-200 pb-2">
+                    <span class="text-muted text-xs">Fecha:</span>
+                    <span id="confirm-fecha-val" class="font-bold text-ink text-xs"></span>
                 </div>
-                <div class="flex justify-between border-b border-gray-100 pb-1.5">
-                    <span class="text-muted font-semibold">Hora de Inicio:</span>
-                    <span class="font-bold text-primary" id="confirm-hora-val">-</span>
+                <div class="flex justify-between border-b border-gray-200 pb-2">
+                    <span class="text-muted text-xs">Hora:</span>
+                    <span id="confirm-hora-val" class="font-bold text-primary text-xs"></span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-muted font-semibold">Consultorio:</span>
-                    <span class="font-bold text-ink" id="confirm-consultorio-val">Asignado Automáticamente</span>
+                    <span class="text-muted text-xs">Consultorio:</span>
+                    <span id="confirm-consultorio-val" class="font-bold text-teal-700 text-xs"></span>
                 </div>
             </div>
 
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 flex items-start gap-3">
+            <!-- CHECKBOX HABEAS DATA -->
+            <div class="flex items-start gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
                 <input type="checkbox" name="acepta_habeas_data" id="habeas-confirm" required class="mt-1 rounded text-primary focus:ring-primary"/>
                 <label for="habeas-confirm" class="text-xs text-muted">
                     Acepto el tratamiento de mis datos personales en salud de acuerdo con la política de privacidad (*Habeas Data*).
@@ -216,17 +250,19 @@
 <script>
     const hoy = new Date();
     let selectedDate = new Date();
-    let currentWeekOffset = 0;
+    let currentMonth = hoy.getMonth();
+    let currentYear = hoy.getFullYear();
     let selectedTime = null;
     let selectedEspecialistaId = null;
 
     const DIAS_SEMANA = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-    const MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+    const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
     const MAPA_HORARIOS_ESPECIALISTAS = {{ horarios_especialistas_json|safe }};
 
     document.addEventListener("DOMContentLoaded", function() {
-        renderDaysStrip();
+        renderMonthCalendar();
+        updateSelectedDayLabel();
         renderTimeSlots();
     });
 
@@ -243,77 +279,116 @@
         specSelect.value = medicoId;
         selectedEspecialistaId = medicoId;
 
+        actualizarFichaResumen();
         renderTimeSlots();
     }
 
-    function cambiarSemana(delta) {
-        if (currentWeekOffset + delta < 0) return;
-        currentWeekOffset += delta;
-        renderDaysStrip();
+    function cambiarMes(delta) {
+        currentMonth += delta;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear -= 1;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear += 1;
+        }
+        renderMonthCalendar();
     }
 
-    function renderDaysStrip() {
-        const container = document.getElementById("days-container");
-        container.innerHTML = "";
+    function renderMonthCalendar() {
+        const grid = document.getElementById("calendar-days-grid");
+        const title = document.getElementById("calendar-month-year");
+        if (!grid || !title) return;
 
-        const baseDate = new Date(hoy);
-        const dayOfWeek = baseDate.getDay();
-        const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
-        
-        const mondayOfOffset = new Date(baseDate);
-        mondayOfOffset.setDate(baseDate.getDate() + diffToMonday + (currentWeekOffset * 7));
+        grid.innerHTML = "";
+        title.textContent = `${MESES[currentMonth]} ${currentYear}`;
 
-        document.getElementById("btn-prev-week").disabled = (currentWeekOffset <= 0);
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        let dayOfWeekIndex = firstDayOfMonth.getDay(); 
+        if (dayOfWeekIndex === 0) dayOfWeekIndex = 7; // Convert LUN=1 ... DOM=7
 
-        let primerDiaSemana = null;
-        let ultimoDiaSemana = null;
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
 
-        for (let i = 0; i < 6; i++) {
-            const d = new Date(mondayOfOffset);
-            d.setDate(mondayOfOffset.getDate() + i);
+        // Celdas vacías antes del primer día del mes
+        for (let i = 1; i < dayOfWeekIndex; i++) {
+            const empty = document.createElement("div");
+            empty.className = "min-h-[44px]";
+            grid.appendChild(empty);
+        }
 
-            if (i === 0) primerDiaSemana = d;
-            if (i === 5) ultimoDiaSemana = d;
+        // Celdas de los días del mes
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cellDate = new Date(currentYear, currentMonth, day);
+            const esHoy = (cellDate.toDateString() === hoySinHora.toDateString());
+            const esSeleccionado = (cellDate.toDateString() === selectedDate.toDateString());
+            const esPasado = (cellDate < hoySinHora);
 
-            const dayName = DIAS_SEMANA[d.getDay()];
-            const dayNum = String(d.getDate()).padStart(2, '0');
-            const monthName = MESES[d.getMonth()];
-            const yearNum = d.getFullYear();
+            const dayBtn = document.createElement("button");
+            dayBtn.type = "button";
 
-            const isSelected = (d.toDateString() === selectedDate.toDateString());
-            const esPasado = (d < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+            let classes = "flex items-center justify-center p-2 min-h-[44px] rounded-xl text-sm font-semibold transition-all select-none ";
+            if (esPasado) {
+                classes += "text-gray-300 bg-gray-50 cursor-not-allowed opacity-40";
+            } else if (esSeleccionado) {
+                classes += "bg-primary text-white font-bold shadow-md scale-105 ring-2 ring-primary ring-offset-1";
+            } else if (esHoy) {
+                classes += "bg-primary-50 text-primary border-2 border-primary font-bold hover:bg-primary hover:text-white";
+            } else {
+                classes += "bg-white text-ink border border-gray-100 hover:bg-primary-50 hover:border-primary hover:text-primary";
+            }
 
-            const div = document.createElement("div");
-            div.className = `day-pill ${isSelected ? 'active' : ''} ${esPasado ? 'opacity-40 cursor-not-allowed' : ''}`;
-            
+            dayBtn.className = classes;
+            dayBtn.innerHTML = `<span>${day}</span>`;
+
             if (!esPasado) {
-                div.onclick = function() {
-                    selectedDate = d;
-                    renderDaysStrip();
-                    updateSelectedDayLabel(dayName, dayNum, monthName, yearNum);
+                dayBtn.onclick = function() {
+                    selectedDate = cellDate;
+                    renderMonthCalendar();
+                    updateSelectedDayLabel();
+                    actualizarFichaResumen();
                     renderTimeSlots();
                 };
             }
 
-            div.innerHTML = `
-                <span class="text-sm font-semibold uppercase ${isSelected ? 'text-white' : 'text-ink'}">${dayName}. ${dayNum} ${monthName}. ${yearNum}</span>
-            `;
-            container.appendChild(div);
+            grid.appendChild(dayBtn);
         }
-
-        if (primerDiaSemana && ultimoDiaSemana) {
-            const pDay = String(primerDiaSemana.getDate()).padStart(2, '0');
-            const uDay = String(ultimoDiaSemana.getDate()).padStart(2, '0');
-            const mesStr = MESES[primerDiaSemana.getMonth()];
-            document.getElementById("range-semana-label").textContent = `${pDay} - ${uDay} ${mesStr}. ${primerDiaSemana.getFullYear()}`;
-        }
-
-        updateSelectedDayLabel(DIAS_SEMANA[selectedDate.getDay()], String(selectedDate.getDate()).padStart(2, '0'), MESES[selectedDate.getMonth()], selectedDate.getFullYear());
     }
 
-    function updateSelectedDayLabel(dayName, dayNum, monthName, yearNum) {
+    function updateSelectedDayLabel() {
         const el = document.getElementById("selected-day-label");
-        if (el) el.textContent = `${dayName}. ${dayNum} ${monthName}. ${yearNum}`;
+        const dName = DIAS_SEMANA[selectedDate.getDay()];
+        const dNum = String(selectedDate.getDate()).padStart(2, '0');
+        const mName = MESES[selectedDate.getMonth()];
+        const yNum = selectedDate.getFullYear();
+
+        if (el) el.textContent = `Fecha: ${dName}. ${dNum} de ${mName}, ${yNum}`;
+    }
+
+    function actualizarFichaResumen() {
+        const dName = DIAS_SEMANA[selectedDate.getDay()];
+        const dNum = String(selectedDate.getDate()).padStart(2, '0');
+        const mName = MESES[selectedDate.getMonth()];
+        const yNum = selectedDate.getFullYear();
+
+        document.getElementById("summary-date").textContent = `${dNum} ${mName} ${yNum}`;
+
+        const specSelect = document.getElementById("select-especialista");
+        const espSelect = document.getElementById("select-especialidad");
+
+        if (specSelect.value && specSelect.options[specSelect.selectedIndex]) {
+            document.getElementById("summary-doctor").textContent = specSelect.options[specSelect.selectedIndex].text;
+        } else if (espSelect.value && espSelect.options[espSelect.selectedIndex]) {
+            document.getElementById("summary-doctor").textContent = `Cualquier médico (${espSelect.options[espSelect.selectedIndex].text})`;
+        } else {
+            document.getElementById("summary-doctor").textContent = "Por seleccionar";
+        }
+
+        if (specSelect.value && MAPA_HORARIOS_ESPECIALISTAS[specSelect.value]) {
+            document.getElementById("summary-consultorio").textContent = `Consultorio ${MAPA_HORARIOS_ESPECIALISTAS[specSelect.value].consultorio}`;
+        } else {
+            document.getElementById("summary-consultorio").textContent = "Asignación Automática";
+        }
     }
 
     function generarFranjasHorarias(inicio, fin) {
@@ -343,15 +418,14 @@
         const specSelectVal = document.getElementById("select-especialista").value;
         const espSelectVal = document.getElementById("select-especialidad").value;
 
-        // REGLA: Si aún no se ha seleccionado especialidad ni médico, NO mostrar horarios
         if (!espSelectVal && !specSelectVal) {
             grid.innerHTML = `
                 <div class="col-span-full bg-surface border border-gray-200 rounded-2xl p-8 text-center animate-fade-in-up">
                     <svg class="w-10 h-10 text-primary-400 mx-auto mb-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <p class="text-sm font-bold text-ink mb-1"> Selecciona una Especialidad Médica</p>
-                    <p class="text-xs text-muted">Por favor elige una especialidad en el Paso 1 para visualizar las fechas y franjas de horarios de atención disponibles.</p>
+                    <p class="text-sm font-bold text-ink mb-1">Selecciona una Especialidad Médica</p>
+                    <p class="text-xs text-muted">Elige la especialidad para cargar los horarios de atención disponibles para la fecha marcada.</p>
                 </div>
             `;
             return;
@@ -391,12 +465,13 @@
         const franjasOrdenadas = Array.from(franjasSet).sort();
 
         if (franjasOrdenadas.length === 0) {
-            grid.innerHTML = `<p class="text-xs text-muted col-span-full py-6 text-center font-semibold">No hay médicos atendiendo en la especialidad seleccionada para el día ${DIAS_SEMANA[selectedDate.getDay()]}. Por favor prueba otro día de la semana.</p>`;
+            grid.innerHTML = `<p class="text-xs text-muted col-span-full py-8 text-center font-semibold bg-surface rounded-2xl border border-gray-100">No hay servicio médico para el día ${DIAS_SEMANA[selectedDate.getDay()]} ${selectedDate.getDate()} de ${MESES[selectedDate.getMonth()]}. Por favor selecciona otro día en el calendario.</p>`;
             return;
         }
 
         franjasOrdenadas.forEach(hora => {
             const button = document.createElement("button");
+            button.type = "button";
             button.className = "time-slot";
             button.textContent = hora;
             button.onclick = function() {
@@ -423,11 +498,13 @@
         });
         specSelect.selectedIndex = 0;
         selectedEspecialistaId = null;
+        actualizarFichaResumen();
         renderTimeSlots();
     }
 
     function filtrarPorEspecialista() {
         selectedEspecialistaId = document.getElementById("select-especialista").value;
+        actualizarFichaResumen();
         renderTimeSlots();
     }
 
@@ -437,7 +514,7 @@
         
         const medicoNombre = (specSelect.value && specSelect.options[specSelect.selectedIndex]?.text) 
             ? specSelect.options[specSelect.selectedIndex].text 
-            : " Asignación Automática (Médico Disponible de la Especialidad)";
+            : "Asignación Automática (Médico Disponible de la Especialidad)";
             
         selectedEspecialistaId = specSelect.value;
         const selectedEspecialidadId = espSelect.value;

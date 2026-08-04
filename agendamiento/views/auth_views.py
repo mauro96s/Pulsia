@@ -3,8 +3,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.utils.crypto import get_random_string
 
-from ..models.usuarios import CustomUser, RolUsuario
-from ..models.pacientes import Paciente
+from agendamiento.models.usuarios import CustomUser, RolUsuario
+from agendamiento.models.pacientes import Paciente
 
 
 # ────────────────────────────────────────────────────

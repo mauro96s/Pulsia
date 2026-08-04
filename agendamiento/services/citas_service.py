@@ -5,11 +5,11 @@ import datetime
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-from ..models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion, ListaEspera, EstadoListaEspera
-from ..models.pacientes import Paciente
-from ..models.especialistas import Especialista, EstadoTurno, HorarioLaboral, Consultorio
-from .festivos_service import es_dia_festivo
-from .notificaciones_service import (
+from agendamiento.models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion, ListaEspera, EstadoListaEspera
+from agendamiento.models.pacientes import Paciente
+from agendamiento.models.especialistas import Especialista, EstadoTurno, HorarioLaboral, Consultorio
+from agendamiento.services.festivos_service import es_dia_festivo
+from agendamiento.services.notificaciones_service import (
     notificar_confirmacion_cita,
     notificar_reprogramacion_cita,
     notificar_cancelacion_institucional,
@@ -103,7 +103,7 @@ def reprogramar_cita(cita, nueva_fecha_hora_inicio, es_recepcion=False, duracion
     if not es_recepcion:
         # RN01: Límite de 1 reprogramación web
         if cita.contador_reprogramacion >= 1:
-            raise ValidationError("Ya has alcanzado el límite de 1 reprogramación permitida desde la web.")
+            raise ValidationError("Ya has alcanzado el límite de 1 reprogramación permitida desde la web (RN01).")
 
         # RN02: Faltan menos de 24 horas para la cita actual
         diferencia_horas = (cita.fecha_hora_inicio - ahora).total_seconds() / 3600.0

@@ -29,3 +29,5 @@ __all__ = [
     'notificar_cancelacion_institucional',
     'notificar_lista_espera_liberacion',
 ]
+def load_tests(loader, tests, pattern):
+    return tests

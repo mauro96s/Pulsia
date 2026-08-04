@@ -5,11 +5,11 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import datetime
 
-from ..models.usuarios import RolUsuario
-from ..models.citas import Cita, EstadoCita
-from ..models.pacientes import Paciente
-from ..models.especialistas import Especialista, Consultorio
-from ..services.citas_service import (
+from agendamiento.models.usuarios import RolUsuario
+from agendamiento.models.citas import Cita, EstadoCita
+from agendamiento.models.pacientes import Paciente
+from agendamiento.models.especialistas import Especialista, Consultorio
+from agendamiento.services.citas_service import (
     reprogramar_cita,
     cancelar_cita,
     registrar_inasistencia,

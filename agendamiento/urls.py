@@ -52,6 +52,7 @@ urlpatterns = [
 
     # Acciones Paciente
     path('paciente/agendar/',               paciente_agendar_view,       name='paciente_agendar'),
+    path('paciente/agendar-cita-web/',      paciente_agendar_view,       name='paciente_agendar_cita_web'),
     path('paciente/reprogramar/<int:cita_id>/', paciente_reprogramar_view,   name='paciente_reprogramar'),
     path('paciente/cancelar/<int:cita_id>/',    paciente_cancelar_view,      name='paciente_cancelar'),
     path('paciente/espera/',                paciente_unirse_espera_view, name='paciente_unirse_espera'),

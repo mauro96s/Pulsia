@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 import datetime
 from agendamiento.models.citas import Cita, EstadoCita
+from agendamiento.services.citas_service import registrar_inasistencia
 
 class Command(BaseCommand):
     help = 'Marca automáticamente las citas como No Asistió si pasan más de 15 minutos (RN03)'
@@ -18,14 +19,7 @@ class Command(BaseCommand):
 
         marcadas = 0
         for cita in citas_atrasadas:
-            cita.estado_cita = EstadoCita.NO_ASISTIO
-            cita.save()
-            
-            # Penalización RN04: Sumar 1 al contador
-            paciente = cita.paciente
-            if paciente:
-                paciente.contador_inasistencias += 1
-                paciente.save()
+            registrar_inasistencia(cita)
             marcadas += 1
 
         if marcadas > 0:

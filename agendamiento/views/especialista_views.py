@@ -5,10 +5,10 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import datetime
 
-from ..models.usuarios import RolUsuario
-from ..models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion
-from ..models.especialistas import Especialista, EstadoTurno
-from ..services.citas_service import registrar_notas_clinicas
+from agendamiento.models.usuarios import RolUsuario
+from agendamiento.models.citas import Cita, EstadoCita, AusenciasPermisos, EstadoAprobacion
+from agendamiento.models.especialistas import Especialista, EstadoTurno
+from agendamiento.services.citas_service import registrar_notas_clinicas
 
 
 @login_required(login_url='login')

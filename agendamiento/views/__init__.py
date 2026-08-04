@@ -57,3 +57,5 @@ __all__ = [
     'admin_crear_consultorio_view',
     'admin_crear_empleado_view',
 ]
+def load_tests(loader, tests, pattern):
+    return tests

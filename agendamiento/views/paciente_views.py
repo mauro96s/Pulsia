@@ -5,16 +5,16 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import datetime, time
 
-from ..models.usuarios import RolUsuario
-from ..models.citas import Cita, EstadoCita, ListaEspera
-from ..models.especialistas import Especialidad, Especialista, Consultorio, HorarioLaboral
-from ..services.citas_service import (
+from agendamiento.models.usuarios import RolUsuario
+from agendamiento.models.citas import Cita, EstadoCita, ListaEspera
+from agendamiento.models.especialistas import Especialidad, Especialista, Consultorio, HorarioLaboral
+from agendamiento.services.citas_service import (
     agendar_cita_web,
     reprogramar_cita,
     cancelar_cita,
     unirse_lista_espera
 )
-from .dashboard_views import _generar_eventos_fullcalendar
+from agendamiento.views.dashboard_views import _generar_eventos_fullcalendar
 
 
 @login_required(login_url='login')
