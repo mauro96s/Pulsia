@@ -1,4 +1,6 @@
 {% extends "agendamiento/base.html" %}
+{% load static %}
+
 
 {% block title %}Registro de Paciente — Pulsia{% endblock %}
 {% block meta_description %}Regístrate como paciente en el sistema de agendamiento médico Pulsia.{% endblock %}
@@ -30,7 +32,7 @@
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                 </div>
-                <span class="text-white text-2xl font-bold tracking-tight">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-8 w-auto"><span class="text-white text-2xl font-bold tracking-tight">Pulsia</span></div>
             </div>
             <p class="text-primary-200 text-sm label-tech">Sistema de Agendamiento Médico</p>
         </div>
@@ -94,7 +96,7 @@
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span class="text-ink text-xl font-bold">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-7 w-auto"><span class="text-ink text-xl font-bold">Pulsia</span></div>
             </div>
 
             <div class="mb-7">

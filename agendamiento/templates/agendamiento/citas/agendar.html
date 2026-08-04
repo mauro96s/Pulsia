@@ -1,14 +1,16 @@
 {% extends "agendamiento/base.html" %}
+{% load static %}
+
 
 {% block title %}Agendar Cita Médica · Pulsia{% endblock %}
 
 {% block extra_head %}
-<style>
+<style type="text/tailwindcss">
     .day-pill {
-        @apply flex flex-col items-center justify-center px-4 py-2.5 rounded-xl border border-gray-200 cursor-pointer transition-all min-w-[95px] select-none bg-white hover:border-primary hover:text-primary;
+        @apply flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all min-w-[100px] select-none bg-white hover:border-primary hover:bg-primary-50 hover:shadow-md flex-1 text-center shadow-sm;
     }
     .day-pill.active {
-        @apply border-primary bg-primary-50 text-primary font-bold shadow-sm;
+        @apply border-primary bg-primary text-white font-bold shadow-lg ring-4 ring-primary ring-opacity-30 scale-105;
     }
     .time-slot {
         @apply px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer select-none text-center;
@@ -38,7 +40,7 @@
                 <a href="{% url 'dashboard_paciente' %}" class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold hover:bg-primary-600 transition-colors">
                     ←
                 </a>
-                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto"><span class="text-ink text-lg font-bold">Pulsia</span></div>
                 <span class="text-xs label-tech text-muted">/ Agendamiento Web</span>
             </div>
 
@@ -53,7 +55,7 @@
 
     <div class="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
-        <!-- MENSAJES -->
+        <!-- MENSAJES DE ALERTAS -->
         {% if messages %}
         <div class="space-y-2">
             {% for message in messages %}
@@ -62,51 +64,29 @@
                         {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
                         {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
                 <span>{{ message }}</span>
-                <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100"></button>
             </div>
             {% endfor %}
         </div>
         {% endif %}
-
-        <!-- BANNER DE ENCABEZADO ESTILO CARTELERA -->
-        <div class="relative rounded-2xl overflow-hidden shadow-lg bg-gradient-to-r from-slate-900 via-primary-900 to-slate-900 text-white p-8">
-            <div class="relative z-10 max-w-2xl">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="bg-primary text-white text-xs font-black px-2.5 py-1 rounded-md tracking-wider">CONSULTA EXTERNA</span>
-                    {% if es_paciente_frecuente %}
-                    <span class="bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-1 rounded-md">⭐ PACIENTE FRECUENTE</span>
-                    {% else %}
-                    <span class="bg-white bg-opacity-20 text-white text-xs font-bold px-2.5 py-1 rounded-md">USUARIO NUEVO · PASO A PASO</span>
-                    {% endif %}
-                </div>
-                <h1 class="text-3xl font-extrabold tracking-tight mb-2">Reserva de Cita Médica</h1>
-                <p class="text-slate-300 text-sm">
-                    {% if es_paciente_frecuente %}
-                    Selecciona tu médico preferido o sigue el flujo por especialidad y horarios disponibles.
-                    {% else %}
-                    Sigue los 3 sencillos pasos: filtra la especialidad, selecciona tu médico especialista y escoge tu horario de preferencia.
-                    {% endif %}
-                </p>
-            </div>
-        </div>
 
         <!-- SECCIÓN PARA PACIENTE FRECUENTE: MIS MÉDICOS PREFERIDOS -->
         {% if es_paciente_frecuente %}
         <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                    <span>⭐ Tus Médicos de Preferencia (Consultados Anteriormente)</span>
+                    <span> Tus Médicos de Preferencia (Consultados Anteriormente)</span>
                 </h2>
                 <span class="text-xs text-muted">Selección rápida en 1 clic</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {% for f in especialistas_frecuentes %}
-                <div class="doctor-chip" onclick="seleccionarMedicoFrecuente('{{ f.id }}', '{{ f.especialidad.id }}', 'Dr/Dra. {{ f.usuario.nombre_completo }}')" id="chip-doc-{{ f.id }}">
+                <div class="doctor-chip" onclick="seleccionarMedicoFrecuente('{{ f.id }}', '{{ f.especialidad.id }}', '{{ f.usuario.nombre_completo }}')" id="chip-doc-{{ f.id }}">
                     <div class="w-10 h-10 rounded-full bg-primary-100 text-primary font-bold flex items-center justify-center text-sm flex-shrink-0">
                         {{ f.usuario.nombre_completo|first }}
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-ink truncate">Dr/Dra. {{ f.usuario.nombre_completo }}</p>
+                        <p class="text-sm font-bold text-ink truncate">{{ f.usuario.nombre_completo }}</p>
                         <p class="text-xs text-muted truncate">{{ f.especialidad.nombre_especialidad }}</p>
                     </div>
                 </div>
@@ -124,9 +104,9 @@
 
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 1: ESPECIALIDAD</span>
+                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 1: ESPECIALIDAD *</span>
                     <select id="select-especialidad" onchange="filtrarPorEspecialidad()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Todas las Especialidades --</option>
+                        <option value="">-- Seleccionar Especialidad --</option>
                         {% for esp in especialidades %}
                         <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
                         {% endfor %}
@@ -134,50 +114,47 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 2: MÉDICO ESPECIALISTA</span>
+                    <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">PASO 2: MÉDICO (OPCIONAL)</span>
                     <select id="select-especialista" onchange="filtrarPorEspecialista()" class="w-full sm:w-64 border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Seleccionar Especialista --</option>
+                        <option value="">-- Cualquier Médico Disponible --</option>
                         {% for e in especialistas %}
-                        <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">Dr/Dra. {{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
+                        <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">{{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
                         {% endfor %}
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- TIRA HORIZONTAL DE DÍAS DISPONIBLES (PASO 3) -->
-        <div class="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">2</span>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">PASO 3: SELECCIONAR FECHA DISPONIBLE</p>
-            </div>
-            <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin" id="days-container">
-                <!-- Generado dinámicamente con JavaScript -->
-            </div>
-        </div>
-
-        <!-- TARJETA DE SEDE / CONSULTORIO Y FRANJAS DE HORARIOS -->
-        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-6" id="horarios-card">
-            <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <h2 class="text-xl font-extrabold text-primary-700 tracking-tight uppercase" id="card-consultorio-title">SEDE QUINTA VÉLEZ — CONSULTORIO 101</h2>
-                    <p class="text-xs text-muted font-medium mt-0.5" id="card-consultorio-address">CALLE 10 Y 11 DIAGONAL SANTANDER SECTOR QUINTA VÉLEZ LOCAL 325</p>
+        <!-- PASO 3: TARJETAS DESTACADAS DE DÍAS Y HORARIOS DISPONIBLES (LUNES A SÁBADO) -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <h3 class="text-sm font-bold text-ink uppercase tracking-wider">PASO 3: SELECCIONAR DÍA Y HORA DISPONIBLE</h3>
                 </div>
-                <div class="text-left sm:text-right">
-                    <span class="text-xs font-bold bg-primary-50 text-primary border border-primary-200 px-3 py-1 rounded-full" id="selected-day-label">LUN. 03 AGO. 2026</span>
+
+                <!-- Botones de Navegación por Semanas -->
+                <div class="flex items-center gap-2">
+                    <button onclick="cambiarSemana(-1)" id="btn-prev-week" class="flex items-center gap-1 text-xs font-bold text-primary bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                        ‹ Semana Anterior
+                    </button>
+                    <span id="range-semana-label" class="text-xs font-extrabold text-ink px-2">SEMANA ACTUAL</span>
+                    <button onclick="cambiarSemana(1)" id="btn-next-week" class="flex items-center gap-1 text-xs font-bold text-primary bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-1.5 rounded-xl transition-all">
+                        Semana Siguiente ›
+                    </button>
                 </div>
             </div>
 
-            <div>
+            <!-- TARJETAS DESTACADAS DE 6 DÍAS (LUNES A SÁBADO) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="days-container"></div>
+
+            <!-- FRANJAS HORARIAS DINÁMICAS SEAGÚN DÍA Y ESPECIALISTA -->
+            <div class="pt-4 border-t border-gray-100">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-ink uppercase tracking-wider">HORARIOS DISPONIBLES</h3>
-                    <p class="text-xs text-muted italic">* Los horarios aquí expuestos representan el inicio de cada consulta *</p>
+                    <h4 class="text-xs font-bold text-ink uppercase tracking-wider">HORARIOS DISPONIBLES DE ATENCIÓN</h4>
+                    <span class="text-xs text-primary font-bold bg-primary-50 px-3 py-1 rounded-full border border-primary-200" id="selected-day-label">LUN. 03 AGO. 2026</span>
                 </div>
-
-                <!-- Grid de Franjas Horarias (Pills de Horas) -->
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3" id="time-slots-grid">
-                    <!-- Pills generados por JS -->
-                </div>
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3" id="time-slots-grid"></div>
             </div>
         </div>
 
@@ -195,6 +172,7 @@
         
         <form method="POST" action="{% url 'paciente_agendar' %}" class="space-y-4">
             {% csrf_token %}
+            <input type="hidden" name="especialidad_id" id="form-especialidad-id"/>
             <input type="hidden" name="especialista_id" id="form-especialista-id"/>
             <input type="hidden" name="fecha" id="form-fecha"/>
             <input type="hidden" name="hora" id="form-hora"/>
@@ -214,7 +192,7 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-muted font-semibold">Consultorio:</span>
-                    <span class="font-bold text-ink">101 Sede Quinta Vélez</span>
+                    <span class="font-bold text-ink" id="confirm-consultorio-val">Asignado Automáticamente</span>
                 </div>
             </div>
 
@@ -238,109 +216,195 @@
 <script>
     const hoy = new Date();
     let selectedDate = new Date();
+    let currentWeekOffset = 0;
     let selectedTime = null;
     let selectedEspecialistaId = null;
 
-    const HORARIOS_BASE = [
-        "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-        "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "18:00", "18:30", "20:25", "20:45"
-    ];
-
     const DIAS_SEMANA = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-    const MESES = ["AGO", "SEP", "OCT", "NOV", "DIC", "ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL"];
+    const MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+
+    const MAPA_HORARIOS_ESPECIALISTAS = {{ horarios_especialistas_json|safe }};
 
     document.addEventListener("DOMContentLoaded", function() {
         renderDaysStrip();
         renderTimeSlots();
-        
-        // Seleccionar primer especialista si existe
-        const specSelect = document.getElementById("select-especialista");
-        if (specSelect.options.length > 1) {
-            specSelect.selectedIndex = 1;
-            selectedEspecialistaId = specSelect.value;
-        }
     });
 
     function seleccionarMedicoFrecuente(medicoId, especialidadId, medicoNombre) {
-        // Highlight chip
         document.querySelectorAll(".doctor-chip").forEach(c => c.classList.remove("selected"));
         const chip = document.getElementById(`chip-doc-${medicoId}`);
         if (chip) chip.classList.add("selected");
 
-        // Set especialidad
         const espSelect = document.getElementById("select-especialidad");
         espSelect.value = especialidadId;
         filtrarPorEspecialidad();
 
-        // Set especialista
         const specSelect = document.getElementById("select-especialista");
         specSelect.value = medicoId;
         selectedEspecialistaId = medicoId;
 
-        // Render slots
         renderTimeSlots();
+    }
+
+    function cambiarSemana(delta) {
+        if (currentWeekOffset + delta < 0) return;
+        currentWeekOffset += delta;
+        renderDaysStrip();
     }
 
     function renderDaysStrip() {
         const container = document.getElementById("days-container");
         container.innerHTML = "";
 
-        for (let i = 0; i < 12; i++) {
-            const d = new Date();
-            d.setDate(hoy.getDate() + i);
+        const baseDate = new Date(hoy);
+        const dayOfWeek = baseDate.getDay();
+        const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+        
+        const mondayOfOffset = new Date(baseDate);
+        mondayOfOffset.setDate(baseDate.getDate() + diffToMonday + (currentWeekOffset * 7));
+
+        document.getElementById("btn-prev-week").disabled = (currentWeekOffset <= 0);
+
+        let primerDiaSemana = null;
+        let ultimoDiaSemana = null;
+
+        for (let i = 0; i < 6; i++) {
+            const d = new Date(mondayOfOffset);
+            d.setDate(mondayOfOffset.getDate() + i);
+
+            if (i === 0) primerDiaSemana = d;
+            if (i === 5) ultimoDiaSemana = d;
 
             const dayName = DIAS_SEMANA[d.getDay()];
             const dayNum = String(d.getDate()).padStart(2, '0');
-            const monthName = MESES[d.getMonth() % 12];
+            const monthName = MESES[d.getMonth()];
             const yearNum = d.getFullYear();
 
             const isSelected = (d.toDateString() === selectedDate.toDateString());
+            const esPasado = (d < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
 
             const div = document.createElement("div");
-            div.className = `day-pill ${isSelected ? 'active' : ''}`;
-            div.onclick = function() {
-                selectedDate = d;
-                renderDaysStrip();
-                updateSelectedDayLabel(dayName, dayNum, monthName, yearNum);
-                renderTimeSlots();
-            };
+            div.className = `day-pill ${isSelected ? 'active' : ''} ${esPasado ? 'opacity-40 cursor-not-allowed' : ''}`;
+            
+            if (!esPasado) {
+                div.onclick = function() {
+                    selectedDate = d;
+                    renderDaysStrip();
+                    updateSelectedDayLabel(dayName, dayNum, monthName, yearNum);
+                    renderTimeSlots();
+                };
+            }
 
             div.innerHTML = `
-                <span class="text-xs font-bold uppercase tracking-wider">${dayName}.</span>
-                <span class="text-xs font-extrabold mt-0.5">${dayNum} ${monthName}. ${yearNum}</span>
+                <span class="text-sm font-semibold uppercase ${isSelected ? 'text-white' : 'text-ink'}">${dayName}. ${dayNum} ${monthName}. ${yearNum}</span>
             `;
             container.appendChild(div);
         }
-        updateSelectedDayLabel(DIAS_SEMANA[selectedDate.getDay()], String(selectedDate.getDate()).padStart(2, '0'), MESES[selectedDate.getMonth() % 12], selectedDate.getFullYear());
+
+        if (primerDiaSemana && ultimoDiaSemana) {
+            const pDay = String(primerDiaSemana.getDate()).padStart(2, '0');
+            const uDay = String(ultimoDiaSemana.getDate()).padStart(2, '0');
+            const mesStr = MESES[primerDiaSemana.getMonth()];
+            document.getElementById("range-semana-label").textContent = `${pDay} - ${uDay} ${mesStr}. ${primerDiaSemana.getFullYear()}`;
+        }
+
+        updateSelectedDayLabel(DIAS_SEMANA[selectedDate.getDay()], String(selectedDate.getDate()).padStart(2, '0'), MESES[selectedDate.getMonth()], selectedDate.getFullYear());
     }
 
     function updateSelectedDayLabel(dayName, dayNum, monthName, yearNum) {
-        document.getElementById("selected-day-label").textContent = `${dayName}. ${dayNum} ${monthName}. ${yearNum}`;
+        const el = document.getElementById("selected-day-label");
+        if (el) el.textContent = `${dayName}. ${dayNum} ${monthName}. ${yearNum}`;
+    }
+
+    function generarFranjasHorarias(inicio, fin) {
+        const lista = [];
+        let [h, m] = inicio.split(':').map(Number);
+        const [hFin, mFin] = fin.split(':').map(Number);
+
+        while (h < hFin || (h === hFin && m < mFin)) {
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            lista.push(`${hh}:${mm}`);
+
+            m += 30;
+            if (m >= 60) {
+                h += 1;
+                m = 0;
+            }
+        }
+        return lista;
     }
 
     function renderTimeSlots() {
         const grid = document.getElementById("time-slots-grid");
+        if (!grid) return;
         grid.innerHTML = "";
 
-        HORARIOS_BASE.forEach(hora => {
-            const button = document.createElement("button");
-            // Franja de descanso 12:00 a 14:00 inhabilitada
-            const esDescanso = (hora >= "12:00" && hora < "14:00");
-            
-            if (esDescanso) {
-                button.className = "time-slot disabled";
-                button.disabled = true;
-                button.textContent = hora;
-            } else {
-                button.className = "time-slot";
-                button.textContent = hora;
-                button.onclick = function() {
-                    document.querySelectorAll(".time-slot").forEach(b => b.classList.remove("selected"));
-                    button.classList.add("selected");
-                    selectedTime = hora;
-                    openConfirmModal(hora);
-                };
+        const specSelectVal = document.getElementById("select-especialista").value;
+        const espSelectVal = document.getElementById("select-especialidad").value;
+
+        // REGLA: Si aún no se ha seleccionado especialidad ni médico, NO mostrar horarios
+        if (!espSelectVal && !specSelectVal) {
+            grid.innerHTML = `
+                <div class="col-span-full bg-surface border border-gray-200 rounded-2xl p-8 text-center animate-fade-in-up">
+                    <svg class="w-10 h-10 text-primary-400 mx-auto mb-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-sm font-bold text-ink mb-1"> Selecciona una Especialidad Médica</p>
+                    <p class="text-xs text-muted">Por favor elige una especialidad en el Paso 1 para visualizar las fechas y franjas de horarios de atención disponibles.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let dayOfWeek = selectedDate.getDay();
+        if (dayOfWeek === 0) dayOfWeek = 7; // Domingo
+
+        let franjasSet = new Set();
+
+        if (specSelectVal && MAPA_HORARIOS_ESPECIALISTAS[specSelectVal]) {
+            const medInfo = MAPA_HORARIOS_ESPECIALISTAS[specSelectVal];
+            const hConfig = medInfo.horarios[String(dayOfWeek)];
+            if (hConfig) {
+                const slots = generarFranjasHorarias(hConfig.inicio, hConfig.fin);
+                slots.forEach(s => {
+                    const esDescanso = hConfig.desc_inicio && hConfig.desc_fin && (s >= hConfig.desc_inicio && s < hConfig.desc_fin);
+                    if (!esDescanso) franjasSet.add(s);
+                });
             }
+        } else {
+            Object.keys(MAPA_HORARIOS_ESPECIALISTAS).forEach(sId => {
+                const medInfo = MAPA_HORARIOS_ESPECIALISTAS[sId];
+                if (!espSelectVal || medInfo.especialidad_id === espSelectVal) {
+                    const hConfig = medInfo.horarios[String(dayOfWeek)];
+                    if (hConfig) {
+                        const slots = generarFranjasHorarias(hConfig.inicio, hConfig.fin);
+                        slots.forEach(s => {
+                            const esDescanso = hConfig.desc_inicio && hConfig.desc_fin && (s >= hConfig.desc_inicio && s < hConfig.desc_fin);
+                            if (!esDescanso) franjasSet.add(s);
+                        });
+                    }
+                }
+            });
+        }
+
+        const franjasOrdenadas = Array.from(franjasSet).sort();
+
+        if (franjasOrdenadas.length === 0) {
+            grid.innerHTML = `<p class="text-xs text-muted col-span-full py-6 text-center font-semibold">No hay médicos atendiendo en la especialidad seleccionada para el día ${DIAS_SEMANA[selectedDate.getDay()]}. Por favor prueba otro día de la semana.</p>`;
+            return;
+        }
+
+        franjasOrdenadas.forEach(hora => {
+            const button = document.createElement("button");
+            button.className = "time-slot";
+            button.textContent = hora;
+            button.onclick = function() {
+                document.querySelectorAll(".time-slot").forEach(b => b.classList.remove("selected"));
+                button.classList.add("selected");
+                selectedTime = hora;
+                openConfirmModal(hora);
+            };
             grid.appendChild(button);
         });
     }
@@ -359,27 +423,31 @@
         });
         specSelect.selectedIndex = 0;
         selectedEspecialistaId = null;
+        renderTimeSlots();
     }
 
     function filtrarPorEspecialista() {
         selectedEspecialistaId = document.getElementById("select-especialista").value;
+        renderTimeSlots();
     }
 
     function openConfirmModal(hora) {
         const specSelect = document.getElementById("select-especialista");
-        const medicoNombre = specSelect.options[specSelect.selectedIndex]?.text || "Especialista Seleccionado";
+        const espSelect = document.getElementById("select-especialidad");
+        
+        const medicoNombre = (specSelect.value && specSelect.options[specSelect.selectedIndex]?.text) 
+            ? specSelect.options[specSelect.selectedIndex].text 
+            : " Asignación Automática (Médico Disponible de la Especialidad)";
+            
         selectedEspecialistaId = specSelect.value;
-
-        if (!selectedEspecialistaId) {
-            alert("Por favor selecciona un médico especialista antes de elegir la hora.");
-            return;
-        }
+        const selectedEspecialidadId = espSelect.value;
 
         const yyyy = selectedDate.getFullYear();
         const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
         const dd = String(selectedDate.getDate()).padStart(2, '0');
         const fechaStr = `${yyyy}-${mm}-${dd}`;
 
+        document.getElementById("form-especialidad-id").value = selectedEspecialidadId;
         document.getElementById("form-especialista-id").value = selectedEspecialistaId;
         document.getElementById("form-fecha").value = fechaStr;
         document.getElementById("form-hora").value = hora;
@@ -387,6 +455,13 @@
         document.getElementById("confirm-medico-name").textContent = medicoNombre;
         document.getElementById("confirm-fecha-val").textContent = `${dd}/${mm}/${yyyy}`;
         document.getElementById("confirm-hora-val").textContent = hora;
+        
+        const consultorioElement = document.getElementById("confirm-consultorio-val");
+        if (selectedEspecialistaId && MAPA_HORARIOS_ESPECIALISTAS[selectedEspecialistaId]) {
+            consultorioElement.innerHTML = `<span class="bg-primary text-white font-bold px-2 py-0.5 rounded text-xs shadow-sm">${MAPA_HORARIOS_ESPECIALISTAS[selectedEspecialistaId].consultorio}</span>`;
+        } else {
+            consultorioElement.textContent = "Asignado Automáticamente";
+        }
 
         document.getElementById("modal-confirmar-cita").classList.remove("hidden");
     }

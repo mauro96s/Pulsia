@@ -1,4 +1,6 @@
 {% extends "agendamiento/base.html" %}
+{% load static %}
+
 
 {% block title %}Mi Agenda — Especialista · Pulsia{% endblock %}
 
@@ -14,7 +16,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto"><span class="text-ink text-lg font-bold">Pulsia</span></div>
                 <span class="text-xs label-tech text-muted">/ {{ especialista.especialidad.nombre_especialidad|default:"Especialista" }}</span>
             </div>
 
@@ -52,7 +54,7 @@
                             {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
                             {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
                     <span>{{ message }}</span>
-                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100"></button>
                 </div>
                 {% endfor %}
             </div>
@@ -90,10 +92,10 @@
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-surface">
                     <div class="flex items-center gap-2">
                         <button onclick="switchAgendaView('diaria')" id="btn-view-diaria" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-primary text-white shadow-sm transition-all">
-                            📅 Agenda de Hoy
+                             Agenda de Hoy
                         </button>
                         <button onclick="switchAgendaView('semanal')" id="btn-view-semanal" class="px-4 py-1.5 rounded-xl text-xs font-bold text-muted hover:bg-card transition-all">
-                            🗓️ Vista Semanal
+                            ️ Vista Semanal
                         </button>
                     </div>
                     <span class="label-tech text-xs text-muted">Especialidad: {{ especialista.especialidad.nombre_especialidad }}</span>
@@ -113,7 +115,7 @@
                                 <p class="text-xs text-muted">Consultorio {{ c.consultorio.nombre_codigo }} — Tel: {{ c.paciente.usuario.telefono|default:"N/A" }}</p>
                                 {% if c.notas_clinicas %}
                                 <span class="inline-block mt-1 text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-md border border-emerald-200">
-                                    ✓ Notas Clínicas Registradas
+                                     Notas Clínicas Registradas
                                 </span>
                                 {% endif %}
                             </div>

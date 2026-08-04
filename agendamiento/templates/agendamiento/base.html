@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -48,7 +49,7 @@
         }
     </script>
 
-    <style>
+    <style type="text/tailwindcss">
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f2f4f6; }
         ::-webkit-scrollbar-thumb { background: #c5cdd6; border-radius: 3px; }
@@ -91,9 +92,9 @@
             {% elif message.tags == 'warning' %}bg-amber-50 border border-amber-200 text-amber-700
             {% else %}bg-primary-50 border border-primary-200 text-primary-700{% endif %}">
             <span class="text-base">
-                {% if message.tags == 'error' %}⚠️
-                {% elif message.tags == 'success' %}✅
-                {% elif message.tags == 'warning' %}🔔
+                {% if message.tags == 'error' %}️
+                {% elif message.tags == 'success' %}
+                {% elif message.tags == 'warning' %}
                 {% else %}ℹ️{% endif %}
             </span>
             <span>{{ message }}</span>

@@ -1,4 +1,6 @@
 {% extends "agendamiento/base.html" %}
+{% load static %}
+
 
 {% block title %}Panel — Recepcionista · Pulsia{% endblock %}
 
@@ -14,7 +16,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto"><span class="text-ink text-lg font-bold">Pulsia</span></div>
                 <span class="text-xs label-tech text-muted">/ Recepción</span>
             </div>
 
@@ -24,7 +26,7 @@
                     + Agendar Presencial/Tel
                 </button>
                 <button onclick="openContingenciaModal()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm">
-                    ⚠️ Ausencia Emergencia
+                    ️ Ausencia Emergencia
                 </button>
             </div>
 
@@ -51,7 +53,7 @@
                             {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
                             {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
                     <span>{{ message }}</span>
-                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100"></button>
                 </div>
                 {% endfor %}
             </div>
@@ -73,11 +75,11 @@
                     <div class="bg-white rounded-xl p-4 border border-purple-100 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
                         <div>
                             <p class="text-sm font-bold text-ink">{{ cp.paciente.usuario.nombre_completo }}</p>
-                            <p class="text-xs text-muted">Afectado por contingencia del Dr/Dra. {{ cp.especialista.usuario.nombre_completo }} ({{ cp.especialista.especialidad.nombre_especialidad }})</p>
+                            <p class="text-xs text-muted">Afectado por contingencia del {{ cp.especialista.usuario.nombre_completo }} ({{ cp.especialista.especialidad.nombre_especialidad }})</p>
                             <p class="text-xs text-purple-700 font-semibold mt-1">Horario cancelado: {{ cp.fecha_hora_inicio|date:"d/m/Y h:i A" }}</p>
                         </div>
                         <button onclick="openReprogramarModal({{ cp.id }}, '{{ cp.paciente.usuario.nombre_completo }}')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm self-start md:self-auto">
-                            ⚡ Reasignar Prioritariamente
+                             Reasignar Prioritariamente
                         </button>
                     </div>
                     {% endfor %}
@@ -98,7 +100,7 @@
                                      {% if esp.estado_turno == 'Presente' %}bg-emerald-400{% else %}bg-red-400{% endif %}"></span>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-ink truncate">Dr/Dra. {{ esp.usuario.nombre_completo }}</p>
+                        <p class="text-sm font-semibold text-ink truncate">{{ esp.usuario.nombre_completo }}</p>
                         <p class="text-xs {% if esp.estado_turno == 'Presente' %}text-emerald-600{% else %}text-red-500{% endif %} font-medium">
                             {{ esp.estado_turno }}
                         </p>
@@ -107,6 +109,48 @@
                 {% empty %}
                 <p class="text-xs text-muted col-span-4">No hay especialistas registrados en el sistema.</p>
                 {% endfor %}
+            </div>
+
+            <!-- BARRA DE FILTROS INTERACTIVOS PARA RECEPCIÓN -->
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-5 mb-6">
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-ink uppercase tracking-wider">Filtro de Citas en Tiempo Real</h3>
+                        <p class="text-xs text-muted">Filtra la agenda médica por Especialista o Cédula/Nombre de Paciente</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <!-- Filtro Especialista -->
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Filtrar por Médico:</label>
+                            <select id="filter-especialista" onchange="aplicarFiltrosRecepcion()" class="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 bg-surface font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">-- Todos los Especialistas --</option>
+                                {% for esp in especialistas_hoy %}
+                                <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Filtro Cédula / Paciente -->
+                        <div class="flex-1 min-w-[220px]">
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Buscar Cédula / Nombre:</label>
+                            <div class="relative">
+                                <input type="text" id="filter-paciente" oninput="aplicarFiltrosRecepcion()" placeholder="Ingresa Cédula o Nombre..." 
+                                       class="w-full text-xs border border-gray-200 rounded-xl pl-8 pr-3 py-2 bg-surface font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Botón Limpiar Filtros -->
+                        <div class="self-end">
+                            <button type="button" onclick="limpiarFiltrosRecepcion()" class="text-xs text-muted hover:text-red-600 font-semibold px-3 py-2 border border-gray-200 rounded-xl bg-surface hover:bg-red-50 transition-colors">
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- CALENDARIO GLOBAL INTERACTIVO FULLCALENDAR -->
@@ -155,7 +199,7 @@
                                     <p class="text-xs text-muted">Fallas previas: <span class="{% if c.paciente.contador_inasistencias >= 3 %}text-red-600 font-bold{% else %}text-muted{% endif %}">{{ c.paciente.contador_inasistencias }}</span></p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-ink">Dr/Dra. {{ c.especialista.usuario.nombre_completo }}</p>
+                                    <p class="font-semibold text-ink">{{ c.especialista.usuario.nombre_completo }}</p>
                                     <p class="text-xs text-muted">{{ c.especialista.especialidad.nombre_especialidad }}</p>
                                 </td>
                                 <td class="px-6 py-4 font-medium text-ink">{{ c.consultorio.nombre_codigo }}</td>
@@ -170,19 +214,28 @@
                                         {{ c.get_estado_cita_display }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right space-x-2">
-                                    <!-- Formulario rápido de cambio de estado -->
+                                <td class="px-6 py-4 text-right whitespace-nowrap space-x-1">
+                                    {% if c.estado_cita == 'Programada' or c.estado_cita == 'En_Sala' %}
+                                    <!-- Botón directo: Asistió (Marcar En Sala) -->
                                     <form method="POST" action="{% url 'recepcionista_cambiar_estado' c.id %}" class="inline">
                                         {% csrf_token %}
-                                        <select name="nuevo_estado" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-surface font-semibold text-muted">
-                                            <option value="">Cambiar Estado...</option>
-                                            {% for code, label in estados_cita %}
-                                            <option value="{{ code }}" {% if c.estado_cita == code %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <input type="hidden" name="nuevo_estado" value="En_Sala">
+                                        <button type="submit" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 font-bold px-3 py-1.5 rounded-xl transition-all shadow-sm" title="Confirmar llegada del paciente">
+                                            ✓ Asistió
+                                        </button>
                                     </form>
 
-                                    <button onclick="openReprogramarModal({{ c.id }}, '{{ c.paciente.usuario.nombre_completo }}')" class="text-xs text-primary font-bold hover:underline">
+                                    <!-- Botón directo: No Asistió -->
+                                    <form method="POST" action="{% url 'recepcionista_cambiar_estado' c.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="nuevo_estado" value="No_Asistio">
+                                        <button type="submit" class="text-xs bg-red-50 text-red-700 hover:bg-red-600 hover:text-white border border-red-200 font-bold px-3 py-1.5 rounded-xl transition-all shadow-sm" title="Marcar inasistencia del paciente">
+                                            ✗ No Asistió
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    <button onclick="openReprogramarModal({{ c.id }}, '{{ c.paciente.usuario.nombre_completo }}')" class="text-xs bg-surface text-ink hover:bg-gray-100 font-bold px-2.5 py-1.5 rounded-xl border border-gray-200 transition-colors">
                                         Reprogramar
                                     </button>
                                 </td>
@@ -208,7 +261,7 @@
                         <div>
                             <p class="font-bold text-ink">{{ item.paciente.usuario.nombre_completo }}</p>
                             <p class="text-xs text-muted">
-                                {% if item.especialista %}Médico: Dr/Dra. {{ item.especialista.usuario.nombre_completo }}{% endif %}
+                                {% if item.especialista %}Médico: {{ item.especialista.usuario.nombre_completo }}{% endif %}
                                 {% if item.especialidad %}Especialidad: {{ item.especialidad.nombre_especialidad }}{% endif %}
                                 — Solicitado: {{ item.fecha_registro|date:"d/m/Y h:i A" }}
                             </p>
@@ -246,7 +299,7 @@
                 <select name="especialista_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
                     <option value="">-- Selecciona especialista --</option>
                     {% for esp in especialistas_hoy %}
-                    <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                    <option value="{{ esp.id }}">{{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -279,7 +332,7 @@
 <!-- MODAL CONTINGENCIA EMERGENCIA (HU14 / RN08) -->
 <div id="modal-contingencia" class="hidden fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-fade-in-up border-t-4 border-red-600">
-        <h3 class="text-lg font-bold text-red-700 mb-1">⚠️ Contingencia por Ausencia de Emergencia</h3>
+        <h3 class="text-lg font-bold text-red-700 mb-1">️ Contingencia por Ausencia de Emergencia</h3>
         <p class="text-xs text-muted mb-4">Esta acción marcará al médico como **Ausente**, pasará todas sus citas de hoy a **Pendiente de Reubicación** y enviará correos de disculpa sin consumir la reprogramación del paciente (**RN08**).</p>
         <form method="POST" action="{% url 'recepcionista_contingencia_emergencia' %}" class="space-y-4">
             {% csrf_token %}
@@ -288,7 +341,7 @@
                 <select name="especialista_id" required class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-surface">
                     <option value="">-- Selecciona médico ausente --</option>
                     {% for esp in especialistas_hoy %}
-                    <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }}</option>
+                    <option value="{{ esp.id }}">{{ esp.usuario.nombre_completo }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -329,11 +382,14 @@
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 <script>
+    let calendarRecepcionista = null;
+    let rawEventsRecepcion = {{ fullcalendar_events_json|safe }};
+
     document.addEventListener('DOMContentLoaded', function() {
         const calendarEl = document.getElementById('fullcalendar-recepcionista');
         if (calendarEl) {
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridDay',
+            calendarRecepcionista = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
                 locale: 'es',
                 firstDay: 1,
                 slotMinTime: '07:00:00',
@@ -351,15 +407,54 @@
                     day: 'Día',
                     list: 'Lista'
                 },
-                events: {{ fullcalendar_events_json|safe }},
+                events: rawEventsRecepcion,
                 eventClick: function(info) {
                     const p = info.event.extendedProps;
                     openReprogramarModal(info.event.id, p.paciente);
                 }
             });
-            calendar.render();
+            calendarRecepcionista.render();
         }
     });
+
+    function aplicarFiltrosRecepcion() {
+        const espId = document.getElementById('filter-especialista').value;
+        const query = document.getElementById('filter-paciente').value.trim().toLowerCase();
+
+        // 1. Filtrar los eventos de FullCalendar
+        const filtered = rawEventsRecepcion.filter(evt => {
+            const props = evt.extendedProps || {};
+            const matchEsp = !espId || String(props.especialista_id) === String(espId);
+            
+            const pacienteNombre = String(props.paciente || '').toLowerCase();
+            const pacienteCedula = String(props.paciente_cedula || '').toLowerCase();
+            const matchPac = !query || pacienteNombre.includes(query) || pacienteCedula.includes(query);
+
+            return matchEsp && matchPac;
+        });
+
+        if (calendarRecepcionista) {
+            calendarRecepcionista.removeAllEvents();
+            calendarRecepcionista.addEventSource(filtered);
+        }
+
+        // 2. Filtrar también la tabla inferior
+        document.querySelectorAll('#tabla-citas tr').forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            const selectedEspText = espId ? (document.querySelector(`#filter-especialista option[value="${espId}"]`)?.text.toLowerCase() || '') : '';
+            
+            const matchTableEsp = !espId || rowText.includes(selectedEspText.split('(')[0].replace('dr/dra.', '').trim());
+            const matchTableQuery = !query || rowText.includes(query);
+
+            row.style.display = (matchTableEsp && matchTableQuery) ? '' : 'none';
+        });
+    }
+
+    function limpiarFiltrosRecepcion() {
+        document.getElementById('filter-especialista').value = '';
+        document.getElementById('filter-paciente').value = '';
+        aplicarFiltrosRecepcion();
+    }
 
     function openAgendarModal() {
         document.getElementById('modal-agendar-rec').classList.remove('hidden');
@@ -379,11 +474,13 @@
         document.getElementById(modalId).classList.add('hidden');
     }
 
-    document.getElementById('search-citas').addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        document.querySelectorAll('#tabla-citas tr').forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+    // Sincronizar campo de búsqueda antiguo si se usa
+    const searchOld = document.getElementById('search-citas');
+    if (searchOld) {
+        searchOld.addEventListener('input', function() {
+            document.getElementById('filter-paciente').value = this.value;
+            aplicarFiltrosRecepcion();
         });
-    });
+    }
 </script>
 {% endblock %}

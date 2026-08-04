@@ -33,9 +33,10 @@ def admin_gestionar_ausencia_view(request, permiso_id):
             )
             count = citas_cruzadas.count()
             if count > 0:
+                citas_cruzadas.update(estado_cita=EstadoCita.PENDIENTE_REUBICACION)
                 messages.warning(
                     request,
-                    f"Ausencia APROBADA. ¡ATENCIÓN! Existen {count} citas programadas en ese intervalo que requieren reubicación en Recepción."
+                    f"Ausencia APROBADA. ¡ATENCIÓN! {count} citas han sido movidas a PENDIENTE DE REUBICACIÓN para Recepción."
                 )
             else:
                 messages.success(request, "Ausencia APROBADA. No se encontraron cruces con citas existentes.")

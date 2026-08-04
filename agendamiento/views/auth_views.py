@@ -33,6 +33,11 @@ def login_view(request):
                     error = 'Tu cuenta está desactivada. Contacta al administrador.'
                 else:
                     login(request, user)
+                    
+                    # RN07: Inactividad de 15 minutos (900 seg) para roles internos
+                    if user.rol in [RolUsuario.ADMINISTRADOR, RolUsuario.RECEPCIONISTA, RolUsuario.ESPECIALISTA]:
+                        request.session.set_expiry(900)
+                    
                     messages.success(request, f'Bienvenido, {user.nombre_completo}.')
                     return _redirect_by_role(user)
             else:

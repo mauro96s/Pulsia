@@ -1,9 +1,11 @@
 {% extends "agendamiento/base.html" %}
+{% load static %}
+
 
 {% block title %}Panel — Administrador · Pulsia{% endblock %}
 
 {% block extra_head %}
-<style>
+<style type="text/tailwindcss">
     .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all cursor-pointer; }
     .sidebar-link.active { @apply bg-white bg-opacity-15 text-white; }
     .stat-card { @apply bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all border border-gray-100; }
@@ -22,7 +24,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span class="text-ink text-lg font-bold">Pulsia</span>
+                <div class="flex items-center gap-2"><img src="{% static 'img/logo.png' %}" alt="Logo" class="h-6 w-auto"><span class="text-ink text-lg font-bold">Pulsia</span></div>
                 <span class="text-xs label-tech text-muted">/ Administrador</span>
             </div>
 
@@ -76,7 +78,7 @@
                             {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
                             {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
                     <span>{{ message }}</span>
-                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100">✕</button>
+                    <button onclick="this.parentElement.remove()" class="text-xs font-bold opacity-60 hover:opacity-100"></button>
                 </div>
                 {% endfor %}
             </div>
@@ -86,7 +88,7 @@
             <div id="tab-dashboard" class="tab-content space-y-8">
                 <!-- Bienvenida -->
                 <div>
-                    <h2 class="text-xl font-bold text-ink">Hola, {{ user.nombre_completo|default:"Administrador" }} 👋</h2>
+                    <h2 class="text-xl font-bold text-ink">Hola, {{ user.nombre_completo|default:"Administrador" }} </h2>
                     <p class="text-muted text-sm mt-0.5">Resumen de actividad operativa y métricas clave del centro médico.</p>
                 </div>
 
@@ -181,7 +183,7 @@
                             {% for e in especialistas %}
                             <div class="py-3 flex items-center justify-between text-sm">
                                 <div>
-                                    <p class="font-bold text-ink">Dr/Dra. {{ e.usuario.nombre_completo }}</p>
+                                    <p class="font-bold text-ink">{{ e.usuario.nombre_completo }}</p>
                                     <p class="text-xs text-muted">{{ e.especialidad.nombre_especialidad }} — {{ e.usuario.correo }}</p>
                                 </div>
                                 <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-full border border-emerald-200">Activo</span>
@@ -227,7 +229,7 @@
                     {% for p in ausencias_pendientes %}
                     <div class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <p class="text-sm font-bold text-ink">Dr/Dra. {{ p.especialista.usuario.nombre_completo }} ({{ p.especialista.especialidad.nombre_especialidad }})</p>
+                            <p class="text-sm font-bold text-ink">{{ p.especialista.usuario.nombre_completo }} ({{ p.especialista.especialidad.nombre_especialidad }})</p>
                             <p class="text-xs text-muted font-medium mt-0.5">Motivo: {{ p.motivo_solicitud }}</p>
                             <p class="text-xs text-primary font-semibold mt-1">
                                 Desde: {{ p.fecha_hora_inicio|date:"d/m/Y h:i A" }} — Hasta: {{ p.fecha_hora_fin|date:"d/m/Y h:i A" }}
@@ -238,14 +240,14 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="accion" value="aprobar"/>
                                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">
-                                    ✓ Aprobar (Notificar Cruces)
+                                     Aprobar (Notificar Cruces)
                                 </button>
                             </form>
                             <form method="POST" action="{% url 'admin_gestionar_ausencia' p.id %}" class="inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="accion" value="rechazar"/>
                                 <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold px-4 py-2 rounded-xl">
-                                    ✕ Rechazar
+                                     Rechazar
                                 </button>
                             </form>
                         </div>

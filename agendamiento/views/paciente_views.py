@@ -14,6 +14,7 @@ from ..services.citas_service import (
     cancelar_cita,
     unirse_lista_espera
 )
+from .dashboard_views import _generar_eventos_fullcalendar
 
 
 @login_required(login_url='login')
@@ -30,33 +31,63 @@ def paciente_agendar_view(request):
 
     if request.method == 'POST':
         especialista_id = request.POST.get('especialista_id')
+        especialidad_id = request.POST.get('especialidad_id')
         fecha_str = request.POST.get('fecha')
         hora_str = request.POST.get('hora')
-        acepta_habeas = request.POST.get('acepta_habeas_data') == 'on'
-
-        if not acepta_habeas:
-            messages.error(request, "Debes aceptar la política de tratamiento de datos (Habeas Data).")
-            return redirect('paciente_agendar')
+        acepta_habeas_data = request.POST.get('acepta_habeas_data') == 'on'
 
         try:
-            especialista = get_object_or_404(Especialista, id=especialista_id)
-            # Consultorio por defecto asignado o primero disponible
-            consultorio = Consultorio.objects.filter(estado_operativo=True).first()
-            if not consultorio:
-                messages.error(request, "No hay consultorios disponibles en el sistema.")
-                return redirect('paciente_agendar')
+            fecha_dt = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            hora_dt = datetime.strptime(hora_str, '%H:%M').time()
+            fecha_hora_inicio = timezone.make_aware(datetime.combine(fecha_dt, hora_dt))
 
-            dt_str = f"{fecha_str} {hora_str}"
-            fecha_hora = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
-            fecha_hora = timezone.make_aware(fecha_hora)
+            if especialista_id:
+                especialista = get_object_or_404(Especialista, id=especialista_id)
+            else:
+                # Auto-asignar médico disponible para la especialidad y hora elegida
+                dia_semana = fecha_dt.isoweekday()
+                candidatos = Especialista.objects.all()
+                if especialidad_id:
+                    candidatos = candidatos.filter(especialidad_id=especialidad_id)
+
+                especialista_asignado = None
+                for cand in candidatos:
+                    horario = HorarioLaboral.objects.filter(especialista=cand, dia_semana=dia_semana).first()
+                    if not horario:
+                        continue
+                    if not (horario.hora_inicio <= hora_dt < horario.hora_fin):
+                        continue
+                    if horario.hora_inicio_descanso and horario.hora_fin_descanso:
+                        if horario.hora_inicio_descanso <= hora_dt < horario.hora_fin_descanso:
+                            continue
+
+                    ocupado = Cita.objects.filter(
+                        especialista=cand,
+                        fecha_hora_inicio=fecha_hora_inicio,
+                        estado_cita__in=['Programada', 'En_Sala']
+                    ).exists()
+
+                    if not ocupado:
+                        especialista_asignado = cand
+                        break
+
+                if not especialista_asignado:
+                    raise ValidationError(f"No hay ningún médico especialista disponible a las {hora_str}.")
+                especialista = especialista_asignado
+
+            consultorio = especialista.consultorio_asignado
+            if not consultorio:
+                consultorio = Consultorio.objects.filter(estado_operativo=True).first()
+                if not consultorio:
+                    raise ValidationError("No hay consultorios operativos disponibles.")
 
             agendar_cita_web(
                 paciente=paciente,
                 especialista=especialista,
                 consultorio=consultorio,
-                fecha_hora_inicio=fecha_hora
+                fecha_hora_inicio=fecha_hora_inicio
             )
-            messages.success(request, "¡Tu cita médica ha sido agendada con éxito!")
+            messages.success(request, f"¡Tu cita médica ha sido agendada con éxito con {especialista.usuario.nombre_completo}!")
             return redirect('dashboard_paciente')
         except ValidationError as ve:
             messages.error(request, str(ve.message if hasattr(ve, 'message') else ve))
@@ -69,11 +100,33 @@ def paciente_agendar_view(request):
         citas__paciente=paciente
     ).select_related('usuario', 'especialidad').distinct()
 
+    import json
+    citas_ocupadas = Cita.objects.select_related('paciente__usuario', 'especialista__usuario', 'especialista__especialidad', 'consultorio').all()
+    horarios_data = {}
+    for h in HorarioLaboral.objects.select_related('especialista__usuario', 'especialista__especialidad', 'especialista__consultorio_asignado').all():
+        s_id = str(h.especialista_id)
+        esp_id = str(h.especialista.especialidad_id)
+        if s_id not in horarios_data:
+            horarios_data[s_id] = {
+                'especialidad_id': esp_id,
+                'nombre_medico': h.especialista.usuario.nombre_completo,
+                'consultorio': h.especialista.consultorio_asignado.nombre_codigo if h.especialista.consultorio_asignado else 'Sin Asignar',
+                'horarios': {}
+            }
+        horarios_data[s_id]['horarios'][str(h.dia_semana)] = {
+            'inicio': h.hora_inicio.strftime('%H:%M'),
+            'fin': h.hora_fin.strftime('%H:%M'),
+            'desc_inicio': h.hora_inicio_descanso.strftime('%H:%M') if h.hora_inicio_descanso else None,
+            'desc_fin': h.hora_fin_descanso.strftime('%H:%M') if h.hora_fin_descanso else None,
+        }
+
     context = {
         'especialidades': Especialidad.objects.all(),
         'especialistas': Especialista.objects.select_related('usuario', 'especialidad').all(),
         'especialistas_frecuentes': especialistas_frecuentes,
         'es_paciente_frecuente': especialistas_frecuentes.exists(),
+        'fullcalendar_events_json': _generar_eventos_fullcalendar(citas_ocupadas),
+        'horarios_especialistas_json': json.dumps(horarios_data),
     }
     return render(request, 'agendamiento/citas/agendar.html', context)
 

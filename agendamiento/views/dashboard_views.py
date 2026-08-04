@@ -34,9 +34,11 @@ def _generar_eventos_fullcalendar(citas_qs):
             'borderColor': color,
             'textColor': '#ffffff',
             'extendedProps': {
-                'paciente': c.paciente.usuario.nombre_completo,
-                'especialista': c.especialista.usuario.nombre_completo,
-                'especialidad': c.especialista.especialidad.nombre_especialidad if c.especialista.especialidad else '',
+                'especialista_id': c.especialista.id if c.especialista else '',
+                'paciente_cedula': c.paciente.usuario.username if (c.paciente and c.paciente.usuario) else '',
+                'paciente': c.paciente.usuario.nombre_completo if (c.paciente and c.paciente.usuario) else '',
+                'especialista': c.especialista.usuario.nombre_completo if (c.especialista and c.especialista.usuario) else '',
+                'especialidad': c.especialista.especialidad.nombre_especialidad if (c.especialista and c.especialista.especialidad) else '',
                 'consultorio': c.consultorio.nombre_codigo if c.consultorio else '',
                 'estado': c.get_estado_cita_display(),
                 'estado_code': c.estado_cita,
@@ -121,6 +123,20 @@ def recepcionista_dashboard_view(request):
     if request.user.rol not in allowed:
         messages.error(request, 'No tienes permiso para acceder a esa página.')
         return redirect('login')
+
+    # RN03: Auto-marcar No Asistió tras 15 minutos de retraso sobre la hora de la cita
+    ahora_actual = timezone.now()
+    limite_tolerancia_15m = ahora_actual - timezone.timedelta(minutes=15)
+    citas_vencidas = Cita.objects.filter(
+        estado_cita=EstadoCita.PROGRAMADA,
+        fecha_hora_inicio__lt=limite_tolerancia_15m
+    )
+    for c_venc in citas_vencidas:
+        c_venc.estado_cita = EstadoCita.NO_ASISTIO
+        c_venc.save()
+        if c_venc.paciente:
+            c_venc.paciente.contador_inasistencias += 1
+            c_venc.paciente.save()
 
     # Filtro por fecha (por defecto hoy)
     fecha_filtro_str = request.GET.get('fecha')

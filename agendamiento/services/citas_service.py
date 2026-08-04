@@ -103,12 +103,12 @@ def reprogramar_cita(cita, nueva_fecha_hora_inicio, es_recepcion=False, duracion
     if not es_recepcion:
         # RN01: Límite de 1 reprogramación web
         if cita.contador_reprogramacion >= 1:
-            raise ValidationError("Ya has alcanzado el límite de 1 reprogramación permitida desde la web (RN01).")
+            raise ValidationError("Ya has alcanzado el límite de 1 reprogramación permitida desde la web.")
 
         # RN02: Faltan menos de 24 horas para la cita actual
         diferencia_horas = (cita.fecha_hora_inicio - ahora).total_seconds() / 3600.0
         if diferencia_horas < 24.0:
-            raise ValidationError("No es posible reprogramar citas si faltan menos de 24 horas (RN02).")
+            raise ValidationError("No es posible reprogramar citas si faltan menos de 24 horas.")
 
     nueva_fecha_hora_fin = nueva_fecha_hora_inicio + datetime.timedelta(minutes=duracion_minutos)
 
@@ -146,10 +146,14 @@ def cancelar_cita(cita, es_recepcion=False, es_contingencia=False):
     if not es_recepcion and not es_contingencia:
         diferencia_horas = (cita.fecha_hora_inicio - ahora).total_seconds() / 3600.0
         if diferencia_horas < 24.0:
-            raise ValidationError("No puedes cancelar tu cita si faltan menos de 24 horas (RN02).")
+            raise ValidationError("No puedes cancelar tu cita si faltan menos de 24 horas.")
 
     cita.estado_cita = EstadoCita.CANCELADA
     cita.save()
+    
+    # RN08: Enviar notificación institucional si es contingencia
+    if es_contingencia:
+        notificar_cancelacion_institucional(cita)
 
     # Notificar a lista de espera
     _notificar_espera_tras_liberacion(cita.especialista, cita.fecha_hora_inicio)
@@ -177,10 +181,10 @@ def registrar_notas_clinicas(cita, especialista_user, notas):
     Exige que la cita esté Atendida y pertenezca al especialista.
     """
     if cita.especialista.usuario != especialista_user:
-        raise ValidationError("No tienes autorización para modificar la historia clínica de esta cita (RN06).")
+        raise ValidationError("No tienes autorización para modificar la historia clínica de esta cita.")
 
     if cita.estado_cita != EstadoCita.ATENDIDA:
-        raise ValidationError("Solo se pueden agregar notas clínicas cuando la cita está en estado 'Atendida' (HU05).")
+        raise ValidationError("Solo se pueden agregar notas clínicas cuando la cita está en estado 'Atendida'.")
 
     cita.notas_clinicas = notas
     cita.save()
