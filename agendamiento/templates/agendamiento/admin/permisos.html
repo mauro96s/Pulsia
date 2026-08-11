@@ -1,0 +1,181 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Gestión de Permisos Médicos | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Sección estilo Resaltado Sutil -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Solicitudes de Permisos y Ausencias Médicas</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Aprobación de ausencias programadas e imprevistos de los especialistas con validación de conflictos de agenda.</p>
+        </div>
+
+        <button onclick="document.getElementById('modalAusenciaEmergencia').classList.remove('hidden')"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-error-red hover:bg-red-800 text-white font-semibold text-xs rounded-xl shadow transition">
+            <span class="material-symbols-outlined text-lg">warning</span>
+            <span>Declarar Ausencia de Emergencia</span>
+        </button>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtros Automáticos -->
+    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
+        <form method="GET" action="{% url 'admin_permisos' %}" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            
+            <!-- Buscador por médico o motivo con lupa centrada -->
+            <div class="sm:col-span-7 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" name="q" value="{{ q }}" oninput="autoSubmitFormDebounced(this.form)" placeholder="Buscar por médico o motivo de la ausencia..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+            </div>
+
+            <!-- Filtro Estado Aprobación -->
+            <div class="sm:col-span-3">
+                <select name="estado" onchange="this.form.submit()" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Todos los Estados</option>
+                    {% for val, label in estados_aprobacion %}
+                        <option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <div class="sm:col-span-2">
+                <a href="{% url 'admin_permisos' %}" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer" title="Limpiar Filtros">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Permisos -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-on-surface">
+                <thead class="bg-surface-container-low text-primary font-heading font-semibold uppercase text-[11px] tracking-wider border-b border-outline-variant/30">
+                    <tr>
+                        <th class="px-6 py-4">Médico Especialista</th>
+                        <th class="px-4 py-4">Periodo de Ausencia</th>
+                        <th class="px-4 py-4">Motivo / Justificación</th>
+                        <th class="px-4 py-4">Estado Aprobación</th>
+                        <th class="px-6 py-4 text-right">Acciones de Control</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/20">
+                    {% for permiso in permisos %}
+                        <tr class="hover:bg-soft-sky/40 transition">
+                            <td class="px-6 py-4 font-medium text-primary">
+                                <p class="font-bold text-sm text-primary">Dr/Dra. {{ permiso.especialista.usuario.nombre_completo }}</p>
+                                <span class="text-[10px] text-secondary font-semibold">{{ permiso.especialista.especialidad.nombre_especialidad }}</span>
+                            </td>
+                            <td class="px-4 py-4 font-mono text-gray-700">
+                                <div><span class="font-bold">Inicio:</span> {{ permiso.fecha_hora_inicio|date:"Y-m-d H:i" }}</div>
+                                <div><span class="font-bold">Fin:</span> {{ permiso.fecha_hora_fin|date:"Y-m-d H:i" }}</div>
+                            </td>
+                            <td class="px-4 py-4 text-gray-600 max-w-xs italic">
+                                "{{ permiso.motivo_solicitud|default:"Sin justificación." }}"
+                            </td>
+                            <td class="px-4 py-4">
+                                {% if permiso.estado_aprobacion == 'Pendiente' %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-warning-amber border border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-warning-amber"></span> Pendiente
+                                    </span>
+                                {% elif permiso.estado_aprobacion == 'Aprobado' %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-success-emerald border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Aprobado
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-error-red border border-rose-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-error-red"></span> Rechazado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                {% if permiso.estado_aprobacion == 'Pendiente' %}
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <!-- Aprobar -->
+                                        <form method="POST" action="{% url 'admin_aprobar_permiso' permiso.id %}" onsubmit="return confirm('¿Aprobar permiso? Si existen citas agendadas, se marcarán como Pendiente de Reubicación.');" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="accion" value="aprobar">
+                                            <button type="submit" title="Aprobar Permiso" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition shadow-2xs cursor-pointer">
+                                                <span class="material-symbols-outlined text-base">check_circle</span>
+                                            </button>
+                                        </form>
+
+                                        <!-- Rechazar -->
+                                        <form method="POST" action="{% url 'admin_aprobar_permiso' permiso.id %}" onsubmit="return confirm('¿Deseas rechazar esta solicitud de permiso?');" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="accion" value="rechazar">
+                                            <button type="submit" title="Rechazar Permiso" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white transition shadow-2xs cursor-pointer">
+                                                <span class="material-symbols-outlined text-base">cancel</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-[10px] font-semibold text-gray-400">Procesado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                No se encontraron solicitudes de ausencias médicas registradas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Declarar Ausencia de Emergencia (HU14 / RN08) -->
+<div id="modalAusenciaEmergencia" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-2xl max-w-md w-full overflow-hidden animate-fade-in">
+        <div class="bg-error-red p-5 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-2xl">warning</span>
+                <h3 class="font-heading font-bold text-base">Declarar Ausencia de Emergencia</h3>
+            </div>
+            <button onclick="document.getElementById('modalAusenciaEmergencia').classList.add('hidden')" class="text-white/80 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'admin_declarar_ausencia_emergencia' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="redirect_to" value="admin_permisos">
+
+            <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 text-xs text-error-red">
+                <p class="font-bold">⚠️ Atención:</p>
+                <p class="mt-1">Esta acción marcará al médico como <strong>Ausente</strong> hoy y pasará todas sus citas del día a <strong>Pendiente de Reubicación</strong> sin consumir el límite de reprogramaciones del paciente.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-primary mb-1.5">Selecciona el Especialista Médico:</label>
+                <select name="especialista_id" required class="w-full text-xs rounded-xl border-outline-variant focus:ring-error-red focus:border-error-red p-2.5">
+                    <option value="">-- Seleccionar Médico --</option>
+                    {% for esp in especialistas %}
+                        <option value="{{ esp.id }}">
+                            Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-4 border-t border-outline-variant/20">
+                <button type="button" onclick="document.getElementById('modalAusenciaEmergencia').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-error-red hover:bg-red-800 rounded-xl shadow transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">emergency</span>
+                    <span>Ejecutar Contingencia</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

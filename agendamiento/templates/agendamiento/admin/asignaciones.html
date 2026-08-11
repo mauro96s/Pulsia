@@ -1,0 +1,432 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Asignaciones y Horarios Médicos | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Sección estilo Resaltado Sutil -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Asignaciones Médicas y Horarios</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Gestión de consultorios físicos asignados y jornadas laborales del equipo médico.</p>
+        </div>
+
+        <!-- Botones de Acción de Encabezado -->
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="abrirModalAsignarGeneral()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-clinical-teal hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">assignment_ind</span>
+                <span>Asignar Consultorio</span>
+            </button>
+            <button type="button" onclick="abrirModalHorarioGeneral()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-container hover:bg-secondary text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">edit_calendar</span>
+                <span>Asignar Horario Laboral</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navegación por Submenú de Pestañas (Tabs: Consultorios, Horarios Laborales) -->
+    <div class="bg-white p-2 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col sm:flex-row gap-2">
+        <button id="tab-btn-cons" onclick="switchTab('cons')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition {% if tab == 'cons' or not tab %}bg-primary text-white shadow-xs{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} cursor-pointer">
+            <span class="material-symbols-outlined text-base">meeting_room</span> Asignación de Consultorios
+        </button>
+        <button id="tab-btn-hor" onclick="switchTab('hor')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition {% if tab == 'hor' %}bg-primary text-white shadow-xs{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} cursor-pointer">
+            <span class="material-symbols-outlined text-base">schedule</span> Horarios Laborales
+        </button>
+    </div>
+
+    <!-- PESTAÑA 1: ASIGNACIÓN DE CONSULTORIOS -->
+    <div id="tab-content-cons" class="space-y-4 {% if tab and tab != 'cons' %}hidden{% endif %}">
+        <!-- Buscador Asignación Consultorios Automático -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
+            <form method="GET" action="{% url 'admin_asignaciones' %}" class="flex items-center gap-3">
+                <input type="hidden" name="tab" value="cons">
+                <div class="flex-1 relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                    <input type="text" name="q_cons" value="{{ q_cons }}" oninput="autoSubmitFormDebounced(this.form)" placeholder="Buscar por nombre de médico, especialidad o consultorio..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+                <a href="{% url 'admin_asignaciones' %}?tab=cons" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer" title="Limpiar Filtros">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </form>
+        </div>
+
+        <!-- Tabla Asignación Consultorios -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+            <table class="w-full text-left text-xs text-on-surface">
+                <thead class="bg-slate-100/80 text-primary font-heading font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Médico Especialista</th>
+                        <th class="px-4 py-3.5">Especialidad Asignada</th>
+                        <th class="px-4 py-3.5">Consultorio Físico</th>
+                        <th class="px-4 py-3.5 text-center">Estado de Turno</th>
+                        <th class="px-6 py-3.5 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for esp in especialistas %}
+                        <tr class="hover:bg-teal-50/40 transition">
+                            <td class="px-6 py-4 font-bold text-primary flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-clinical-teal/10 text-clinical-teal font-extrabold flex items-center justify-center text-xs">
+                                    {{ esp.usuario.nombre_completo|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-primary">Dr/Dra. {{ esp.usuario.nombre_completo }}</span>
+                                    <span class="block text-[10px] text-gray-500 font-normal">{{ esp.usuario.correo }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-secondary border border-sky-200">
+                                    <span class="material-symbols-outlined text-sm">stethoscope</span>
+                                    {{ esp.especialidad.nombre_especialidad }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                {% if esp.consultorio %}
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                        <span class="material-symbols-outlined text-sm">meeting_room</span>
+                                        Consultorio {{ esp.consultorio.nombre_codigo }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                        <span class="material-symbols-outlined text-sm">no_meeting_room</span>
+                                        Sin Consultorio
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                {% if esp.estado_turno == 'Presente' %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-success-emerald border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Presente
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Ausente
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button type="button" onclick="abrirModalAsignar('{{ esp.id }}', '{{ esp.especialidad.id }}', {% if esp.consultorio %}'{{ esp.consultorio.id }}'{% else %}''{% endif %})" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-teal-50 hover:bg-teal-600 text-teal-700 hover:text-white transition shadow-2xs cursor-pointer" title="Reasignar Consultorio">
+                                        <span class="material-symbols-outlined text-base">assignment_ind</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                No se encontraron especialistas para asignar consultorio.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 2: HORARIOS LABORALES -->
+    <div id="tab-content-hor" class="space-y-4 {% if tab != 'hor' %}hidden{% endif %}">
+        <!-- Buscador Horarios Automático -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
+            <form method="GET" action="{% url 'admin_asignaciones' %}" class="flex items-center gap-3">
+                <input type="hidden" name="tab" value="hor">
+                <div class="flex-1 relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                    <input type="text" name="q_hor" value="{{ q_hor }}" oninput="autoSubmitFormDebounced(this.form)" placeholder="Buscar especialista o especialidad para consultar jornada..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+                <a href="{% url 'admin_asignaciones' %}?tab=hor" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer" title="Limpiar Filtros">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </form>
+        </div>
+
+        <!-- Tabla de Horarios Laborales de Médicos Especialistas -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+            <table class="w-full text-left text-xs text-on-surface">
+                <thead class="bg-slate-100/80 text-primary font-heading font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Médico Especialista</th>
+                        <th class="px-4 py-3.5">Especialidad</th>
+                        <th class="px-4 py-3.5">Jornada Laboral Configurada</th>
+                        <th class="px-6 py-3.5 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for esp in especialistas_horarios %}
+                        <tr class="hover:bg-teal-50/40 transition">
+                            <td class="px-6 py-4 font-bold text-primary flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-extrabold flex items-center justify-center text-xs">
+                                    {{ esp.usuario.nombre_completo|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-primary">Dr/Dra. {{ esp.usuario.nombre_completo }}</span>
+                                    <span class="block text-[10px] text-gray-500 font-normal">{{ esp.usuario.correo }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-secondary border border-sky-200">
+                                    <span class="material-symbols-outlined text-sm">stethoscope</span>
+                                    {{ esp.especialidad.nombre_especialidad }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                {% if esp.horarios.all %}
+                                    <div class="flex flex-wrap gap-1.5">
+                                        {% for h in esp.horarios.all %}
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-700">
+                                                <strong class="text-primary">
+                                                    {% if h.dia_semana == 1 %}Lun
+                                                    {% elif h.dia_semana == 2 %}Mar
+                                                    {% elif h.dia_semana == 3 %}Mié
+                                                    {% elif h.dia_semana == 4 %}Jue
+                                                    {% elif h.dia_semana == 5 %}Vie
+                                                    {% elif h.dia_semana == 6 %}Sáb
+                                                    {% elif h.dia_semana == 7 %}Dom
+                                                    {% endif %}:
+                                                </strong>
+                                                {{ h.hora_inicio|time:"H:i" }}-{{ h.hora_fin|time:"H:i" }}
+                                                {% if h.hora_inicio_descanso %}
+                                                    <span class="text-[10px] text-gray-400 ml-0.5">(Descanso {{ h.hora_inicio_descanso|time:"H:i" }}-{{ h.hora_fin_descanso|time:"H:i" }})</span>
+                                                {% endif %}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Sin horario asignado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button type="button" onclick="abrirModalHorario('{{ esp.id }}')" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white transition shadow-2xs cursor-pointer" title="Configurar Horario Laboral">
+                                        <span class="material-symbols-outlined text-base">edit_calendar</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                No se encontraron médicos especialistas registrados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Reasignar / Asignar Consultorio Físico -->
+<div id="modal-asignar-medico" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-outline-variant/30">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">assignment_ind</span> Asignar Consultorio Físico
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-asignar-medico')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="form-asignar-medico" method="POST" action="" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-primary mb-1">Médico Especialista *</label>
+                <select id="asig-especialista-select" name="especialista_id_select" onchange="actualizarActionFormAsignar(this.value)" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Selecciona un médico especialista...</option>
+                    {% for esp in especialistas %}
+                        <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold text-primary mb-1">Especialidad Médica *</label>
+                <select id="asig-especialidad" name="especialidad_id" required class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    {% for esp in especialidades %}
+                        <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold text-primary mb-1">Consultorio Físico Asignado</label>
+                <select id="asig-consultorio" name="consultorio_id" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Sin consultorio asignado...</option>
+                    {% for cons in consultorios %}
+                        <option value="{{ cons.id }}">Consultorio {{ cons.nombre_codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="cerrarModal('modal-asignar-medico')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition cursor-pointer">
+                    Guardar Asignación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Configurar Horario Laboral del Médico -->
+<div id="modal-configurar-horario" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-outline-variant/30">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">edit_calendar</span> Configurar Horario Laboral del Médico
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-configurar-horario')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'admin_guardar_horario' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-primary mb-1">Médico Especialista *</label>
+                <select id="horario-especialista-id" name="especialista_id" required class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Selecciona un médico especialista...</option>
+                    {% for esp in especialistas_horarios %}
+                        <option value="{{ esp.id }}">Dr/Dra. {{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Selección de Días a Aplicar -->
+            <div>
+                <label class="block font-semibold text-primary mb-1.5">Días Laborales a Configurar *</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="1" checked class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Lunes</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="2" checked class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Martes</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="3" checked class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Miércoles</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="4" checked class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Jueves</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="5" checked class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Viernes</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="6" class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Sábado</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="dias" value="7" class="rounded text-clinical-teal focus:ring-clinical-teal">
+                        <span>Domingo</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Horas de Turno -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Hora Inicio Turno *</label>
+                    <input type="time" name="hora_inicio" value="08:00" required class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Hora Fin Turno *</label>
+                    <input type="time" name="hora_fin" value="17:00" required class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+            </div>
+
+            <!-- Horas de Descanso -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Inicio Descanso / Almuerzo</label>
+                    <input type="time" name="hora_inicio_descanso" value="12:00" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Fin Descanso / Almuerzo</label>
+                    <input type="time" name="hora_fin_descanso" value="13:00" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="cerrarModal('modal-configurar-horario')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition cursor-pointer">
+                    Guardar Horarios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        document.getElementById('tab-content-cons').classList.add('hidden');
+        document.getElementById('tab-content-hor').classList.add('hidden');
+
+        document.getElementById('tab-btn-cons').className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer';
+        document.getElementById('tab-btn-hor').className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer';
+
+        if (document.getElementById('tab-content-' + tabName)) {
+            document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+        }
+        if (document.getElementById('tab-btn-' + tabName)) {
+            document.getElementById('tab-btn-' + tabName).className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition bg-primary text-white shadow-xs cursor-pointer';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeTab = "{{ tab|default:'cons' }}";
+        switchTab(activeTab);
+    });
+
+    function actualizarActionFormAsignar(id) {
+        const form = document.getElementById('form-asignar-medico');
+        if (id) {
+            form.action = `/administracion/estructura-medica/asignar/${id}/`;
+        }
+    }
+
+    function abrirModalAsignarGeneral() {
+        const select = document.getElementById('asig-especialista-select');
+        select.value = '';
+        select.disabled = false;
+        document.getElementById('form-asignar-medico').action = '';
+        document.getElementById('asig-consultorio').value = '';
+        document.getElementById('modal-asignar-medico').classList.remove('hidden');
+    }
+
+    function abrirModalAsignar(id, especialidadId, consultorioId) {
+        const select = document.getElementById('asig-especialista-select');
+        select.value = id;
+        actualizarActionFormAsignar(id);
+        document.getElementById('asig-especialidad').value = especialidadId;
+        document.getElementById('asig-consultorio').value = consultorioId || '';
+        document.getElementById('modal-asignar-medico').classList.remove('hidden');
+    }
+
+    function abrirModalHorarioGeneral() {
+        const select = document.getElementById('horario-especialista-id');
+        select.value = '';
+        document.getElementById('modal-configurar-horario').classList.remove('hidden');
+    }
+
+    function abrirModalHorario(id) {
+        const select = document.getElementById('horario-especialista-id');
+        select.value = id;
+        document.getElementById('modal-configurar-horario').classList.remove('hidden');
+    }
+
+    function cerrarModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+</script>
+{% endblock %}

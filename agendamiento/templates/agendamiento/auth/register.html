@@ -1,0 +1,197 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Crear Cuenta | Pulsia Medical Systems{% endblock %}
+
+<!-- Ocultar barra superior y footer para usar el 100% de la pantalla -->
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block container_class %}w-full p-0{% endblock %}
+
+{% block content %}
+<div class="min-h-screen w-full flex items-center justify-center bg-surface p-4 sm:p-6 lg:p-8">
+
+    <!-- Split Screen Container Invertido (Formulario a la Izquierda, Brand a la Derecha) -->
+    <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden grid grid-cols-1 lg:grid-cols-2 min-h-[85vh] transition-all duration-500 ease-in-out">
+        
+        <!-- LADO IZQUIERDO: Formulario de Registro -->
+        <div class="p-8 sm:p-10 flex flex-col justify-center bg-white order-2 lg:order-1">
+            
+            <div class="max-w-md w-full mx-auto">
+                
+                <!-- Encabezado del Formulario -->
+                <div class="mb-6">
+                    <h1 class="font-heading text-2xl font-bold text-primary">Crear Cuenta</h1>
+                    <p class="text-xs text-on-surface-variant mt-1">Completa tus datos personales para habilitar tu usuario en el sistema.</p>
+                </div>
+
+                <!-- Formulario de Registro -->
+                <form method="post" action="{% url 'register' %}" class="space-y-4 text-xs">
+                    {% csrf_token %}
+
+                    <!-- 1. Nombre Completo (Ancho completo) -->
+                    <div>
+                        <label for="nombre_completo" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                            Nombre Completo <span class="text-error-red">*</span>
+                        </label>
+                        <input type="text" id="nombre_completo" name="nombre_completo" required placeholder="Ej. Juan Carlos Pérez Gómez"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                    </div>
+
+                    <!-- 2. Tipo y Número de Documento (Grid 1/3 + 2/3) -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="tipo_documento" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                                Tipo <span class="text-error-red">*</span>
+                            </label>
+                            <select id="tipo_documento" name="tipo_documento" required
+                                class="w-full px-2 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                                <option value="CC" selected>CC</option>
+                                <option value="CE">CE</option>
+                                <option value="TI">TI</option>
+                                <option value="RC">RC</option>
+                                <option value="PA">PA</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="num_documento" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                                Número Documento <span class="text-error-red">*</span>
+                            </label>
+                            <input type="text" id="num_documento" name="num_documento" required placeholder="1020304050"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                        </div>
+                    </div>
+
+                    <!-- 3. Fecha de Nacimiento y Teléfono (Grid 1/2 + 1/2) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="fecha_nacimiento" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                                Fecha Nacimiento <span class="text-error-red">*</span>
+                            </label>
+                            <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                        </div>
+                        <div>
+                            <label for="telefono" class="block font-semibold text-primary uppercase tracking-wider mb-1">Teléfono Celular</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="3001234567"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                        </div>
+                    </div>
+
+                    <!-- 4. Correo Electrónico (Ancho completo) -->
+                    <div>
+                        <label for="correo" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                            Correo Electrónico <span class="text-error-red">*</span>
+                        </label>
+                        <input type="email" id="correo" name="correo" required placeholder="tu-correo@pulsia.com"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                    </div>
+
+                    <!-- 5. Contraseñas (Grid 1/2 + 1/2) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="password" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                                Contraseña <span class="text-error-red">*</span>
+                            </label>
+                            <input type="password" id="password" name="password" required placeholder="••••••••"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                        </div>
+                        <div>
+                            <label for="password_confirm" class="block font-semibold text-primary uppercase tracking-wider mb-1">
+                                Confirmar <span class="text-error-red">*</span>
+                            </label>
+                            <input type="password" id="password_confirm" name="password_confirm" required placeholder="••••••••"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low/30">
+                        </div>
+                    </div>
+
+                    <!-- 6. Habeas Data -->
+                    <div class="bg-soft-sky/40 p-3 rounded-xl border border-secondary-container/60">
+                        <label class="flex items-start space-x-2 cursor-pointer">
+                            <input type="checkbox" name="acepta_habeas_data" required class="mt-0.5 w-4 h-4 rounded text-clinical-teal focus:ring-clinical-teal">
+                            <span class="text-[11px] text-primary leading-tight font-medium">
+                                Acepto el tratamiento de mis datos personales (*Habeas Data*) y notificaciones médicas.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- 7. Submit Button -->
+                    <button type="submit"
+                        class="w-full py-3 px-4 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-base">check_circle</span>
+                        <span>Completar registro</span>
+                    </button>
+                </form>
+
+                <!-- Regresar a Login -->
+                <div class="mt-4 pt-4 border-t border-outline-variant/30 text-center">
+                    <span class="text-xs text-on-surface-variant">¿Ya tienes una cuenta? </span>
+                    <a href="{% url 'login' %}" class="font-bold text-primary hover:underline text-xs">Iniciar Sesión</a>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- LADO DERECHO: Branding, Logo y Mensaje Portal del Paciente -->
+        <div class="relative bg-gradient-to-br from-secondary via-primary-container to-primary text-white p-8 sm:p-12 flex flex-col justify-between overflow-hidden order-1 lg:order-2">
+            
+            <!-- Elementos de Fondo Decorativos -->
+            <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-soft-sky/20 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-clinical-teal/20 blur-3xl pointer-events-none"></div>
+            
+            <!-- Marca Superior -->
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-white text-primary flex items-center justify-center shadow-lg">
+                        <span class="material-symbols-outlined text-3xl">health_and_safety</span>
+                    </div>
+                    <div>
+                        <span class="font-heading font-extrabold text-2xl tracking-tight text-white">Pulsia</span>
+                        <span class="block text-xs uppercase font-bold text-secondary-container tracking-widest -mt-1">Portal de Salud</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mt-8">
+                    <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-white/10 text-secondary-container border border-white/20 uppercase tracking-wider">
+                        Autogestión del Paciente
+                    </span>
+                    <h2 class="font-heading text-3xl sm:text-4xl font-bold leading-tight text-white">
+                        Tu Salud y tus Citas en un Solo Lugar
+                    </h2>
+                    
+                    <ul class="space-y-3 text-xs sm:text-sm text-on-primary-container pt-2">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-clinical-teal text-lg">check_circle</span>
+                            <span>Agendamiento autónomo por especialidad y médico</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-clinical-teal text-lg">check_circle</span>
+                            <span>Reprogramación ágil con 24h de anticipación</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-clinical-teal text-lg">check_circle</span>
+                            <span>Inscripción en Lista de Espera automática</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-clinical-teal text-lg">check_circle</span>
+                            <span>Notificaciones por correo sobre tus reservas</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Botón Conmutador a Login -->
+            <div class="relative z-10 mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span class="text-xs text-secondary-container">¿Ya te registraste anteriormente?</span>
+                <a href="{% url 'login' %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-primary font-bold text-xs rounded-xl shadow hover:bg-gray-100 transition">
+                    <span class="material-symbols-outlined text-base">login</span>
+                    <span>Iniciar Sesión</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

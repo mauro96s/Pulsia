@@ -1,0 +1,659 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Gestión Unificada de Usuarios | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Sección estilo Resaltado Sutil -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Gestión Unificada de Usuarios</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Administración centralizada de cuentas para Especialistas, Recepcionistas, Pacientes y Administradores.</p>
+        </div>
+
+        <div>
+            <button type="button" onclick="abrirModalCrearUsuario()"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-clinical-teal hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">person_add</span>
+                <span>Registrar Nuevo Usuario</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtro por Pestañas de Rol -->
+    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm space-y-3">
+        
+        <!-- Pestañas de Roles (Filter Tabs) -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
+            <a href="?rol=&q={{ q }}&estado={{ estado }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 {% if not rol_filtro %}bg-primary text-white shadow-xs{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                <span class="material-symbols-outlined text-base">group</span> Todos los Usuarios
+            </a>
+            <a href="?rol=Especialista&q={{ q }}&estado={{ estado }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 {% if rol_filtro == 'Especialista' %}bg-teal-700 text-white shadow-xs{% else %}bg-teal-50 text-teal-800 hover:bg-teal-100{% endif %}">
+                <span class="material-symbols-outlined text-base">stethoscope</span> Especialistas
+            </a>
+            <a href="?rol=Recepcionista&q={{ q }}&estado={{ estado }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 {% if rol_filtro == 'Recepcionista' %}bg-sky-700 text-white shadow-xs{% else %}bg-sky-50 text-sky-800 hover:bg-sky-100{% endif %}">
+                <span class="material-symbols-outlined text-base">desk</span> Recepcionistas
+            </a>
+            <a href="?rol=Paciente&q={{ q }}&estado={{ estado }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 {% if rol_filtro == 'Paciente' %}bg-amber-600 text-white shadow-xs{% else %}bg-amber-50 text-amber-900 hover:bg-amber-100{% endif %}">
+                <span class="material-symbols-outlined text-base">patient_list</span> Pacientes
+            </a>
+            <a href="?rol=Administrador&q={{ q }}&estado={{ estado }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 {% if rol_filtro == 'Administrador' %}bg-slate-800 text-white shadow-xs{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                <span class="material-symbols-outlined text-base">admin_panel_settings</span> Administradores
+            </a>
+        </div>
+
+        <!-- Buscador y Filtros Secundarios Automáticos -->
+        <form method="GET" action="{% url 'admin_usuarios' %}" class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1 items-center">
+            <input type="hidden" name="rol" value="{{ rol_filtro }}">
+
+            <!-- Buscador general con lupa centrada -->
+            <div class="sm:col-span-5 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" name="q" value="{{ q }}"
+                    oninput="autoSubmitFormDebounced(this.form)"
+                    placeholder="Buscar por nombre, documento, correo o teléfono..."
+                    class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+            </div>
+
+            <!-- Filtro Especialidad -->
+            <div class="sm:col-span-3">
+                <select name="especialidad" onchange="this.form.submit()"
+                    class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Todas las Especialidades</option>
+                    {% for esp in especialidades %}
+                    <option value="{{ esp.id }}" {% if especialidad_id == esp.id|slugify %}selected{% endif %}>{{ esp.nombre_especialidad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro Estado -->
+            <div class="sm:col-span-2">
+                <select name="estado" onchange="this.form.submit()"
+                    class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    <option value="">Todos los Estados</option>
+                    <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activos</option>
+                    <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivos (Dados de baja)</option>
+                </select>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <div class="sm:col-span-2">
+                <a href="{% url 'admin_usuarios' %}{% if rol_filtro %}?rol={{ rol_filtro }}{% endif %}"
+                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer"
+                    title="Limpiar todos los filtros">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla Unificada de Usuarios -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-on-surface border-collapse">
+                <thead class="bg-slate-100/80 text-primary font-heading font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Usuario / Correo</th>
+                        <th class="px-4 py-3.5">Rol Sistema</th>
+                        <th class="px-4 py-3.5">Identificación & Contacto</th>
+                        <th class="px-4 py-3.5">Especialidad / Consultorio</th>
+                        <th class="px-4 py-3.5">Estado</th>
+                        <th class="px-6 py-3.5 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for u in usuarios %}
+                    <tr class="hover:bg-teal-50/40 transition">
+                        <!-- Usuario & Avatar -->
+                        <td class="px-6 py-4 font-medium text-primary">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl {% if u.rol == 'Especialista' %}bg-teal-700{% elif u.rol == 'Recepcionista' %}bg-sky-700{% elif u.rol == 'Paciente' %}bg-amber-600{% else %}bg-primary{% endif %} text-white flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0">
+                                    {{ u.nombre_completo|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm text-primary">{{ u.nombre_completo }}</p>
+                                    <span class="text-[11px] text-gray-500 font-mono">{{ u.correo }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Rol Badge -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            {% if u.rol == 'Especialista' %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                                    Especialista
+                                </span>
+                            {% elif u.rol == 'Recepcionista' %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
+                                    Recepcionista
+                                </span>
+                            {% elif u.rol == 'Paciente' %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                                    Paciente
+                                </span>
+                            {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800 border border-slate-300">
+                                    Administrador
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Documento & Contacto -->
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="font-semibold text-gray-800 font-mono text-[11px]">{{ u.tipo_documento|default:"CC" }}: {{ u.num_documento|default:"N/A" }}</span>
+                                <span class="text-[11px] text-gray-500 font-mono flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs text-teal-600">call</span>
+                                    {{ u.telefono|default:"Sin teléfono" }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Especialidad / Consultorio asignado -->
+                        <td class="px-4 py-4">
+                            {% if u.rol == 'Especialista' and u.perfil_especialista %}
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-bold text-teal-700 text-xs">{{ u.perfil_especialista.especialidad.nombre_especialidad }}</span>
+                                    <span class="text-[10px] text-gray-500 flex items-center gap-1 font-mono">
+                                        <span class="material-symbols-outlined text-xs text-gray-400">meeting_room</span>
+                                        {{ u.perfil_especialista.consultorio.nombre_codigo|default:"Sin consultorio asignado" }}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <span class="text-[11px] text-gray-400 italic">N/A</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Estado Cuenta -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            {% if u.is_active %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-success-emerald border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Activo
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-error-red border border-rose-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-error-red"></span> Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Acciones -->
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1.5">
+                                
+                    <!-- Ver Detalle -->
+                                <button type="button"
+                                    title="Ver Detalle"
+                                    onclick="abrirModalDetalleUsuario('{{ u.nombre_completo|escapejs }}', '{{ u.rol }}', '{{ u.tipo_documento }}', '{{ u.num_documento|escapejs }}', '{{ u.correo|escapejs }}', '{{ u.telefono|escapejs }}', {% if u.perfil_especialista %}'{{ u.perfil_especialista.especialidad.nombre_especialidad|escapejs }}'{% else %}''{% endif %}, {{ u.is_active|yesno:'true,false' }}, {% if u.perfil_paciente %}'{{ u.perfil_paciente.fecha_nacimiento|date:"Y-m-d" }}'{% else %}''{% endif %})"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-teal-50 hover:bg-teal-600 text-teal-700 hover:text-white transition shadow-2xs cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                </button>
+
+                                <!-- Editar -->
+                                <button type="button"
+                                    title="Editar Usuario"
+                                    onclick="abrirModalEditarUsuario('{{ u.id }}', '{{ u.nombre_completo|escapejs }}', '{{ u.tipo_documento }}', '{{ u.num_documento|escapejs }}', '{{ u.correo|escapejs }}', '{{ u.telefono|escapejs }}', '{{ u.rol }}', {% if u.perfil_especialista %}'{{ u.perfil_especialista.especialidad.id }}'{% else %}''{% endif %}, {% if u.perfil_especialista and u.perfil_especialista.consultorio %}'{{ u.perfil_especialista.consultorio.id }}'{% else %}''{% endif %}, {{ u.is_active|yesno:'true,false' }}, {% if u.perfil_paciente %}'{{ u.perfil_paciente.fecha_nacimiento|date:"Y-m-d" }}'{% else %}''{% endif %})"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white transition shadow-2xs cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">edit</span>
+                                </button>
+                                <!-- Eliminar / Dar de Baja -->
+                                {% if u != request.user %}
+                                <form method="POST" action="{% url 'admin_eliminar_usuario' u.id %}"
+                                    onsubmit="return confirm('¿Estás seguro de procesar la baja/eliminación de este usuario ({{ u.nombre_completo|escapejs }})?');"
+                                    class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        title="Dar de baja / Eliminar"
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white transition shadow-2xs cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">person_remove</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">group_off</span>
+                            No se encontraron usuarios registrados con los criterios seleccionados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Usuario -->
+<div id="modal-detalle-usuario" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-outline-variant/30 transform transition-all">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">badge</span> Información del Usuario
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-detalle-usuario')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-4 text-xs">
+            <div class="flex items-center gap-3 p-3 bg-teal-50/60 rounded-xl border border-teal-100">
+                <div class="w-12 h-12 rounded-xl bg-primary text-white font-extrabold text-lg flex items-center justify-center shrink-0">
+                    <span id="detalle-avatar">U</span>
+                </div>
+                <div>
+                    <p id="detalle-nombre" class="text-base font-bold text-primary"></p>
+                    <p id="detalle-rol-badge" class="text-xs font-semibold text-clinical-teal"></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-semibold text-gray-400 uppercase text-[10px]">Documento de Identidad:</p>
+                    <p id="detalle-documento" class="font-bold text-gray-800"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-400 uppercase text-[10px]">Estado de la Cuenta:</p>
+                    <span id="detalle-estado" class="inline-block px-2.5 py-0.5 rounded-full text-white font-bold text-[10px]"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-semibold text-gray-400 uppercase text-[10px]">Correo Electrónico:</p>
+                    <p id="detalle-correo" class="font-semibold text-primary"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-400 uppercase text-[10px]">Teléfono de Contacto:</p>
+                    <p id="detalle-telefono" class="font-semibold text-gray-800"></p>
+                </div>
+            </div>
+
+            <!-- Campos Extensión Especialista -->
+            <div id="wrapper-detalle-especialidad" class="hidden p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <p class="font-semibold text-gray-400 uppercase text-[10px]">Especialidad Médica Asignada:</p>
+                <p id="detalle-especialidad" class="font-bold text-teal-800 text-xs mt-0.5"></p>
+            </div>
+
+            <!-- Campos Extensión Paciente -->
+            <div id="wrapper-detalle-paciente" class="hidden p-3 bg-amber-50/60 rounded-xl border border-amber-200">
+                <p class="font-semibold text-gray-400 uppercase text-[10px]">Fecha de Nacimiento:</p>
+                <p id="detalle-fecha-nacimiento" class="font-bold text-amber-900 text-xs mt-0.5"></p>
+            </div>
+        </div>
+        <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
+            <button type="button" onclick="cerrarModal('modal-detalle-usuario')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition cursor-pointer">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Registrar Nuevo Usuario -->
+<div id="modal-crear-usuario" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-outline-variant/30">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">person_add</span> Registrar Nuevo Usuario
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-crear-usuario')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'admin_crear_usuario' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <!-- Paso 1: Selección del Rol de Usuario -->
+            <div class="p-4 bg-gradient-to-r from-teal-50 via-sky-50 to-teal-50/50 rounded-2xl border border-teal-200 shadow-2xs">
+                <label class="block font-extrabold text-teal-900 mb-1.5 flex items-center gap-1.5 text-xs">
+                    <span class="w-5 h-5 rounded-full bg-teal-700 text-white flex items-center justify-center font-bold text-[10px]">1</span>
+                    <span>Paso 1: Seleccione el Rol del Usuario a Registrar *</span>
+                </label>
+                <select id="crear-select-rol" name="rol" required onchange="toggleFieldsByRole(this.value, 'crear')"
+                    class="w-full text-xs rounded-xl border-teal-300 focus:border-clinical-teal focus:ring-clinical-teal bg-white font-bold text-primary shadow-2xs py-2">
+                    <option value="" disabled selected>-- Seleccione un rol para cargar el formulario --</option>
+                    {% for val, label in roles %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Paso 2: Formulario Adaptativo cargado dinámicamente debajo -->
+            <div id="crear-form-body" class="hidden space-y-4 pt-2 border-t border-slate-200 animate-fade-in-up">
+                <div class="flex items-center gap-2 text-teal-800 font-extrabold text-xs">
+                    <span class="w-5 h-5 rounded-full bg-clinical-teal text-white flex items-center justify-center font-bold text-[10px]">2</span>
+                    <span id="crear-role-title">Paso 2: Complete la Información de la Cuenta</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-primary mb-1">Nombre Completo *</label>
+                        <input type="text" name="nombre_completo" required placeholder="Ej: Carlos Pérez Ruiz"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-primary mb-1">Tipo de Documento *</label>
+                        <select name="tipo_documento" required
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                            {% for code, label in tipos_documento %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-primary mb-1">Número de Documento *</label>
+                        <input type="text" name="num_documento" required placeholder="Ej: 1003003003"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-primary mb-1">Correo Electrónico (Usuario) *</label>
+                        <input type="email" name="correo" required placeholder="usuario@pulsia.com"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-primary mb-1">Teléfono de Contacto</label>
+                        <input type="text" name="telefono" placeholder="300 123 4567"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+
+                    <!-- Extensión Especialista -->
+                    <div id="crear-field-especialidad" class="hidden">
+                        <label class="block font-semibold text-primary mb-1">Especialidad Médica *</label>
+                        <select name="especialidad_id"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                            <option value="">Seleccione una especialidad...</option>
+                            {% for esp in especialidades %}
+                            <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="crear-field-consultorio" class="hidden">
+                        <label class="block font-semibold text-primary mb-1">Consultorio Asignado</label>
+                        <select name="consultorio_id"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                            <option value="">Sin consultorio inicial...</option>
+                            {% for cons in consultorios %}
+                            <option value="{{ cons.id }}">Consultorio {{ cons.nombre_codigo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Extensión Paciente -->
+                    <div id="crear-field-paciente" class="hidden sm:col-span-2">
+                        <label class="block font-semibold text-primary mb-1">Fecha de Nacimiento del Paciente *</label>
+                        <input type="date" name="fecha_nacimiento" value="1995-01-01"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-primary mb-1">Contraseña Inicial *</label>
+                        <input type="password" name="password" required value="123456"
+                            class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                    <button type="button" onclick="cerrarModal('modal-crear-usuario')"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition cursor-pointer">
+                        Guardar Usuario
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div id="modal-editar-usuario" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-outline-variant/30">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">edit</span> Editar Información de Usuario
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-editar-usuario')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form id="form-editar-usuario" method="POST" action="" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-primary mb-1">Nombre Completo *</label>
+                    <input type="text" id="edit-nombre" name="nombre_completo" required
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Tipo de Documento *</label>
+                    <select id="edit-tipo-doc" name="tipo_documento" required
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                        {% for code, label in tipos_documento %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Número de Documento *</label>
+                    <input type="text" id="edit-num-doc" name="num_documento" required
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Correo Electrónico *</label>
+                    <input type="email" id="edit-correo" name="correo" required
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Teléfono</label>
+                    <input type="text" id="edit-telefono" name="telefono"
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-primary mb-1">Rol del Usuario *</label>
+                    <select id="edit-rol" name="rol" required onchange="toggleFieldsByRole(this.value, 'editar')"
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                        {% for val, label in roles %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Extensión Especialista -->
+                <div id="edit-field-especialidad">
+                    <label class="block font-semibold text-primary mb-1">Especialidad Médica</label>
+                    <select id="edit-especialidad" name="especialidad_id"
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                        <option value="">Seleccione una especialidad...</option>
+                        {% for esp in especialidades %}
+                        <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="edit-field-consultorio">
+                    <label class="block font-semibold text-primary mb-1">Consultorio Asignado</label>
+                    <select id="edit-consultorio" name="consultorio_id"
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                        <option value="">Sin consultorio asignado...</option>
+                        {% for cons in consultorios %}
+                        <option value="{{ cons.id }}">Consultorio {{ cons.nombre_codigo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Extensión Paciente -->
+                <div id="edit-field-paciente" class="hidden sm:col-span-2">
+                    <label class="block font-semibold text-primary mb-1">Fecha de Nacimiento del Paciente</label>
+                    <input type="date" id="edit-fecha-nacimiento" name="fecha_nacimiento"
+                        class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+                </div>
+
+                <!-- Cambio de Contraseña Opcional por Administrador -->
+                <div class="sm:col-span-2 p-3 bg-amber-50/60 rounded-xl border border-amber-200/80">
+                    <label class="block font-bold text-amber-900 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-base">key</span>
+                        <span>Cambiar Contraseña (Opcional):</span>
+                    </label>
+                    <input type="password" id="edit-nueva-password" name="nueva_password" placeholder="Dejar en blanco para no modificar la contraseña actual"
+                        class="w-full text-xs rounded-xl border-amber-300 focus:border-clinical-teal focus:ring-clinical-teal bg-white">
+                </div>
+
+                <div class="sm:col-span-2 flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="edit-active" name="is_active"
+                        class="rounded text-clinical-teal focus:ring-clinical-teal">
+                    <label for="edit-active" class="text-xs font-semibold text-gray-700">Cuenta Activa (Permitir acceso al sistema)</label>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="cerrarModal('modal-editar-usuario')"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-xl text-xs shadow transition cursor-pointer">
+                    Actualizar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleFieldsByRole(roleValue, mode) {
+        if (mode === 'crear') {
+            const bodyEl = document.getElementById('crear-form-body');
+            const roleTitleEl = document.getElementById('crear-role-title');
+
+            if (!roleValue) {
+                if (bodyEl) bodyEl.classList.add('hidden');
+                return;
+            }
+
+            if (bodyEl) bodyEl.classList.remove('hidden');
+            if (roleTitleEl) {
+                roleTitleEl.textContent = `Paso 2: Complete la Información de la Cuenta (${roleValue})`;
+            }
+        }
+
+        const specField = mode === 'crear' ? document.getElementById('crear-field-especialidad') : document.getElementById('edit-field-especialidad');
+        const consField = mode === 'crear' ? document.getElementById('crear-field-consultorio') : document.getElementById('edit-field-consultorio');
+        const pacField = mode === 'crear' ? document.getElementById('crear-field-paciente') : document.getElementById('edit-field-paciente');
+
+        if (roleValue === 'Especialista') {
+            if (specField) specField.classList.remove('hidden');
+            if (consField) consField.classList.remove('hidden');
+            if (pacField) pacField.classList.add('hidden');
+        } else if (roleValue === 'Paciente') {
+            if (specField) specField.classList.add('hidden');
+            if (consField) consField.classList.add('hidden');
+            if (pacField) pacField.classList.remove('hidden');
+        } else {
+            if (specField) specField.classList.add('hidden');
+            if (consField) consField.classList.add('hidden');
+            if (pacField) pacField.classList.add('hidden');
+        }
+    }
+
+    function abrirModalCrearUsuario() {
+        const selectEl = document.getElementById('crear-select-rol');
+        if (selectEl) {
+            selectEl.value = '';
+        }
+        const bodyEl = document.getElementById('crear-form-body');
+        if (bodyEl) {
+            bodyEl.classList.add('hidden');
+        }
+        document.getElementById('modal-crear-usuario').classList.remove('hidden');
+    }
+
+
+    function abrirModalDetalleUsuario(nombre, rol, tipoDoc, numDoc, correo, telefono, especialidad, isActive, fechaNacimiento) {
+        document.getElementById('detalle-avatar').innerText = (nombre || 'U')[0].toUpperCase();
+        document.getElementById('detalle-nombre').innerText = nombre || 'N/A';
+        document.getElementById('detalle-rol-badge').innerText = rol || 'N/A';
+        document.getElementById('detalle-documento').innerText = `${tipoDoc || 'CC'} ${numDoc || 'N/A'}`;
+        document.getElementById('detalle-correo').innerText = correo || 'N/A';
+        document.getElementById('detalle-telefono').innerText = telefono || 'Sin teléfono';
+
+        const espWrap = document.getElementById('wrapper-detalle-especialidad');
+        if (rol === 'Especialista' && especialidad) {
+            espWrap.classList.remove('hidden');
+            document.getElementById('detalle-especialidad').innerText = especialidad;
+        } else {
+            espWrap.classList.add('hidden');
+        }
+
+        const pacWrap = document.getElementById('wrapper-detalle-paciente');
+        if (rol === 'Paciente' && fechaNacimiento) {
+            pacWrap.classList.remove('hidden');
+            document.getElementById('detalle-fecha-nacimiento').innerText = fechaNacimiento;
+        } else {
+            pacWrap.classList.add('hidden');
+        }
+
+        const estadoEl = document.getElementById('detalle-estado');
+        if (isActive) {
+            estadoEl.innerText = 'Cuenta Activa';
+            estadoEl.className = 'inline-block px-2.5 py-0.5 rounded-full text-white font-bold text-[10px] bg-emerald-600';
+        } else {
+            estadoEl.innerText = 'Inactivo / Dado de baja';
+            estadoEl.className = 'inline-block px-2.5 py-0.5 rounded-full text-white font-bold text-[10px] bg-rose-600';
+        }
+
+        document.getElementById('modal-detalle-usuario').classList.remove('hidden');
+    }
+
+    function abrirModalEditarUsuario(id, nombre, tipoDoc, numDoc, correo, telefono, rol, especialidadId, consultorioId, isActive, fechaNacimiento) {
+        const form = document.getElementById('form-editar-usuario');
+        form.action = `/administracion/usuarios/${id}/editar/`;
+
+        document.getElementById('edit-nombre').value = nombre;
+        document.getElementById('edit-tipo-doc').value = tipoDoc;
+        document.getElementById('edit-num-doc').value = numDoc;
+        document.getElementById('edit-correo').value = correo;
+        document.getElementById('edit-telefono').value = telefono;
+        document.getElementById('edit-rol').value = rol;
+        document.getElementById('edit-especialidad').value = especialidadId || '';
+        document.getElementById('edit-consultorio').value = consultorioId || '';
+        document.getElementById('edit-active').checked = isActive;
+        document.getElementById('edit-nueva-password').value = '';
+        if (document.getElementById('edit-fecha-nacimiento')) {
+            document.getElementById('edit-fecha-nacimiento').value = fechaNacimiento || '';
+        }
+
+        toggleFieldsByRole(rol, 'editar');
+
+        document.getElementById('modal-editar-usuario').classList.remove('hidden');
+    }
+
+    function cerrarModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+</script>ist.add('hidden');
+    }
+</script>
+{% endblock %}

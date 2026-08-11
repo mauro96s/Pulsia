@@ -1,0 +1,155 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Iniciar Sesión | Pulsia Medical Systems{% endblock %}
+
+<!-- Ocultar barra superior y footer para usar el 100% de la pantalla -->
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block container_class %}w-full p-0{% endblock %}
+
+{% block content %}
+<div class="min-h-screen w-full flex items-center justify-center bg-surface p-4 sm:p-6 lg:p-8">
+
+    <!-- Split Screen Container (50/50 Desktop) usando el 100% del espacio visual -->
+    <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden grid grid-cols-1 lg:grid-cols-2 min-h-[85vh] transition-all duration-500 ease-in-out">
+        
+        <!-- LADO IZQUIERDO: Branding, Logo y Mensaje Institucional -->
+        <div class="relative bg-gradient-to-br from-primary via-primary-container to-secondary text-white p-8 sm:p-12 flex flex-col justify-between overflow-hidden">
+            
+            <!-- Elementos de Fondo Decorativos -->
+            <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-clinical-teal/20 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
+            
+            <!-- Marca Superior -->
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-clinical-teal text-white flex items-center justify-center shadow-lg">
+                        <span class="material-symbols-outlined text-3xl">local_hospital</span>
+                    </div>
+                    <div>
+                        <span class="font-heading font-extrabold text-2xl tracking-tight text-white">Pulsia</span>
+                        <span class="block text-xs uppercase font-bold text-secondary-container tracking-widest -mt-1">Medical Systems</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mt-10">
+                    <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-clinical-teal/30 text-secondary-container border border-clinical-teal/40 uppercase tracking-wider">
+                        Sistema Clínico Integrado
+                    </span>
+                    <h2 class="font-heading text-3xl sm:text-4xl font-bold leading-tight text-white">
+                        Gestión de Agendamiento Inteligente y Seguro
+                    </h2>
+                    <p class="text-xs sm:text-sm text-on-primary-container leading-relaxed">
+                        Plataforma unificada para la administración de citas médicas, control de recepción omnicanal, seguimiento de especialistas y autogestión.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ticker de Métricas / Garantías -->
+            <div class="relative z-10 mt-8 pt-6 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="font-heading text-xl font-bold text-white">100%</p>
+                    <p class="text-[10px] text-secondary-container font-semibold uppercase tracking-wider">Seguridad</p>
+                </div>
+                <div>
+                    <p class="font-heading text-xl font-bold text-white">24/7</p>
+                    <p class="text-[10px] text-secondary-container font-semibold uppercase tracking-wider">Disponibilidad</p>
+                </div>
+                <div>
+                    <p class="font-heading text-xl font-bold text-white">15 min</p>
+                    <p class="text-[10px] text-secondary-container font-semibold uppercase tracking-wider">Inactividad (RN07)</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- LADO DERECHO: Formulario de Iniciar Sesión -->
+        <div class="p-8 sm:p-12 flex flex-col justify-center bg-white relative">
+            
+            <div class="max-w-md w-full mx-auto">
+                
+                <!-- Encabezado del Formulario -->
+                <div class="mb-8">
+                    <h1 class="font-heading text-2xl font-bold text-primary">Iniciar Sesión</h1>
+                    <p class="text-xs text-on-surface-variant mt-1">Ingresa con tus credenciales asignadas para acceder al sistema.</p>
+                </div>
+
+                <!-- Formulario -->
+                <form method="post" action="{% url 'login' %}" class="space-y-5">
+                    {% csrf_token %}
+
+                    <!-- Campo Correo / Username -->
+                    <div>
+                        <label for="username" class="block text-xs font-semibold text-primary uppercase tracking-wider mb-2">
+                            Correo Electrónico
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                                <span class="material-symbols-outlined text-lg">mail</span>
+                            </div>
+                            <input type="email" id="username" name="username" required
+                                placeholder="tu-correo@pulsia.com"
+                                class="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none bg-surface-container-low/30">
+                        </div>
+                    </div>
+
+                    <!-- Campo Contraseña -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="password" class="block text-xs font-semibold text-primary uppercase tracking-wider">
+                                Contraseña
+                            </label>
+                            <a href="#" class="text-xs font-medium text-secondary hover:text-primary transition">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                                <span class="material-symbols-outlined text-lg">lock</span>
+                            </div>
+                            <input type="password" id="password" name="password" required
+                                placeholder="••••••••"
+                                class="w-full pl-10 pr-10 py-3 text-sm rounded-xl border border-outline-variant/60 focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none bg-surface-container-low/30">
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-primary">
+                                <span class="material-symbols-outlined text-lg" id="eye-icon">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botón Submit -->
+                    <button type="submit"
+                        class="w-full py-3.5 px-4 bg-primary hover:bg-primary-container text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                        <span>Ingresar al Sistema</span>
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </button>
+                </form>
+
+                <!-- Conmutación suave a Registro -->
+                <div class="mt-8 pt-6 border-t border-outline-variant/30 text-center">
+                    <p class="text-xs text-on-surface-variant mb-2">¿Aún no tienes una cuenta?</p>
+                    <a href="{% url 'register' %}" class="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 bg-soft-sky/60 hover:bg-soft-sky text-primary font-bold text-xs rounded-xl border border-secondary-container transition duration-300">
+                        <span class="material-symbols-outlined text-base">person_add</span>
+                        <span>Registrarme</span>
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function togglePasswordVisibility() {
+        const input = document.getElementById('password');
+        const icon = document.getElementById('eye-icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
+    }
+</script>
+{% endblock %}

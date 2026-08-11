@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}Pulsia - Sistema de Agendamiento Médico{% endblock %}</title>
+
+    <!-- Google Fonts: Geist & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols Outlined Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CSS con configuración personalizada de tema -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#123748",
+                        "primary-container": "#2c4e60",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#9cbfd4",
+                        secondary: "#0e6877",
+                        "secondary-container": "#a2ebfd",
+                        "clinical-teal": "#0D9488",
+                        "soft-sky": "#E0F2FE",
+                        "matte-slate": "#334155",
+                        "success-emerald": "#059669",
+                        "warning-amber": "#D97706",
+                        "error-red": "#BE123C",
+                        surface: "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "on-surface-variant": "#42484c",
+                        outline: "#72787c",
+                        "outline-variant": "#c2c7cc"
+                    },
+                    fontFamily: {
+                        geist: ["Geist", "sans-serif"],
+                        inter: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Geist', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-surface text-on-surface">
+
+    <!-- BLOCK NAVBAR -->
+    {% block navbar %}
+    <header class="sticky top-0 z-50 bg-primary text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'dashboard' %}" class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-xl bg-clinical-teal flex items-center justify-center text-white shadow-inner">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <div>
+                            <span class="font-heading font-bold text-xl tracking-tight text-white">Pulsia</span>
+                            <span class="block text-[10px] uppercase font-semibold text-secondary-container tracking-wider -mt-1">Centro Médico</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Menú Superior Personalizado por Rol con Resaltado Dinámico y Títulos Limpios -->
+                <nav class="hidden md:flex items-center space-x-1.5">
+                    {% if user.is_authenticated %}
+                        {% with url_name=request.resolver_match.url_name %}
+                        
+                        {% if user.rol == 'Administrador' %}
+                            <!-- Menú Administrador -->
+                            <a href="{% url 'dashboard_admin' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'dashboard_admin' or url_name == 'dashboard' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">home</span> Inicio
+                            </a>
+                            <a href="{% url 'admin_usuarios' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'admin_usuarios' or url_name == 'admin_especialistas' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">group</span> Gestión de Usuarios
+                            </a>
+                            <a href="{% url 'admin_estructura_medica' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'admin_estructura_medica' or url_name == 'admin_catalogos' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">domain</span> Estructura Médica
+                            </a>
+                            <a href="{% url 'admin_asignaciones' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'admin_asignaciones' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">assignment_ind</span> Asignaciones
+                            </a>
+                            <a href="{% url 'admin_permisos' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'admin_permisos' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">event_busy</span> Permisos Médicos
+                            </a>
+                            <a href="{% url 'admin_reportes_bi' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'admin_reportes_bi' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">analytics</span> Reportes
+                            </a>
+
+
+                        {% elif user.rol == 'Recepcionista' %}
+                            <!-- Menú Recepcionista -->
+                            <a href="{% url 'dashboard_recepcion' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'dashboard_recepcion' or url_name == 'dashboard' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">home</span> Inicio
+                            </a>
+                            <a href="{% url 'recepcion_agenda_global' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'recepcion_agenda_global' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">calendar_view_day</span> Agenda Global
+                            </a>
+
+                            <a href="{% url 'recepcion_bandeja_reubicacion' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'recepcion_bandeja_reubicacion' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">event_repeat</span> Reubicación
+                            </a>
+
+
+
+                        {% elif user.rol == 'Especialista' %}
+                            <!-- Menú Especialista -->
+                            <a href="{% url 'dashboard_especialista' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'dashboard_especialista' or url_name == 'dashboard' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">schedule</span> Mi Agenda
+                            </a>
+
+                        {% elif user.rol == 'Paciente' %}
+                            <!-- Menú Paciente -->
+                            <a href="{% url 'dashboard_paciente' %}" 
+                               class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all
+                                      {% if url_name == 'dashboard_paciente' or url_name == 'dashboard' %}bg-primary-container text-white font-bold shadow-xs border border-primary-container{% else %}text-gray-200 hover:text-white hover:bg-primary-container/60 font-medium{% endif %}">
+                                <span class="material-symbols-outlined text-base">event_upcoming</span> Mis Citas
+                            </a>
+                        {% endif %}
+
+                        {% endwith %}
+                    {% endif %}
+                </nav>
+
+                <!-- Acciones de Usuario (Desplegable interactivo a la derecha) -->
+                <div class="flex items-center space-x-3">
+                    {% if user.is_authenticated %}
+                        <div class="relative">
+                            <button type="button" 
+                                    onclick="toggleUserDropdown()" 
+                                    id="user-menu-button"
+                                    class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-primary-container/60 transition cursor-pointer group">
+                                <div class="w-9 h-9 rounded-xl bg-clinical-teal text-white font-extrabold text-sm flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                                    {{ user.nombre_completo|default:user.username|slice:":1"|upper }}
+                                </div>
+                                <div class="hidden sm:flex flex-col text-right leading-tight">
+                                    <span class="text-xs font-bold text-white group-hover:text-teal-200 transition">{{ user.nombre_completo|default:user.username }}</span>
+                                    <span class="text-[10px] text-secondary-container font-bold uppercase tracking-wider">{{ user.rol }}</span>
+                                </div>
+                                <span class="material-symbols-outlined text-gray-300 text-sm group-hover:text-white transition">expand_more</span>
+                            </button>
+
+                            <!-- Submenú desplegable de usuario con tono intermedio suave -->
+                            <div id="user-menu-dropdown" 
+                                 class="hidden absolute right-0 mt-2 w-48 bg-[#244b5e] border border-[#376278] rounded-2xl shadow-xl p-1.5 z-50 text-white backdrop-blur-md">
+                                <a href="{% url 'logout' %}" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-200 hover:text-white hover:bg-rose-600/80 rounded-xl transition">
+                                    <span class="material-symbols-outlined text-base text-rose-300">logout</span>
+                                    <span>Cerrar Sesión</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <script>
+                            function toggleUserDropdown() {
+                                const dropdown = document.getElementById('user-menu-dropdown');
+                                if (dropdown) {
+                                    dropdown.classList.toggle('hidden');
+                                }
+                            }
+
+                            document.addEventListener('click', (e) => {
+                                const btn = document.getElementById('user-menu-button');
+                                const dropdown = document.getElementById('user-menu-dropdown');
+                                if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+                                    dropdown.classList.add('hidden');
+                                }
+                            });
+                        </script>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-xs font-semibold text-white hover:text-secondary-container px-3 py-2 rounded-lg transition">
+                            Iniciar Sesión
+                        </a>
+                        <a href="{% url 'register' %}" class="bg-clinical-teal hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow">
+                            Registrarme
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </header>
+    {% endblock %}
+
+    <!-- Notificaciones Flotantes del Sistema (Esquina Superior Derecha) -->
+    {% if messages %}
+        <div id="system-messages-container" class="fixed top-20 right-5 z-[9999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+            {% for message in messages %}
+                <div class="toast-message pointer-events-auto flex items-center justify-between gap-3 p-3.5 rounded-2xl text-xs font-medium shadow-xl backdrop-blur-md border transition-all duration-500 opacity-100 transform translate-x-0 {% if message.tags == 'error' %}bg-rose-900/90 text-rose-100 border-rose-700/60{% elif message.tags == 'warning' %}bg-amber-900/90 text-amber-100 border-amber-700/60{% elif message.tags == 'success' %}bg-emerald-900/90 text-emerald-100 border-emerald-700/60{% else %}bg-[#1e4456]/95 text-sky-100 border-[#376278]{% endif %}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">
+                            {% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+                        </span>
+                        <span>{{ message }}</span>
+                    </div>
+                    <button type="button" onclick="dismissToast(this.parentElement)" class="text-current opacity-70 hover:opacity-100 transition p-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <script>
+            function dismissToast(element) {
+                if (!element) return;
+                element.style.opacity = '0';
+                element.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    element.remove();
+                }, 500);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const toasts = document.querySelectorAll('.toast-message');
+                toasts.forEach((toast) => {
+                    setTimeout(() => {
+                        dismissToast(toast);
+                    }, 5000);
+                });
+            });
+        </script>
+    {% endif %}
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 w-full mx-auto {% block container_class %}max-w-7xl px-4 sm:px-6 lg:px-8 py-8{% endblock %}">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- MODAL DETALLE DE CITA CENTRALIZADO Y COMPARTIDO (ADMIN, RECEPCION, ESPECIALISTA, PACIENTE) -->
+    <div id="modal-detalle-cita" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-outline-variant/30 animate-fade-in-up">
+            <div class="bg-primary text-white p-4 flex items-center justify-between">
+                <h3 class="font-heading font-bold text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-teal-400">event_note</span>
+                    <span>Detalle de la Cita Médica</span>
+                </h3>
+                <button type="button" onclick="cerrarModalGeneral('modal-detalle-cita')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-bold text-gray-400 uppercase text-[10px]">Paciente:</p>
+                        <p id="modal-cita-paciente" class="font-extrabold text-primary text-sm mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-400 uppercase text-[10px]">Especialista:</p>
+                        <p id="modal-cita-especialista" class="font-bold text-secondary mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-400 uppercase text-[10px]">Consultorio:</p>
+                        <p id="modal-cita-consultorio" class="font-semibold text-gray-700 mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-400 uppercase text-[10px]">Fecha & Hora:</p>
+                        <p id="modal-cita-inicio" class="font-bold text-primary mt-0.5"></p>
+                    </div>
+                </div>
+                <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <span class="font-bold text-gray-400 uppercase text-[10px]">Estado de la Cita:</span>
+                    <span id="modal-cita-estado" class="px-3 py-1 rounded-full text-white font-bold text-[11px] shadow-2xs"></span>
+                </div>
+                <div id="modal-cita-notas-container">
+                    <p class="font-bold text-gray-400 uppercase text-[10px]">Notas / Observaciones:</p>
+                    <p id="modal-cita-notas" class="p-3 bg-surface rounded-xl text-gray-700 italic border border-outline-variant/30 mt-1"></p>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                <button type="button" onclick="cerrarModalGeneral('modal-detalle-cita')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                    Cerrar
+                </button>
+                <div id="modal-cita-btn-reagendar-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Helper Global de Filtrado Automático y Modales -->
+    <script>
+        function cerrarModalGeneral(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        }
+
+        window.abrirModalDetalleCita = function(cita) {
+            const elPac = document.getElementById('modal-cita-paciente');
+            if (!elPac) return;
+
+            elPac.innerText = cita.paciente || cita.titulo || 'N/A';
+            document.getElementById('modal-cita-especialista').innerText = cita.especialista || 'N/A';
+            document.getElementById('modal-cita-consultorio').innerText = cita.consultorio || 'N/A';
+            
+            let fechaStr = 'N/A';
+            if (cita.inicio) {
+                try {
+                    const d = new Date(cita.inicio);
+                    fechaStr = d.toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' });
+                } catch(e) { fechaStr = cita.inicio; }
+            }
+            document.getElementById('modal-cita-inicio').innerText = fechaStr;
+            document.getElementById('modal-cita-notas').innerText = cita.notas || 'Sin notas registradas.';
+            
+            const estadoEl = document.getElementById('modal-cita-estado');
+            const estado = cita.estado || 'Programada';
+            estadoEl.innerText = estado.replace('_', ' ');
+            
+            const colors = {
+                'Programada': '#2C4E60',
+                'En_Sala': '#0E6877',
+                'Atendida': '#059669',
+                'Cancelada': '#6B7280',
+                'No_Asistio': '#BE123C',
+                'Pendiente_Reubicacion': '#D97706'
+            };
+            estadoEl.style.backgroundColor = colors[estado] || '#123748';
+
+            const btnContainer = document.getElementById('modal-cita-btn-reagendar-container');
+            if (btnContainer) {
+                if (cita.id && (estado === 'Programada' || estado === 'Pendiente_Reubicacion')) {
+                    btnContainer.innerHTML = `
+                        <a href="/recepcion/agendar-cita/?cita_id=${cita.id}&modo=reprogramar" 
+                           class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition inline-flex items-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">event_repeat</span>
+                            <span>Reagendar Cita</span>
+                        </a>
+                    `;
+                } else {
+                    btnContainer.innerHTML = '';
+                }
+            }
+
+            const modalEl = document.getElementById('modal-detalle-cita');
+            if (modalEl) modalEl.classList.remove('hidden');
+        };
+
+        let searchDebounceTimer = null;
+        function autoSubmitFormDebounced(formEl) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                if (formEl) formEl.submit();
+            }, 450);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInputs = document.querySelectorAll('input[type="text"][name^="q"]');
+            searchInputs.forEach(input => {
+                if (input.value && document.referrer.includes(window.location.pathname)) {
+                    input.focus();
+                    const val = input.value;
+                    input.value = '';
+                    input.value = val;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

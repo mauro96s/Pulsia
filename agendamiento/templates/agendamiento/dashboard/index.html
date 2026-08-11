@@ -1,0 +1,100 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Panel Principal | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Hero Welcome Header -->
+    <div class="bg-gradient-to-r from-primary via-primary-container to-secondary text-white rounded-3xl p-8 shadow-lg relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-clinical-teal text-white uppercase tracking-wider">Pulsia Medical Center</span>
+            <h1 class="font-heading text-3xl font-bold mt-2">Sistema de Gestión y Agendamiento Médico</h1>
+            <p class="text-xs text-on-primary-container mt-2 leading-relaxed">
+                Selecciona la vista según el rol operativo para explorar los paneles interactivos diseñados para el centro médico.
+            </p>
+        </div>
+        <div class="absolute right-6 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none hidden md:block">
+            <span class="material-symbols-outlined text-[180px]">local_hospital</span>
+        </div>
+    </div>
+
+    <!-- Dashboards Role Switcher Cards -->
+    <div>
+        <h2 class="font-heading text-xl font-bold text-primary mb-4">Seleccionar Vista de Rol (Dashboards Operativos)</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Card 1: Administrador -->
+            <a href="{% url 'dashboard_admin' %}" class="group bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-primary transition flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mb-4 group-hover:scale-105 transition">
+                        <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-primary group-hover:text-secondary transition">Administrador</h3>
+                    <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                        Métricas de reportes BI, aprobación de permisos médicos, festivos oficiales de Colombia y gestión de catálogos operativos.
+                    </p>
+                </div>
+                <div class="mt-6 flex items-center gap-1 text-xs font-bold text-clinical-teal group-hover:translate-x-1 transition">
+                    <span>Ver Dashboard Admin</span>
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </div>
+            </a>
+
+            <!-- Card 2: Recepcionista -->
+            <a href="{% url 'dashboard_recepcion' %}" class="group bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-secondary transition flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-secondary text-white flex items-center justify-center mb-4 group-hover:scale-105 transition">
+                        <span class="material-symbols-outlined text-2xl">support_agent</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-primary group-hover:text-secondary transition">Recepcionista</h3>
+                    <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                        Agenda global omnicanal, tolerancia de llegadas en sala, estado de asistencia médica y contingencias.
+                    </p>
+                </div>
+                <div class="mt-6 flex items-center gap-1 text-xs font-bold text-clinical-teal group-hover:translate-x-1 transition">
+                    <span>Ver Dashboard Recepción</span>
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </div>
+            </a>
+
+            <!-- Card 3: Especialista -->
+            <a href="{% url 'dashboard_especialista' %}" class="group bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-clinical-teal transition flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-clinical-teal text-white flex items-center justify-center mb-4 group-hover:scale-105 transition">
+                        <span class="material-symbols-outlined text-2xl">stethoscope</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-primary group-hover:text-secondary transition">Especialista Médico</h3>
+                    <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                        Inicio de turno (Check-in), registro de anotaciones clínicas privadas y solicitud de permisos o ausencias.
+                    </p>
+                </div>
+                <div class="mt-6 flex items-center gap-1 text-xs font-bold text-clinical-teal group-hover:translate-x-1 transition">
+                    <span>Ver Dashboard Médico</span>
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </div>
+            </a>
+
+            <!-- Card 4: Paciente -->
+            <a href="{% url 'dashboard_paciente' %}" class="group bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-indigo-600 transition flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4 group-hover:scale-105 transition">
+                        <span class="material-symbols-outlined text-2xl">person</span>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-primary group-hover:text-secondary transition">Paciente</h3>
+                    <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                        Agendamiento web autónomo, reprogramación anticipada y registro en Lista de Espera.
+                    </p>
+                </div>
+                <div class="mt-6 flex items-center gap-1 text-xs font-bold text-clinical-teal group-hover:translate-x-1 transition">
+                    <span>Ver Portal del Paciente</span>
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -30,6 +30,13 @@ class Especialista(models.Model):
         on_delete=models.RESTRICT,
         related_name='especialistas'
     )
+    consultorio = models.ForeignKey(
+        Consultorio,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='especialistas'
+    )
     estado_turno = models.CharField(
         max_length=20, 
         choices=EstadoTurno.choices, 
