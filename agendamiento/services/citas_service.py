@@ -421,3 +421,18 @@ def validar_reprogramacion(cita, fecha_nueva):
         return False, "La reprogramación debe realizarse con más de 24 horas de anticipación."
 
     return True, "Reprogramación válida."
+
+
+@transaction.atomic
+def atender_y_guardar_notas_cita(cita_id: int, especialista: Especialista, notas_clinicas: str = "") -> Cita:
+    """
+    HU05: Pasa el estado de la cita a 'Atendida' y registra las notas clínicas/observaciones del paciente.
+    """
+    cita = Cita.objects.select_related('paciente__usuario', 'especialista').get(id=cita_id)
+    if cita.especialista_id != especialista.id:
+        raise PermissionError("Esta cita no pertenece a tu agenda médica.")
+    cita.estado_cita = EstadoCita.ATENDIDA
+    if notas_clinicas is not None:
+        cita.notas_clinicas = notas_clinicas.strip()
+    cita.save()
+    return cita

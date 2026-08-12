@@ -2,8 +2,13 @@ from .auth_views import login_view, register_view, logout_view
 from .dashboard_views import (
     dashboard_view,
     recepcion_dashboard_view,
-    especialista_dashboard_view,
     paciente_dashboard_view
+)
+from .especialistas_views import (
+    especialista_dashboard_view,
+    especialista_checkin_turno_view,
+    especialista_atender_cita_view,
+    especialista_solicitar_permiso_view
 )
 from .admin_views import (
     admin_dashboard_view,
@@ -63,6 +68,9 @@ __all__ = [
     'recepcion_agenda_global_view',
 
     'especialista_dashboard_view',
+    'especialista_checkin_turno_view',
+    'especialista_atender_cita_view',
+    'especialista_solicitar_permiso_view',
     'paciente_dashboard_view',
     'admin_usuarios_view',
     'admin_crear_usuario',

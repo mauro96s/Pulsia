@@ -8,10 +8,15 @@ from .citas_service import (
     agendar_cita_recepcion_balanceada,
     obtener_horarios_disponibles,
     reprogramar_cita_recepcion,
-    reubicar_cita_contingencia
+    reubicar_cita_contingencia,
+    atender_y_guardar_notas_cita
 )
 from .festivos_service import obtener_festivos_colombia, es_dia_festivo
-from .ausencias_service import declarar_ausencia_emergencia, procesar_aprobacion_permiso
+from .ausencias_service import (
+    declarar_ausencia_emergencia,
+    procesar_aprobacion_permiso,
+    solicitar_permiso_especialista
+)
 
 __all__ = [
     'validar_reprogramacion',
@@ -24,10 +29,12 @@ __all__ = [
     'obtener_horarios_disponibles',
     'reprogramar_cita_recepcion',
     'reubicar_cita_contingencia',
+    'atender_y_guardar_notas_cita',
     'obtener_festivos_colombia',
     'es_dia_festivo',
     'declarar_ausencia_emergencia',
     'procesar_aprobacion_permiso',
+    'solicitar_permiso_especialista',
 ]
 
 

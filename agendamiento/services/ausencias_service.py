@@ -73,3 +73,21 @@ def procesar_aprobacion_permiso(permiso_id: int, aprobar: bool) -> tuple[Ausenci
         citas_conflicto.update(estado_cita=EstadoCita.PENDIENTE_REUBICACION)
 
     return permiso, cant_conflictos
+
+
+def solicitar_permiso_especialista(
+    especialista: Especialista,
+    fecha_hora_inicio: datetime,
+    fecha_hora_fin: datetime,
+    motivo_solicitud: str
+) -> AusenciasPermisos:
+    """
+    HU04: Permite al especialista registrar una solicitud de permiso o ausencia médica (estado Pendiente).
+    """
+    return AusenciasPermisos.objects.create(
+        especialista=especialista,
+        fecha_hora_inicio=fecha_hora_inicio,
+        fecha_hora_fin=fecha_hora_fin,
+        motivo_solicitud=motivo_solicitud.strip(),
+        estado_aprobacion=EstadoAprobacion.PENDIENTE
+    )

@@ -17,7 +17,7 @@ def login_view(request):
         # Buscar usuario por correo
         try:
             user_obj = CustomUser.objects.get(correo=correo)
-            user = authenticate(request, username=user_obj.username, password=password)
+            user = authenticate(request, username=user_obj.correo, password=password)
         except CustomUser.DoesNotExist:
             user = None
 

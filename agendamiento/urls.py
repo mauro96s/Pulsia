@@ -7,6 +7,9 @@ from .views import (
     admin_dashboard_view,
     recepcion_dashboard_view,
     especialista_dashboard_view,
+    especialista_checkin_turno_view,
+    especialista_atender_cita_view,
+    especialista_solicitar_permiso_view,
     paciente_dashboard_view,
     admin_usuarios_view,
     admin_crear_usuario,
@@ -59,6 +62,9 @@ urlpatterns = [
     path('dashboard/admin/', admin_dashboard_view, name='dashboard_admin'),
     path('dashboard/recepcion/', recepcion_dashboard_view, name='dashboard_recepcion'),
     path('dashboard/especialista/', especialista_dashboard_view, name='dashboard_especialista'),
+    path('especialista/checkin/', especialista_checkin_turno_view, name='especialista_checkin_turno'),
+    path('especialista/cita/<int:cita_id>/atender/', especialista_atender_cita_view, name='especialista_atender_cita'),
+    path('especialista/permisos/solicitar/', especialista_solicitar_permiso_view, name='especialista_solicitar_permiso'),
     path('dashboard/paciente/', paciente_dashboard_view, name='dashboard_paciente'),
 
     # Acciones de Recepción y Control de Citas
