@@ -1,33 +1,42 @@
 from .citas_service import (
-    agendar_cita_web,
-    reprogramar_cita,
-    cancelar_cita,
+    validar_reprogramacion,
     registrar_inasistencia,
-    registrar_notas_clinicas,
-    activar_contingencia_emergencia,
-    unirse_lista_espera,
+    evaluar_tolerancia_cita,
+    marcar_llegada_paciente,
+    marcar_checkin_medico,
+    crear_paciente_expres,
+    agendar_cita_recepcion_balanceada,
+    obtener_horarios_disponibles,
+    reprogramar_cita_recepcion,
+    reubicar_cita_contingencia,
+    atender_y_guardar_notas_cita
 )
-from .festivos_service import es_dia_festivo
-from .notificaciones_service import (
-    notificar_confirmacion_cita,
-    notificar_reprogramacion_cita,
-    notificar_cancelacion_institucional,
-    notificar_lista_espera_liberacion,
+from .festivos_service import obtener_festivos_colombia, es_dia_festivo
+from .ausencias_service import (
+    declarar_ausencia_emergencia,
+    procesar_aprobacion_permiso,
+    solicitar_permiso_especialista
 )
 
 __all__ = [
-    'agendar_cita_web',
-    'reprogramar_cita',
-    'cancelar_cita',
+    'validar_reprogramacion',
     'registrar_inasistencia',
-    'registrar_notas_clinicas',
-    'activar_contingencia_emergencia',
-    'unirse_lista_espera',
+    'evaluar_tolerancia_cita',
+    'marcar_llegada_paciente',
+    'marcar_checkin_medico',
+    'crear_paciente_expres',
+    'agendar_cita_recepcion_balanceada',
+    'obtener_horarios_disponibles',
+    'reprogramar_cita_recepcion',
+    'reubicar_cita_contingencia',
+    'atender_y_guardar_notas_cita',
+    'obtener_festivos_colombia',
     'es_dia_festivo',
-    'notificar_confirmacion_cita',
-    'notificar_reprogramacion_cita',
-    'notificar_cancelacion_institucional',
-    'notificar_lista_espera_liberacion',
+    'declarar_ausencia_emergencia',
+    'procesar_aprobacion_permiso',
+    'solicitar_permiso_especialista',
 ]
-def load_tests(loader, tests, pattern):
-    return tests
+
+
+
+

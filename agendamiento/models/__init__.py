@@ -1,4 +1,4 @@
-from .usuarios import CustomUser, RolUsuario
+from .usuarios import CustomUser, RolUsuario, TipoDocumento
 from .pacientes import Paciente
 from .especialistas import Especialidad, Consultorio, Especialista, HorarioLaboral, EstadoTurno
 from .citas import Cita, AusenciasPermisos, EstadoCita, EstadoAprobacion, ListaEspera, EstadoListaEspera
@@ -6,6 +6,7 @@ from .citas import Cita, AusenciasPermisos, EstadoCita, EstadoAprobacion, ListaE
 __all__ = [
     'CustomUser',
     'RolUsuario',
+    'TipoDocumento',
     'Paciente',
     'Especialidad',
     'Consultorio',

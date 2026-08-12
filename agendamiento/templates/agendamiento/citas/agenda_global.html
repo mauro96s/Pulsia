@@ -1,0 +1,374 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Agenda Global | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<style>
+    .fc {
+        font-family: 'Inter', sans-serif;
+    }
+    .fc-header-toolbar {
+        margin-bottom: 1.25rem !important;
+    }
+    .fc-toolbar-title {
+        font-family: 'Geist', sans-serif;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #123748 !important;
+    }
+    .fc-button-primary {
+        background-color: #2c4e60 !important;
+        border-color: #2c4e60 !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.5rem !important;
+        text-transform: capitalize !important;
+    }
+    .fc-button-primary:hover {
+        background-color: #0e6877 !important;
+        border-color: #0e6877 !important;
+    }
+    .fc-button-active {
+        background-color: #0D9488 !important;
+        border-color: #0D9488 !important;
+    }
+    .fc-daygrid-day-number {
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        color: #123748;
+        font-size: 0.85rem;
+    }
+    .fc-event {
+        border-radius: 0.375rem !important;
+        font-size: 0.75rem !important;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+    .fc-event:hover {
+        transform: scale(1.01);
+    }
+    .fc-timegrid-event {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .fc-timegrid-event .fc-event-main {
+        padding: 0 !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    /* Estilo para el día de hoy: Verde biche suave */
+    .fc .fc-day-today,
+    .fc .fc-timegrid-col.fc-day-today {
+        background-color: #DCFCE7 !important; /* Verde biche suave */
+    }
+    .fc .fc-day-today .fc-daygrid-day-number {
+        color: #047857 !important;
+        font-weight: 800 !important;
+    }
+    .pulsia-holiday-badge {
+        background-color: #F97316 !important;
+        border-color: #EA580C !important;
+        color: #FFFFFF !important;
+    }
+
+</style>
+
+<div class="space-y-6">
+
+
+    <!-- Header Module Card (Estilo Quiet Authority) -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Agenda Global de la Clínica</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Visualización unificada de la programación médica, filtros avanzados por especialidad, especialista o paciente y gestión de citas.</p>
+        </div>
+        <div id="wrapper-btn-volver-mes" class="hidden">
+            <button type="button" onclick="window.pulsiaCal.volverAMes()" 
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">calendar_month</span>
+                <span>Volver a Vista Mes</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BARRA DE FILTROS SEARCHABLE Y BOTÓN DE ACCIÓN (+ NUEVA CITA) -->
+    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        
+        <!-- SUBMENÚ DE FILTROS AVANZADOS CON BÚSQUEDA INTERACTIVA (IZQUIERDA) -->
+        <div class="flex flex-wrap items-center gap-4">
+            
+            <!-- Filtro Especialidad Searchable Combobox -->
+            <div class="relative space-y-1 min-w-[210px]" id="wrapperComboEspecialidad">
+                <label class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-clinical-teal">medical_services</span>
+                    Especialidad
+                </label>
+                <div class="relative">
+                    <input type="text" id="inputSearchEspecialidad" placeholder="Todas las Especialidades"
+                           onfocus="toggleCombobox('dropdownEspecialidad', true)"
+                           onkeyup="filtrarComboboxOpciones('inputSearchEspecialidad', 'dropdownEspecialidad')"
+                           class="w-full pl-3 pr-8 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary font-semibold focus:bg-white focus:ring-2 focus:ring-clinical-teal cursor-pointer">
+                    <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-gray-400 text-base pointer-events-none">expand_more</span>
+                    <input type="hidden" id="selectFiltroEspecialidad" value="">
+                </div>
+                <div id="dropdownEspecialidad" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-outline-variant shadow-xl hidden py-1 text-xs space-y-0.5">
+                    <div onclick="seleccionarComboOption('inputSearchEspecialidad', 'selectFiltroEspecialidad', '', 'Todas las Especialidades', 'dropdownEspecialidad')"
+                         class="px-3 py-2 hover:bg-teal-50 cursor-pointer font-bold text-primary transition flex items-center justify-between">
+                        <span>Todas las Especialidades</span>
+                    </div>
+                    {% for esp in especialidades %}
+                        <div data-text="{{ esp.nombre_especialidad }}"
+                             onclick="seleccionarComboOption('inputSearchEspecialidad', 'selectFiltroEspecialidad', '{{ esp.id }}', '{{ esp.nombre_especialidad|escapejs }}', 'dropdownEspecialidad')"
+                             class="combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer font-medium text-gray-700 hover:text-primary transition flex items-center justify-between">
+                            <span>{{ esp.nombre_especialidad }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Filtro Especialista Searchable Combobox -->
+            <div class="relative space-y-1 min-w-[210px]" id="wrapperComboEspecialista">
+                <label class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-clinical-teal">stethoscope</span>
+                    Especialista
+                </label>
+                <div class="relative">
+                    <input type="text" id="inputSearchEspecialista" placeholder="Todos los Especialistas"
+                           onfocus="toggleCombobox('dropdownEspecialista', true)"
+                           onkeyup="filtrarComboboxOpciones('inputSearchEspecialista', 'dropdownEspecialista')"
+                           class="w-full pl-3 pr-8 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary font-semibold focus:bg-white focus:ring-2 focus:ring-clinical-teal cursor-pointer">
+                    <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-gray-400 text-base pointer-events-none">expand_more</span>
+                    <input type="hidden" id="selectFiltroEspecialista" value="">
+                </div>
+                <div id="dropdownEspecialista" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-outline-variant shadow-xl hidden py-1 text-xs space-y-0.5">
+                    <div onclick="seleccionarComboOption('inputSearchEspecialista', 'selectFiltroEspecialista', '', 'Todos los Especialistas', 'dropdownEspecialista')"
+                         class="px-3 py-2 hover:bg-teal-50 cursor-pointer font-bold text-primary transition flex items-center justify-between">
+                        <span>Todos los Especialistas</span>
+                    </div>
+                    {% for med in especialistas %}
+                        <div data-text="Dr/Dra. {{ med.usuario.nombre_completo }}"
+                             onclick="seleccionarComboOption('inputSearchEspecialista', 'selectFiltroEspecialista', '{{ med.id }}', 'Dr/Dra. {{ med.usuario.nombre_completo|escapejs }}', 'dropdownEspecialista')"
+                             class="combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer font-medium text-gray-700 hover:text-primary transition flex items-center justify-between">
+                            <span>Dr/Dra. {{ med.usuario.nombre_completo }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Filtro Paciente Searchable Combobox -->
+            <div class="relative space-y-1 min-w-[230px]" id="wrapperComboPaciente">
+                <label class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-clinical-teal">person</span>
+                    Paciente
+                </label>
+                <div class="relative">
+                    <input type="text" id="inputSearchPaciente" placeholder="Todos los Pacientes"
+                           onfocus="toggleCombobox('dropdownPaciente', true)"
+                           onkeyup="filtrarComboboxOpciones('inputSearchPaciente', 'dropdownPaciente')"
+                           class="w-full pl-3 pr-8 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary font-semibold focus:bg-white focus:ring-2 focus:ring-clinical-teal cursor-pointer">
+                    <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-gray-400 text-base pointer-events-none">expand_more</span>
+                    <input type="hidden" id="selectFiltroPaciente" value="">
+                </div>
+                <div id="dropdownPaciente" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-outline-variant shadow-xl hidden py-1 text-xs space-y-0.5">
+                    <div onclick="seleccionarComboOption('inputSearchPaciente', 'selectFiltroPaciente', '', 'Todos los Pacientes', 'dropdownPaciente')"
+                         class="px-3 py-2 hover:bg-teal-50 cursor-pointer font-bold text-primary transition flex items-center justify-between">
+                        <span>Todos los Pacientes</span>
+                    </div>
+                    {% for pac in pacientes %}
+                        <div data-text="{{ pac.usuario.nombre_completo }} {{ pac.usuario.num_documento }}"
+                             onclick="seleccionarComboOption('inputSearchPaciente', 'selectFiltroPaciente', '{{ pac.id }}', '{{ pac.usuario.nombre_completo|escapejs }} (Doc: {{ pac.usuario.num_documento|default:"N/A" }})', 'dropdownPaciente')"
+                             class="combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer font-medium text-gray-700 hover:text-primary transition flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-primary">{{ pac.usuario.nombre_completo }}</p>
+                                <p class="text-[10px] text-gray-400">Doc: {{ pac.usuario.num_documento|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <button type="button" onclick="limpiarFiltrosAgendaGlobal()" title="Limpiar Filtros"
+                    class="self-end px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1 transition cursor-pointer">
+                <span class="material-symbols-outlined text-base">restart_alt</span>
+                <span>Limpiar</span>
+            </button>
+        </div>
+
+        <!-- BOTÓN DE ACCIÓN ÚNICO (LADO DERECHO: + AGENDAR CITA) -->
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{% url 'recepcion_agendar_cita' %}" 
+               class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">add_circle</span>
+                <span>Agendar Cita</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENEDORES DEL CALENDARIO (VISTA MES Y VISTA DETALLADA DIARIA CON CARRUSEL) -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
+        
+        <!-- VISTA 1: CALENDARIO MES GENERAL -->
+        <div id="calendario-mes-wrapper" class="transition-all duration-300">
+            <div id="calendarAgendaGlobal" class="min-h-[650px] w-full"></div>
+        </div>
+
+        <!-- VISTA 2: DETALLE DIARIO CON CARRUSEL SEMANAL Y TABLA DE CITAS -->
+        <div id="calendario-detalle-wrapper" class="hidden transition-all duration-300 space-y-6">
+            
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold shrink-0">
+                        <span class="material-symbols-outlined text-2xl">event_available</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-700">Vista Detallada por Día</span>
+                        <h2 id="titulo-fecha-seleccionada" class="text-base sm:text-lg font-extrabold text-primary">Cargando fecha...</h2>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span id="label-mes-actual-carrusel" class="text-xs font-bold text-gray-500 uppercase tracking-wider"></span>
+                    <button type="button" onclick="window.pulsiaCal.volverAMes()" 
+                            class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition">
+                        ← Vista Mes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner Festivo -->
+            <div id="contenedor-banner-festivo" class="hidden"></div>
+
+            <!-- Carrusel Semanal -->
+            <div id="carrusel-semanal-container"></div>
+
+            <!-- Tabla de Citas del Día -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-heading font-extrabold text-sm text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-teal-600 text-base">format_list_bulleted</span>
+                        <span>Citas Programadas para este Día</span>
+                    </h3>
+                    <span id="contador-tabla-citas" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200"></span>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-gray-100 shadow-2xs">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-surface-container-low text-primary uppercase font-extrabold tracking-wider text-[10px] border-b border-gray-200">
+                                <th class="px-4 py-3">Hora</th>
+                                <th class="px-4 py-3">Paciente</th>
+                                <th class="px-4 py-3">Especialista</th>
+                                <th class="px-4 py-3">Consultorio</th>
+                                <th class="px-4 py-3">Estado</th>
+                                <th class="px-4 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-citas-dia" class="divide-y divide-gray-100 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FullCalendar JS + PulsiaCalendar -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="/static/js/pulsia_calendar.js"></script>
+
+<script>
+    let pulsiaCalGlobal = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        pulsiaCalGlobal = new PulsiaCalendar('Recepcionista', '#calendarAgendaGlobal');
+        window.pulsiaCal = pulsiaCalGlobal;
+    });
+
+    function toggleCombobox(dropdownId, show) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        if (show) {
+            document.querySelectorAll('#wrapperComboEspecialidad [id^="dropdown"], #wrapperComboEspecialista [id^="dropdown"], #wrapperComboPaciente [id^="dropdown"]').forEach(el => {
+                if (el.id !== dropdownId) el.classList.add('hidden');
+            });
+            dropdown.classList.remove('hidden');
+        } else {
+            dropdown.classList.add('hidden');
+        }
+    }
+
+    function filtrarComboboxOpciones(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        if (!input || !dropdown) return;
+        
+        dropdown.classList.remove('hidden');
+        const filter = input.value.toLowerCase().trim();
+        const items = dropdown.querySelectorAll('.combo-item');
+
+        items.forEach(item => {
+            const text = (item.getAttribute('data-text') || item.innerText).toLowerCase();
+            if (text.includes(filter)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function seleccionarComboOption(inputId, hiddenId, val, text, dropdownId) {
+        document.getElementById(hiddenId).value = val;
+        document.getElementById(inputId).value = text;
+        document.getElementById(dropdownId).classList.add('hidden');
+        filtrarAgendaGlobal();
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#wrapperComboEspecialidad') && 
+            !e.target.closest('#wrapperComboEspecialista') && 
+            !e.target.closest('#wrapperComboPaciente')) {
+            document.querySelectorAll('#dropdownEspecialidad, #dropdownEspecialista, #dropdownPaciente').forEach(el => el.classList.add('hidden'));
+        }
+    });
+
+    function filtrarAgendaGlobal() {
+        const espId = document.getElementById('selectFiltroEspecialidad').value;
+        const medId = document.getElementById('selectFiltroEspecialista').value;
+        const pacId = document.getElementById('selectFiltroPaciente').value;
+
+        let url = `/api/citas/eventos/?especialidad=${espId}&especialista=${medId}&paciente=${pacId}`;
+
+        if (pulsiaCalGlobal && pulsiaCalGlobal.calendar) {
+            pulsiaCalGlobal.calendar.removeAllEventSources();
+            pulsiaCalGlobal.calendar.addEventSource(url);
+        }
+        if (pulsiaCalGlobal && pulsiaCalGlobal.currentViewMode === 'dayDetail' && pulsiaCalGlobal.selectedDateStr) {
+            pulsiaCalGlobal.renderTablaCitasDia(pulsiaCalGlobal.selectedDateStr);
+            pulsiaCalGlobal.renderCarruselSemana(pulsiaCalGlobal.selectedDateStr);
+        }
+    }
+
+    function limpiarFiltrosAgendaGlobal() {
+        document.getElementById('selectFiltroEspecialidad').value = '';
+        document.getElementById('inputSearchEspecialidad').value = '';
+        
+        document.getElementById('selectFiltroEspecialista').value = '';
+        document.getElementById('inputSearchEspecialista').value = '';
+        
+        document.getElementById('selectFiltroPaciente').value = '';
+        document.getElementById('inputSearchPaciente').value = '';
+
+        // Restablecer visibilidad de todas las opciones en los desplegables
+        document.querySelectorAll('.combo-item').forEach(el => el.classList.remove('hidden'));
+        
+        filtrarAgendaGlobal();
+    }
+
+</script>
+{% endblock %}

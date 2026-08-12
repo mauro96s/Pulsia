@@ -1,0 +1,134 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Mi Portal de Salud | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header & Quick Agendar Button -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/30">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary text-white uppercase tracking-wider">Portal del Paciente</span>
+                <span class="text-xs text-on-surface-variant font-medium">HU02 / HU03 / HU09</span>
+            </div>
+            <h1 class="font-heading text-2xl font-bold text-primary mt-1">¡Hola, Juan Carlos!</h1>
+            <p class="text-xs text-on-surface-variant">Gestiona tus reservas médicas, reprogramaciones y consulta tus recomendaciones de salud.</p>
+        </div>
+
+        <div class="flex gap-2">
+            <!-- Botón Agendar Nueva Cita -->
+            <button class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+                <span class="material-symbols-outlined text-lg">calendar_add_on</span>
+                <span>Agendar Nueva Cita</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Indicador de Estado / Penalización por Inasistencias -->
+    <div class="p-4 rounded-2xl border border-blue-200 bg-soft-sky/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">verified</span>
+            </div>
+            <div>
+                <p class="font-bold text-xs text-primary">Estado de Agendamiento Web: Habilitado</p>
+                <p class="text-[11px] text-on-surface-variant">
+                    Has acumulado <strong>0 de 3 inasistencias</strong>. Recuerda cancelar o reprogramar con mínimo 24h de anticipación.
+                </p>
+            </div>
+        </div>
+        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">Sin Sanciones</span>
+    </div>
+
+    <!-- Grid Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Left 2 Cols: Mis Citas Programadas -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
+                <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
+                    <h2 class="font-heading text-lg font-bold text-primary">Mis Citas Próximas</h2>
+                    <span class="text-xs font-bold text-secondary">1 Cita Activa</span>
+                </div>
+
+                <div class="space-y-4">
+                    
+                    <!-- Tarjeta de Cita Próxima con Opción a Reprogramar -->
+                    <div class="p-5 rounded-2xl border border-outline-variant/40 bg-surface-container-low/20 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 uppercase">Cardiología</span>
+                                <h3 class="font-bold text-base text-primary mt-1">Dr. Roberto Gómez</h3>
+                                <p class="text-xs text-on-surface-variant">Consultorio 101 • Sede Central</p>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <p class="font-bold text-sm text-primary">Viernes, 14 Ago 2026</p>
+                                <p class="text-xs text-clinical-teal font-semibold">10:00 AM</p>
+                            </div>
+                        </div>
+
+                        <!-- Estado de Reprogramación -->
+                        <div class="p-3 rounded-xl bg-white border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-2 text-on-surface-variant">
+                                <span class="material-symbols-outlined text-base text-secondary">info</span>
+                                <span>Reprogramaciones realizadas: <strong>0 / 1</strong></span>
+                            </div>
+
+                            <!-- Botones Reprogramar & Cancelar -->
+                            <div class="flex items-center gap-2">
+                                <button class="px-3 py-1.5 bg-secondary hover:bg-primary text-white font-semibold text-xs rounded-lg shadow transition">
+                                    Reprogramar Cita
+                                </button>
+                                <button class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-error-red font-semibold text-xs rounded-lg transition">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Recomendaciones Históricas del Médico -->
+            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
+                <h2 class="font-heading text-lg font-bold text-primary mb-4">Historial de Recomendaciones</h2>
+
+                <div class="p-4 rounded-xl border border-outline-variant/30 bg-surface-container-low/20 space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-primary">
+                        <span>Consulta General — Dr. Alejandro Silva</span>
+                        <span class="text-on-surface-variant">25 Jul 2026</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant">
+                        "Continuar con la hidratación adecuada. Se recomienda realizar exámenes de sangre de control en 3 meses."
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Col: Lista de Espera -->
+        <div class="space-y-6">
+            
+            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
+                <div class="flex items-center gap-2 mb-3 text-primary">
+                    <span class="material-symbols-outlined text-2xl text-warning-amber">hourglass_top</span>
+                    <h3 class="font-heading font-bold text-base">Lista de Espera</h3>
+                </div>
+                <p class="text-xs text-on-surface-variant mb-4">
+                    Si no encuentras disponibilidad cercana con tu especialista, inscríbete para tomar un cupo liberado por cancelación.
+                </p>
+
+                <button class="w-full py-2.5 bg-warning-amber hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">queue</span>
+                    Unirme a Lista de Espera
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

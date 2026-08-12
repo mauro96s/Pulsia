@@ -1,0 +1,469 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Inicio - Dashboard Administrador | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<!-- FullCalendar.js v6.1 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/es.global.min.js"></script>
+<!-- Script Integrador PulsiaCalendar -->
+<script src="/static/js/pulsia_calendar.js"></script>
+
+<style>
+    .fc {
+        font-family: 'Inter', sans-serif;
+    }
+    .fc-header-toolbar {
+        margin-bottom: 1.25rem !important;
+    }
+    .fc-toolbar-title {
+        font-family: 'Geist', sans-serif;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #123748 !important;
+    }
+    .fc-button-primary {
+        background-color: #2c4e60 !important;
+        border-color: #2c4e60 !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.5rem !important;
+        text-transform: capitalize !important;
+    }
+    .fc-button-primary:hover {
+        background-color: #0e6877 !important;
+        border-color: #0e6877 !important;
+    }
+    .fc-button-active {
+        background-color: #0D9488 !important;
+        border-color: #0D9488 !important;
+    }
+    .fc-daygrid-day-number {
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        color: #123748;
+        font-size: 0.85rem;
+    }
+    .fc-event {
+        border-radius: 0.375rem !important;
+        font-size: 0.75rem !important;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+    .fc-event:hover {
+        transform: scale(1.01);
+    }
+    .fc-timegrid-event {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .fc-timegrid-event .fc-event-main {
+        padding: 0 !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Estilo para el día de hoy: Verde biche suave */
+    .fc .fc-day-today,
+    .fc .fc-timegrid-col.fc-day-today {
+        background-color: #DCFCE7 !important; /* Verde biche suave */
+    }
+    .fc .fc-day-today .fc-daygrid-day-number {
+        color: #047857 !important;
+        font-weight: 800 !important;
+    }
+    /* Celdas del mes ultra compactas (44px) solo en vista mes */
+    .fc-dayGridMonth-view .fc-daygrid-day-frame {
+        min-height: 40px !important;
+        height: 44px !important;
+        padding: 2px 4px !important;
+        overflow: hidden !important;
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+    /* Número del día en la parte superior derecha (esquina) */
+    .fc .fc-daygrid-day-top {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    .fc-daygrid-day-number {
+        font-family: 'Geist', sans-serif;
+        font-weight: 700;
+        color: #123748;
+        font-size: 0.75rem !important;
+        padding: 1px 3px !important;
+        line-height: 1 !important;
+    }
+    /* Ocultar tarjetas de eventos por defecto */
+    .fc-daygrid-month-start .fc-daygrid-day-events,
+    .fc-daygrid-day-events {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    /* Centrado de badge de conteo */
+    .pulsia-day-count-badge {
+        margin: 0 auto 2px auto !important;
+        text-align: center !important;
+        align-self: center !important;
+    }
+    /* Animaciones suaves para la transición del carrusel y la tabla */
+    @keyframes fadeInUpSmooth {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUpSmooth 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
+<div class="w-full space-y-6">
+
+    <!-- Encabezado Principal del Dashboard -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Visión General del Centro Médico</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Métricas BI en tiempo real y agenda interactiva global de citas.</p>
+        </div>
+
+        <!-- Acciones Rápidas del Administrador -->
+        <div class="flex items-center gap-2">
+            <a href="{% url 'admin_reportes_bi' %}"
+               class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                <span class="material-symbols-outlined text-base">analytics</span>
+                <span>Reportes</span>
+            </a>
+
+            <!-- Botón Volver a Vista Mensual (Ubicado en el encabezado principal, visible en modo detalle) -->
+            <div id="wrapper-btn-volver-mes" class="hidden">
+                <button type="button" 
+                        onclick="pulsiaCal.volverAMes()" 
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer">
+                    <span class="material-symbols-outlined text-base">calendar_month</span>
+                    <span>Volver a Vista Mensual</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Contenedor Principal en Grilla 2 Columnas (1/4 Izquierda - Pila de Cards, 3/4 Derecha - Calendario & Filtros) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+        <!-- Columna Izquierda (1/4): Pila de Tarjetas Informativas KPI con Datos de DB -->
+        <div class="lg:col-span-1 space-y-4">
+            
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-soft-sky text-primary flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">calendar_month</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Citas Totales</p>
+                    <p class="text-xl font-extrabold text-primary mt-0.5">{{ total_citas }}</p>
+                    <span class="text-[10px] text-secondary font-semibold">Registradas en sistema</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-success-emerald flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">task_alt</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Citas Atendidas</p>
+                    <p class="text-xl font-extrabold text-success-emerald mt-0.5">{{ total_atendidas }}</p>
+                    <span class="text-[10px] text-emerald-700 font-semibold">Efectividad: {{ tasa_atencion }}%</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">event_upcoming</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Programadas / En Sala</p>
+                    <p class="text-xl font-extrabold text-sky-800 mt-0.5">{{ total_programadas }}</p>
+                    <span class="text-[10px] text-sky-700 font-semibold">{{ total_en_sala }} cita(s) en sala de espera</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-rose-50 text-error-red flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">event_busy</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Inasistencias (No-Show)</p>
+                    <p class="text-xl font-extrabold text-error-red mt-0.5">{{ total_inasistencias }}</p>
+                    <span class="text-[10px] text-rose-700 font-semibold">Tasa Inasistencia: {{ tasa_inasistencia }}%</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-amber-50 text-warning-amber flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">stethoscope</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Especialistas Activos</p>
+                    <p class="text-xl font-extrabold text-primary mt-0.5">{{ especialistas.count }}</p>
+                    <span class="text-[10px] text-amber-700 font-semibold">Habilitados para atención</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center gap-3.5 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Pacientes Registrados</p>
+                    <p class="text-xl font-extrabold text-primary mt-0.5">{{ pacientes_count }}</p>
+                    <span class="text-[10px] text-indigo-700 font-semibold">Usuarios activos</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Columna Derecha (3/4): Calendario Interactivo con Vista Detalle -->
+        <div class="lg:col-span-3 bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm transition-all duration-300">
+            
+            <!-- Contenedor 1: Vista Mensual General (FullCalendar) -->
+            <div id="calendario-mes-wrapper" class="transition-all duration-300 ease-in-out">
+                <div id="pulsia-admin-calendar" class="min-h-[600px]"></div>
+            </div>
+
+            <!-- Contenedor 2: Vista Detallada Diaria (Carrusel Semanal + Filtros + Tabla de Citas) -->
+            <div id="calendario-detalle-wrapper" class="hidden transition-all duration-300 ease-in-out space-y-6">
+                
+                <!-- Encabezado de la Vista Detallada por Día con Navegación por Mes -->
+                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold shrink-0">
+                            <span class="material-symbols-outlined text-2xl">event_available</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-700">Vista Detallada por Día</span>
+                            <h2 id="titulo-fecha-seleccionada" class="text-base sm:text-lg font-extrabold text-primary">Cargando fecha...</h2>
+                        </div>
+                    </div>
+
+                    <!-- Navegación por Mes (< Mes Año >) -->
+                    <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-2xs">
+                        <button type="button" onclick="window.pulsiaCal.navigateMonth(-1)" class="w-8 h-8 rounded-lg hover:bg-teal-50 text-gray-600 hover:text-teal-700 flex items-center justify-center transition cursor-pointer" title="Mes Anterior">
+                            <span class="material-symbols-outlined text-lg">chevron_left</span>
+                        </button>
+                        <span id="label-mes-actual" class="text-xs font-extrabold text-primary px-2 font-mono">Agosto 2026</span>
+                        <button type="button" onclick="window.pulsiaCal.navigateMonth(1)" class="w-8 h-8 rounded-lg hover:bg-teal-50 text-gray-600 hover:text-teal-700 flex items-center justify-center transition cursor-pointer" title="Mes Siguiente">
+                            <span class="material-symbols-outlined text-lg">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Carrusel de Días con Navegación Día Anterior / Día Siguiente sin Scrollbar -->
+                <div class="flex items-center gap-2 w-full">
+                    <button type="button" onclick="window.pulsiaCal.navigateDay(-1)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white hover:bg-teal-50 border border-gray-200 text-gray-700 hover:text-teal-700 flex items-center justify-center transition shadow-2xs shrink-0 cursor-pointer" title="Día Anterior">
+                        <span class="material-symbols-outlined text-lg">chevron_left</span>
+                    </button>
+
+                    <div id="carrusel-dias-semana" class="flex-1 w-full overflow-hidden">
+                        <!-- Inyectado dinámicamente desde PulsiaCalendar como grid grid-cols-7 -->
+                    </div>
+
+                    <button type="button" onclick="window.pulsiaCal.navigateDay(1)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white hover:bg-teal-50 border border-gray-200 text-gray-700 hover:text-teal-700 flex items-center justify-center transition shadow-2xs shrink-0 cursor-pointer" title="Día Siguiente">
+                        <span class="material-symbols-outlined text-lg">chevron_right</span>
+                    </button>
+                </div>
+
+                <!-- Contenedor dinámico de Banner de Día Festivo (HU08) -->
+                <div id="contenedor-banner-festivo" class="hidden"></div>
+
+                <!-- Filtros Rápidos Ubicados Encima de la Tabla -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80 items-end">
+                    <div class="md:col-span-5">
+                        <label class="block text-xs font-bold text-primary mb-1">Filtrar Citas por Especialidad:</label>
+                        <select id="filtro-especialidad" onchange="filtrarCalendario()" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal bg-white">
+                            <option value="">Todas las Especialidades</option>
+                            {% for esp in especialidades %}
+                                <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="block text-xs font-bold text-primary mb-1">Filtrar Citas por Especialista:</label>
+                        <select id="filtro-especialista" onchange="filtrarCalendario()" class="w-full text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal bg-white">
+                            <option value="">Todos los Especialistas</option>
+                            {% for esp in especialistas %}
+                                <option value="{{ esp.id }}">{{ esp.usuario.nombre_completo }} ({{ esp.especialidad.nombre_especialidad }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="button" onclick="limpiarFiltrosCalendario()" class="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1 border border-slate-200 shadow-2xs cursor-pointer" title="Limpiar Filtros">
+                            <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                            <span>Limpiar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla Detallada de Citas del Día -->
+                <div class="bg-gray-50/50 rounded-2xl border border-gray-200/80 overflow-hidden shadow-2xs">
+                    <div class="p-4 bg-white border-b border-gray-200/80 flex items-center justify-between">
+                        <h3 class="font-bold text-xs text-primary uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-teal-600 text-base">format_list_bulleted</span>
+                            <span>Citas Agendadas del Día</span>
+                        </h3>
+                        <span id="contador-tabla-citas" class="px-2.5 py-1 bg-teal-50 text-teal-700 font-bold text-[11px] rounded-full border border-teal-200/60">
+                            0 Citas Registradas
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100/70 text-gray-600 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                                    <th class="px-4 py-3">Hora</th>
+                                    <th class="px-4 py-3">Paciente</th>
+                                    <th class="px-4 py-3">Especialista</th>
+                                    <th class="px-4 py-3">Consultorio</th>
+                                    <th class="px-4 py-3">Estado</th>
+                                    <th class="px-4 py-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-citas-dia">
+                                <!-- Inyectado dinámicamente desde PulsiaCalendar -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal Detalle Cita -->
+<div id="modal-detalle-cita" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-outline-variant/30 transform transition-all">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">event_note</span> Detalle de la Cita Médica
+            </h3>
+            <button type="button" onclick="cerrarModal('modal-detalle-cita')" class="text-gray-300 hover:text-white transition">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-4 text-xs">
+            <div>
+                <p class="font-semibold text-gray-500 uppercase text-[10px]">Paciente:</p>
+                <p id="modal-cita-paciente" class="text-sm font-bold text-primary"></p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-semibold text-gray-500 uppercase text-[10px]">Especialista:</p>
+                    <p id="modal-cita-especialista" class="font-semibold text-on-surface"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-500 uppercase text-[10px]">Consultorio:</p>
+                    <p id="modal-cita-consultorio" class="font-semibold text-on-surface"></p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-semibold text-gray-500 uppercase text-[10px]">Fecha & Hora Inicio:</p>
+                    <p id="modal-cita-inicio" class="font-semibold text-on-surface"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-500 uppercase text-[10px]">Estado Cita:</p>
+                    <span id="modal-cita-estado" class="inline-block px-2.5 py-1 rounded-full text-white font-bold text-[10px]"></span>
+                </div>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-500 uppercase text-[10px]">Notas Clínicas:</p>
+                <p id="modal-cita-notas" class="p-3 bg-surface rounded-xl text-gray-700 italic border border-outline-variant/30"></p>
+            </div>
+        </div>
+        <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
+            <button type="button" onclick="cerrarModal('modal-detalle-cita')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-xs transition">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pulsiaCal = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        pulsiaCal = new PulsiaCalendar('Administrador', '#pulsia-admin-calendar');
+        window.pulsiaCal = pulsiaCal;
+    });
+
+    function filtrarCalendario() {
+        if (!pulsiaCal) return;
+
+        // Si estamos en la vista detallada por día, actualizar la tabla y el carrusel en vivo
+        if (pulsiaCal.currentViewMode === 'dayDetail' && pulsiaCal.selectedDateStr) {
+            pulsiaCal.renderTablaCitasDia(pulsiaCal.selectedDateStr);
+            pulsiaCal.renderCarruselSemana(pulsiaCal.selectedDateStr);
+        } else if (pulsiaCal.calendar) {
+            const espId = document.getElementById('filtro-especialidad').value;
+            const medicoId = document.getElementById('filtro-especialista').value;
+
+            let url = '/api/citas/eventos/?';
+            if (espId) url += `especialidad=${espId}&`;
+            if (medicoId) url += `especialista=${medicoId}&`;
+
+            pulsiaCal.calendar.removeAllEventSources();
+            pulsiaCal.calendar.addEventSource(url);
+        }
+    }
+
+    function limpiarFiltrosCalendario() {
+        document.getElementById('filtro-especialidad').value = '';
+        document.getElementById('filtro-especialista').value = '';
+        filtrarCalendario();
+    }
+
+    window.abrirModalDetalleCita = function(cita) {
+        document.getElementById('modal-cita-paciente').innerText = cita.paciente || 'N/A';
+        document.getElementById('modal-cita-especialista').innerText = cita.especialista || 'N/A';
+        document.getElementById('modal-cita-consultorio').innerText = cita.consultorio || 'N/A';
+        document.getElementById('modal-cita-inicio').innerText = cita.inicio ? new Date(cita.inicio).toLocaleString() : 'N/A';
+        document.getElementById('modal-cita-notas').innerText = cita.notas || 'Sin notas registradas.';
+        
+        const estadoEl = document.getElementById('modal-cita-estado');
+        estadoEl.innerText = cita.estado || 'PROGRAMADA';
+        
+        const colors = {
+            'Programada': '#2C4E60',
+            'En_Sala': '#0E6877',
+            'Atendida': '#059669',
+            'Cancelada': '#6B7280',
+            'No_Asistio': '#BE123C',
+            'Pendiente_Reubicacion': '#D97706'
+        };
+        estadoEl.style.backgroundColor = colors[cita.estado] || '#123748';
+
+        document.getElementById('modal-detalle-cita').classList.remove('hidden');
+    };
+
+    function cerrarModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+</script>
+{% endblock %}

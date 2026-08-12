@@ -1,0 +1,412 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}{% if cita_preCargada %}Reagendar Cita Médica{% else %}Agendar Cita Médica{% endif %} | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Module Card (Estilo Quiet Authority) -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">
+                {% if cita_preCargada %}
+                    Reagendar Cita Médica #{{ cita_preCargada.id }}
+                {% else %}
+                    Agendamiento de Cita Médica
+                {% endif %}
+            </h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                {% if cita_preCargada %}
+                    Selecciona el nuevo día en el calendario o ajusta el especialista y horario de atención para reprogramar la cita.
+                {% else %}
+                    Selecciona el día en el calendario y asigna el paciente, especialidad y horario de atención.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'recepcion_agenda_global' %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+                <span>Volver a Agenda Global</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- MÓDULO UNIFICADO CON DISTRIBUCIÓN 1/2 Y 1/2 (CALENDARIO A LA IZQUIERDA Y PANEL A LA DERECHA) -->
+    <div id="secModuloAgendar" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUMNA IZQUIERDA (1/2 DEL ANCHO = 6 COLS): CALENDARIO LIMPIO PARA SELECCIÓN DE FECHA -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+                <div>
+                    <h2 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-clinical-teal">calendar_month</span>
+                        Selección de Fecha en Calendario
+                    </h2>
+                    <p class="text-xs text-on-surface-variant">Haz clic en un día para fijar la fecha de la cita</p>
+                </div>
+            </div>
+
+            <!-- Contenedor del Calendario Limpio -->
+            <div id="calendarAgendar" class="min-h-[500px] w-full"></div>
+        </div>
+
+        <!-- COLUMNA DERECHA (1/2 DEL ANCHO = 6 COLS): PANEL DE ASIGNACIÓN CON PACIENTE, ESPECIALIDAD Y HORARIOS -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm space-y-4">
+            <div class="pb-3 border-b border-outline-variant/20 flex items-center justify-between">
+                <div>
+                    <h2 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-clinical-teal">edit_calendar</span>
+                        {% if cita_preCargada %}
+                            Panel de Reagendamiento
+                        {% else %}
+                            Panel de Asignación
+                        {% endif %}
+                    </h2>
+                    <p class="text-xs text-on-surface-variant">
+                        {% if cita_preCargada %}
+                            Modifica los datos necesarios y confirma los nuevos cambios
+                        {% else %}
+                            Selecciona el paciente, la especialidad y el horario de atención
+                        {% endif %}
+                    </p>
+                </div>
+                {% if cita_preCargada %}
+                    <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+                        🔄 Modo Reagendamiento
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Banner de Fecha Seleccionada -->
+            <div class="p-3.5 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold uppercase text-teal-800 tracking-wider">Fecha Seleccionada:</span>
+                    <p id="lblFechaSeleccionadaTexto" class="font-extrabold text-sm text-primary">{{ fecha_seleccionada }}</p>
+                </div>
+                <span class="material-symbols-outlined text-clinical-teal text-2xl">event_available</span>
+            </div>
+
+            <form method="POST" action="{% url 'recepcion_agendar_cita' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="cita_id" id="formInputCitaId" value="{% if cita_preCargada %}{{ cita_preCargada.id }}{% endif %}">
+                <input type="hidden" name="fecha_cita" id="inputFechaAgendar" value="{{ fecha_seleccionada }}">
+                <input type="hidden" name="hora_cita" id="formInputHoraCita" required>
+                <input type="hidden" name="paciente_id" id="inputPacienteIdAgendar" value="{% if cita_preCargada %}{{ cita_preCargada.paciente_id }}{% endif %}" required>
+
+                <!-- BUSCADOR / REGISTRO DUAL DE PACIENTE -->
+                <div class="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-outline-variant/30">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-primary">1. Paciente *</label>
+                        {% if not cita_preCargada %}
+                            <button type="button" onclick="toggleRegistroExpres()" class="text-xs font-bold text-clinical-teal hover:underline flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-xs">person_add</span>
+                                <span>+ Registro Exprés</span>
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Buscador AJAX por Cédula/Nombre (Oculto si ya viene pre-cargado el paciente) -->
+                    <div id="secBuscadorPacienteAgendar" class="relative flex items-center {% if cita_preCargada %}hidden{% endif %}">
+                        <span class="material-symbols-outlined absolute left-3 text-gray-400 text-base">search</span>
+                        <input type="text" id="inputBuscarPacienteAgendar" onkeyup="buscarPacienteAgendarAjax(this.value)"
+                               placeholder="Ingresa cédula o nombre del paciente..."
+                               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-outline-variant bg-white text-primary">
+                    </div>
+                    <div id="resBuscadorPacienteAgendar" class="max-h-36 overflow-y-auto divide-y divide-gray-100 bg-white p-2 rounded-xl border border-outline-variant/30 text-xs hidden"></div>
+
+                    <!-- Banner Paciente Seleccionado -->
+                    <div id="bannerPacienteSeleccionado" class="p-2.5 rounded-xl bg-emerald-100 border border-emerald-300 {% if not cita_preCargada %}hidden{% endif %} flex items-center justify-between">
+                        <p id="lblPacienteSeleccionado" class="font-bold text-xs text-emerald-950 truncate">
+                            {% if cita_preCargada %}{{ cita_preCargada.paciente_nombre }} (Doc: {{ cita_preCargada.paciente_doc }}){% endif %}
+                        </p>
+                        <span class="material-symbols-outlined text-emerald-700 text-sm">check_circle</span>
+                    </div>
+                </div>
+
+                <!-- SELECTOR DE ESPECIALIDAD (BLOQUEADO EN REAGENDAMIENTO) -->
+                <div>
+                    <label class="block text-xs font-bold text-primary mb-1 flex items-center justify-between">
+                        <span>2. Especialidad Médica *</span>
+                        {% if cita_preCargada %}
+                            <span class="text-[10px] text-amber-700 font-bold">🔒 No modificable al reagendar</span>
+                        {% endif %}
+                    </label>
+                    {% if cita_preCargada %}
+                        <input type="hidden" name="especialidad_id" value="{{ cita_preCargada.especialidad_id }}">
+                    {% endif %}
+                    <select {% if not cita_preCargada %}name="especialidad_id"{% endif %} id="selectEspecialidadAgendar" onchange="cargarMedicosYHorarios()" required
+                            {% if cita_preCargada %}disabled class="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 text-xs bg-amber-50/60 text-amber-950 font-bold cursor-not-allowed"{% else %}class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-white text-primary font-semibold focus:ring-2 focus:ring-clinical-teal"{% endif %}>
+                        <option value="">Selecciona especialidad...</option>
+                        {% for esp in especialidades %}
+                            <option value="{{ esp.id }}" {% if cita_preCargada and cita_preCargada.especialidad_id == esp.id %}selected{% endif %}>
+                                {{ esp.nombre_especialidad }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <!-- SELECTOR DE ESPECIALISTA (OPCIONAL) -->
+                <div>
+                    <label class="block text-xs font-bold text-primary mb-1">3. Especialista (Opcional)</label>
+                    <select name="especialista_id" id="selectEspecialistaAgendar" onchange="actualizarHorariosDisponibles()"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-white text-primary focus:ring-2 focus:ring-clinical-teal">
+                        <option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>
+                        {% for med in especialistas %}
+                            <option value="{{ med.id }}" {% if cita_preCargada and cita_preCargada.especialista_id == med.id %}selected{% endif %}>
+                                Dr/Dra. {{ med.usuario.nombre_completo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- HORARIOS DISPONIBLES (DISPONIBLES EN TEAL - NO DISPONIBLES EN ROJO / DISABLED) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-primary">4. Franjas Horarias *</label>
+                        <span class="text-[10px] text-gray-400 font-medium">🍏 Disponibles (Teal) | 🔴 Ocupados (Rojo)</span>
+                    </div>
+                    <div id="contenedorHorariosDisponibles" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2.5 bg-slate-50 rounded-xl border border-outline-variant/30 text-xs">
+                        <p class="text-xs text-gray-400 col-span-4 text-center py-4">Cargando horarios...</p>
+                    </div>
+                </div>
+
+                <!-- CONFIRMAR -->
+                <div class="pt-3 border-t border-outline-variant/20 flex items-center justify-between gap-4">
+                    <span id="lblHorarioSeleccionadoTexto" class="text-xs font-bold text-gray-500">Ningún horario seleccionado</span>
+                    <button type="submit" id="btnConfirmarAgendamiento" disabled
+                            class="px-5 py-2.5 {% if cita_preCargada %}bg-amber-600 hover:bg-amber-700{% else %}bg-clinical-teal hover:bg-emerald-700{% endif %} disabled:bg-gray-300 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">{% if cita_preCargada %}event_repeat{% else %}check_circle{% endif %}</span>
+                        <span>{% if cita_preCargada %}Guardar Reagendamiento{% else %}Confirmar Agendamiento{% endif %}</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+    let calendarInstance = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendarAgendar');
+        if (calendarEl) {
+            calendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                firstDay: 1,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes'
+                },
+                selectable: true,
+                dateClick: function(info) {
+                    if (info && info.dateStr) {
+                        seleccionarFechaDesdeCalendario(info.dateStr);
+                    }
+                }
+            });
+            calendarInstance.render();
+        }
+    });
+
+    {% if cita_preCargada %}
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const prePacId = "{{ cita_preCargada.paciente_id }}";
+            const prePacNombre = "{{ cita_preCargada.paciente_nombre|escapejs }}";
+            const prePacDoc = "{{ cita_preCargada.paciente_doc|escapejs }}";
+            const preEspId = "{{ cita_preCargada.especialidad_id }}";
+            const preMedId = "{{ cita_preCargada.especialista_id }}";
+            const preFecha = "{{ cita_preCargada.fecha_ymd }}";
+
+            if (prePacId) {
+                seleccionarPacienteAgendar(prePacId, prePacNombre, prePacDoc);
+            }
+
+            if (preEspId) {
+                document.getElementById('selectEspecialidadAgendar').value = preEspId;
+                cargarMedicosYHorarios();
+            } else if (preFecha) {
+                seleccionarFechaDesdeCalendario(preFecha);
+            }
+        }, 150);
+    });
+    {% endif %}
+
+    function seleccionarFechaDesdeCalendario(dateStr) {
+        document.getElementById('inputFechaAgendar').value = dateStr;
+        
+        const parts = dateStr.split('-');
+        const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fechaFormateada = dObj.toLocaleDateString('es-ES', opciones);
+        
+        document.getElementById('lblFechaSeleccionadaTexto').innerText = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+        
+        actualizarHorariosDisponibles();
+    }
+
+    function buscarPacienteAgendarAjax(q) {
+        const resEl = document.getElementById('resBuscadorPacienteAgendar');
+        if (q.trim().length < 2) {
+            resEl.classList.add('hidden');
+            return;
+        }
+
+        fetch(`/api/recepcion/pacientes/buscar/?q=${encodeURIComponent(q)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.pacientes.length > 0) {
+                    resEl.innerHTML = '';
+                    data.pacientes.forEach(p => {
+                        const d = document.createElement('div');
+                        d.className = "p-2 hover:bg-teal-50 cursor-pointer flex items-center justify-between transition rounded-lg";
+                        d.onclick = () => seleccionarPacienteAgendar(p.id, p.nombre_completo, p.num_documento);
+                        d.innerHTML = `
+                            <div>
+                                <p class="font-bold text-xs text-primary">${p.nombre_completo}</p>
+                                <span class="text-[10px] text-gray-500">Doc: ${p.num_documento}</span>
+                            </div>
+                            <span class="text-[10px] font-bold text-clinical-teal">Seleccionar →</span>
+                        `;
+                        resEl.appendChild(d);
+                    });
+                    resEl.classList.remove('hidden');
+                } else {
+                    resEl.innerHTML = '<p class="p-2 text-gray-400 text-center">No se encontraron pacientes.</p>';
+                    resEl.classList.remove('hidden');
+                }
+            });
+    }
+
+    function seleccionarPacienteAgendar(id, nombre, doc) {
+        document.getElementById('inputPacienteIdAgendar').value = id;
+        document.getElementById('lblPacienteSeleccionado').innerText = `${nombre} (Doc: ${doc})`;
+        document.getElementById('bannerPacienteSeleccionado').classList.remove('hidden');
+        document.getElementById('resBuscadorPacienteAgendar').classList.add('hidden');
+        validarFormularioCompleto();
+    }
+
+    function cargarMedicosYHorarios() {
+        const espId = document.getElementById('selectEspecialidadAgendar').value;
+        const selectMed = document.getElementById('selectEspecialistaAgendar');
+        const preMedId = "{% if cita_preCargada %}{{ cita_preCargada.especialista_id }}{% endif %}";
+
+        if (!espId) {
+            selectMed.innerHTML = '<option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>';
+            document.getElementById('contenedorHorariosDisponibles').innerHTML = '<p class="text-xs text-gray-400 col-span-4 text-center py-4">Selecciona especialidad en la lista superior.</p>';
+            return;
+        }
+
+        fetch(`/api/recepcion/especialistas-especialidad/?especialidad_id=${espId}`)
+            .then(res => res.json())
+            .then(data => {
+                let html = '<option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>';
+                if (data.success && data.especialistas && data.especialistas.length > 0) {
+                    data.especialistas.forEach(m => {
+                        const isSel = (String(m.id) === String(preMedId)) ? 'selected' : '';
+                        html += `<option value="${m.id}" ${isSel}>Dr/Dra. ${m.nombre_completo}</option>`;
+                    });
+                }
+                selectMed.innerHTML = html;
+                actualizarHorariosDisponibles();
+            })
+            .catch(err => {
+                console.error("Error al cargar especialistas:", err);
+                actualizarHorariosDisponibles();
+            });
+    }
+
+    function actualizarHorariosDisponibles() {
+        let fecha = document.getElementById('inputFechaAgendar').value;
+        if (!fecha) {
+            fecha = new Date().toISOString().slice(0, 10);
+            document.getElementById('inputFechaAgendar').value = fecha;
+        }
+
+        const espId = document.getElementById('selectEspecialidadAgendar').value;
+        const espMedId = document.getElementById('selectEspecialistaAgendar').value;
+        const cont = document.getElementById('contenedorHorariosDisponibles');
+
+        if (!espId) {
+            cont.innerHTML = '<p class="text-xs text-gray-400 col-span-4 text-center py-4">Selecciona una especialidad en la lista superior.</p>';
+            return;
+        }
+
+        cont.innerHTML = '<p class="text-xs text-gray-400 col-span-4 text-center py-4">Consultando franjas libres...</p>';
+
+        let url = `/api/recepcion/horarios-disponibles/?fecha=${fecha}&especialidad_id=${espId}`;
+        if (espMedId) {
+            url += `&especialista_id=${espMedId}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.horarios && data.horarios.length > 0) {
+                    cont.innerHTML = '';
+                    data.horarios.forEach(h => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        
+                        if (h.disponible) {
+                            btn.className = "p-2 rounded-xl border border-teal-200 bg-teal-50/70 hover:bg-clinical-teal hover:text-white font-bold text-xs transition shadow-2xs text-center cursor-pointer text-teal-900";
+                            btn.innerHTML = `<div>${h.hora_display}</div>`;
+                            btn.onclick = () => seleccionarHorario(h.hora, h.hora_display, btn);
+                        } else {
+                            btn.className = "p-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 font-bold text-xs text-center opacity-60 cursor-not-allowed";
+                            btn.disabled = true;
+                            btn.innerHTML = `<div>${h.hora_display}</div><span class="text-[9px] block text-rose-600 font-normal">Ocupado</span>`;
+                        }
+                        
+                        cont.appendChild(btn);
+                    });
+                } else {
+                    cont.innerHTML = '<p class="text-xs text-rose-500 col-span-4 text-center py-4">No hay franjas de atención configuradas para esta fecha.</p>';
+                }
+            })
+            .catch(err => {
+                console.error("Error al cargar horarios:", err);
+                cont.innerHTML = '<p class="text-xs text-rose-500 col-span-4 text-center py-4">Error al consultar los horarios. Inténtalo de nuevo.</p>';
+            });
+    }
+
+    function seleccionarHorario(hora, horaDisplay, btnEl) {
+        document.querySelectorAll('#contenedorHorariosDisponibles button').forEach(b => {
+            if (!b.disabled) {
+                b.className = "p-2 rounded-xl border border-teal-200 bg-teal-50/70 hover:bg-clinical-teal hover:text-white font-bold text-xs transition shadow-2xs text-center cursor-pointer text-teal-900";
+            }
+        });
+        btnEl.className = "p-2 rounded-xl bg-clinical-teal text-white font-bold text-xs transition shadow-md text-center ring-2 ring-teal-300 cursor-pointer";
+        document.getElementById('formInputHoraCita').value = hora;
+        document.getElementById('lblHorarioSeleccionadoTexto').innerText = `Horario: ${horaDisplay}`;
+        validarFormularioCompleto();
+    }
+
+    function validarFormularioCompleto() {
+        const pacId = document.getElementById('inputPacienteIdAgendar').value;
+        const espId = document.getElementById('selectEspecialidadAgendar').value;
+        const hora = document.getElementById('formInputHoraCita').value;
+        const btn = document.getElementById('btnConfirmarAgendamiento');
+
+        if (pacId && espId && hora) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+</script>
+{% endblock %}

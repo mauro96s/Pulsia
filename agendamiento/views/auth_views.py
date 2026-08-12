@@ -1,141 +1,115 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from django.utils.crypto import get_random_string
+from agendamiento.models import CustomUser, Paciente, RolUsuario, TipoDocumento
+from datetime import datetime
 
-from agendamiento.models.usuarios import CustomUser, RolUsuario
-from agendamiento.models.pacientes import Paciente
-
-
-# ────────────────────────────────────────────────────
-# HU01 — Login
-# ────────────────────────────────────────────────────
 def login_view(request):
-    """Autentica al usuario por correo/contraseña y redirige según su rol."""
+    """Vista de Login con autenticación y redirección automática por rol (HU01)."""
+    # Si el usuario ya está autenticado, redirigir según su rol
     if request.user.is_authenticated:
-        return _redirect_by_role(request.user)
-
-    error = None
-    correo_value = ''
+        return redirect_by_role(request.user)
 
     if request.method == 'POST':
-        correo = request.POST.get('correo', '').strip()
+        correo = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
-        correo_value = correo
 
-        if not correo or not password:
-            error = 'Por favor ingresa tu correo y contraseña.'
+        # Buscar usuario por correo
+        try:
+            user_obj = CustomUser.objects.get(correo=correo)
+            user = authenticate(request, username=user_obj.correo, password=password)
+        except CustomUser.DoesNotExist:
+            user = None
+
+        if user is not None:
+            if not user.is_active or not user.estado_cuenta:
+                messages.error(request, 'Tu cuenta se encuentra desactivada. Contacta al administrador.')
+                return render(request, 'agendamiento/auth/login.html')
+
+            login(request, user)
+            return redirect_by_role(user)
         else:
-            # Django autentica usando USERNAME_FIELD='correo'
-            user = authenticate(request, username=correo, password=password)
-            if user is not None:
-                if not user.estado_cuenta:
-                    error = 'Tu cuenta está desactivada. Contacta al administrador.'
-                else:
-                    login(request, user)
-                    
-                    # RN07: Inactividad de 15 minutos (900 seg) para roles internos
-                    if user.rol in [RolUsuario.ADMINISTRADOR, RolUsuario.RECEPCIONISTA, RolUsuario.ESPECIALISTA]:
-                        request.session.set_expiry(900)
-                    
-                    messages.success(request, f'Bienvenido, {user.nombre_completo}.')
-                    return _redirect_by_role(user)
-            else:
-                error = 'Correo o contraseña incorrectos. Verifica tus credenciales.'
+            messages.error(request, 'Correo electrónico o contraseña incorrectos.')
 
-    return render(request, 'agendamiento/auth/login.html', {
-        'error': error,
-        'correo_value': correo_value,
-    })
+    return render(request, 'agendamiento/auth/login.html')
 
 
-def _redirect_by_role(user):
-    """Redirección automática al panel según el rol del usuario."""
-    rol = user.rol
-    if rol == RolUsuario.ADMINISTRADOR:
-        return redirect('dashboard_admin')
-    elif rol == RolUsuario.RECEPCIONISTA:
-        return redirect('dashboard_recepcionista')
-    elif rol == RolUsuario.ESPECIALISTA:
-        return redirect('dashboard_especialista')
-    elif rol == RolUsuario.PACIENTE:
+def register_view(request):
+    """Vista de Registro exclusiva para Pacientes (HU02 / HU10)."""
+    if request.user.is_authenticated:
+        return redirect_by_role(request.user)
+
+    if request.method == 'POST':
+        nombre_completo = request.POST.get('nombre_completo', '').strip()
+        tipo_documento = request.POST.get('tipo_documento', TipoDocumento.CC)
+        num_documento = request.POST.get('num_documento', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        fecha_nac_str = request.POST.get('fecha_nacimiento', '')
+        password = request.POST.get('password', '')
+        password_confirm = request.POST.get('password_confirm', '')
+        acepta_habeas = request.POST.get('acepta_habeas_data') == 'on'
+
+        # Validaciones
+        if password != password_confirm:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'agendamiento/auth/register.html')
+
+        if CustomUser.objects.filter(correo=correo).exists():
+            messages.error(request, 'Ya existe un usuario registrado con este correo electrónico.')
+            return render(request, 'agendamiento/auth/register.html')
+
+        if num_documento and CustomUser.objects.filter(num_documento=num_documento).exists():
+            messages.error(request, 'Ya existe un usuario registrado con este número de documento.')
+            return render(request, 'agendamiento/auth/register.html')
+
+        try:
+            fecha_nacimiento = datetime.strptime(fecha_nac_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, 'Fecha de nacimiento inválida.')
+            return render(request, 'agendamiento/auth/register.html')
+
+        # Crear Usuario con rol PACIENTE
+        user = CustomUser.objects.create_user(
+            username=correo,
+            correo=correo,
+            nombre_completo=nombre_completo,
+            tipo_documento=tipo_documento,
+            num_documento=num_documento,
+            telefono=telefono,
+            rol=RolUsuario.PACIENTE,
+            password=password
+        )
+
+        # Crear Perfil Paciente
+        Paciente.objects.create(
+            usuario=user,
+            fecha_nacimiento=fecha_nacimiento,
+            acepta_habeas_data=acepta_habeas
+        )
+
+        login(request, user)
+        messages.success(request, '¡Registro completado exitosamente! Bienvenido a tu Portal de Salud.')
         return redirect('dashboard_paciente')
-    else:
-        return redirect('login')
+
+    return render(request, 'agendamiento/auth/register.html')
 
 
-# ────────────────────────────────────────────────────
-# Logout
-# ────────────────────────────────────────────────────
 def logout_view(request):
+    """Cierra la sesión del usuario."""
     logout(request)
     messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('login')
 
 
-# ────────────────────────────────────────────────────
-# Registro de Paciente
-# ────────────────────────────────────────────────────
-def register_view(request):
-    """Crea una cuenta de tipo Paciente con perfil asociado."""
-    if request.user.is_authenticated:
-        return _redirect_by_role(request.user)
-
-    error = None
-    form_data = {}
-
-    if request.method == 'POST':
-        nombre_completo  = request.POST.get('nombre_completo', '').strip()
-        correo           = request.POST.get('correo', '').strip().lower()
-        telefono         = request.POST.get('telefono', '').strip()
-        fecha_nacimiento = request.POST.get('fecha_nacimiento', '').strip()
-        password1        = request.POST.get('password1', '')
-        password2        = request.POST.get('password2', '')
-        acepta_habeas    = request.POST.get('acepta_habeas_data') == 'on'
-
-        form_data = {
-            'nombre_completo': nombre_completo,
-            'correo': correo,
-            'telefono': telefono,
-            'fecha_nacimiento': fecha_nacimiento,
-        }
-
-        # Validaciones de servidor
-        if not all([nombre_completo, correo, fecha_nacimiento, password1, password2]):
-            error = 'Todos los campos obligatorios deben ser completados.'
-        elif password1 != password2:
-            error = 'Las contraseñas no coinciden.'
-        elif len(password1) < 8:
-            error = 'La contraseña debe tener al menos 8 caracteres.'
-        elif not acepta_habeas:
-            error = 'Debes aceptar el tratamiento de datos personales (Habeas Data).'
-        elif CustomUser.objects.filter(correo=correo).exists():
-            error = 'Ya existe una cuenta registrada con ese correo electrónico.'
-        else:
-            try:
-                # Crear usuario — username único automático
-                user = CustomUser.objects.create_user(
-                    username=correo,
-                    correo=correo,
-                    email=correo,
-                    nombre_completo=nombre_completo,
-                    rol=RolUsuario.PACIENTE,
-                    telefono=telefono,
-                    password=password1,
-                )
-                # Crear perfil Paciente
-                Paciente.objects.create(
-                    usuario=user,
-                    fecha_nacimiento=fecha_nacimiento,
-                    acepta_habeas_data=acepta_habeas,
-                )
-                login(request, user)
-                messages.success(request, f'¡Bienvenido a Pulsia, {nombre_completo}! Tu cuenta ha sido creada.')
-                return redirect('dashboard_paciente')
-            except Exception as e:
-                error = f'Ocurrió un error al crear tu cuenta. Intenta nuevamente.'
-
-    return render(request, 'agendamiento/auth/register.html', {
-        'error': error,
-        'form_data': form_data,
-    })
+def redirect_by_role(user):
+    """Auxiliar para redirigir al dashboard según el rol del usuario."""
+    if user.rol == RolUsuario.ADMINISTRADOR:
+        return redirect('dashboard_admin')
+    elif user.rol == RolUsuario.RECEPCIONISTA:
+        return redirect('dashboard_recepcion')
+    elif user.rol == RolUsuario.ESPECIALISTA:
+        return redirect('dashboard_especialista')
+    elif user.rol == RolUsuario.PACIENTE:
+        return redirect('dashboard_paciente')
+    return redirect('dashboard')

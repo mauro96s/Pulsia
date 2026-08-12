@@ -1,0 +1,319 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Inicio - Recepción | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Operations Card (Estilo Quiet Authority Limpio - Sin botones redundantes) -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30">
+        <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Inicio - Control de Recepción</h1>
+        <p class="text-xs text-on-surface-variant mt-1">Gestión del flujo de llegada del día, asistencia médica y control de tolerancia de 10 minutos.</p>
+    </div>
+
+    <!-- DIV DE ASISTENCIA MÉDICA Y CHECK-IN MANUAL -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-3 border-b border-outline-variant/20">
+            <div>
+                <h2 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-success-emerald animate-pulse"></span>
+                    Asistencia Médica y Check-in Manual
+                </h2>
+                <p class="text-xs text-on-surface-variant">Monitoreo de asistencia y registro manual de turno en consultorio</p>
+            </div>
+            <div id="lblInfoEscalabilidadMedicos" class="text-[11px] text-gray-500 font-medium">
+                Mostrando médicos principales. Escribe en la búsqueda para consultar cualquier especialista.
+            </div>
+        </div>
+
+        <!-- BARRA DE BÚSQUEDA A TODO EL ANCHO CON BOTÓN DINÁMICO DE LIMPIAR -->
+        <div class="relative flex items-center w-full">
+            <span class="material-symbols-outlined absolute left-3.5 text-gray-400 text-lg pointer-events-none">search</span>
+            <input type="text" id="inputBuscarMedicoAsistencia" oninput="filtrarMedicosAsistencia(this.value)"
+                   placeholder="Buscar médico por nombre o especialidad..."
+                   class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-outline-variant text-xs bg-surface-container-low text-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-clinical-teal font-medium transition">
+            
+            <button type="button" id="btnLimpiarBusquedaMedico" onclick="limpiarBusquedaMedico()"
+                    class="absolute right-3 text-gray-400 hover:text-primary transition hidden" title="Limpiar Búsqueda">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <!-- GRILLA DE TARJETAS DE MÉDICOS (Manejo de 100+ médicos) -->
+        <div id="gridMedicosAsistencia" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {% for esp in especialistas %}
+                <div class="card-medico-item p-3.5 rounded-xl border {% if esp.estado_turno == 'Presente' %}border-emerald-200 bg-emerald-50/40{% else %}border-rose-200 bg-rose-50/40{% endif %} flex flex-col justify-between gap-2 {% if forloop.counter > 8 %}hidden{% endif %}"
+                     data-search="{{ esp.usuario.nombre_completo|lower }} {{ esp.especialidad.nombre_especialidad|lower }}"
+                     data-index="{{ forloop.counter }}">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="font-bold text-xs text-primary">Dr/Dra. {{ esp.usuario.nombre_completo }}</p>
+                            <p class="text-[11px] text-gray-600 font-semibold">{{ esp.especialidad.nombre_especialidad }}</p>
+                            <span class="text-[10px] text-gray-500 font-medium">Cons: {{ esp.consultorio.nombre_codigo|default:"Sin consultorio" }}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {% if esp.estado_turno == 'Presente' %}bg-success-emerald text-white{% else %}bg-error-red text-white{% endif %}">
+                            {{ esp.estado_turno }}
+                        </span>
+                    </div>
+
+                    <!-- Botón de Asistencia / Check-in Manual -->
+                    <form method="POST" action="{% url 'recepcion_checkin_medico' esp.id %}" class="pt-2 border-t border-outline-variant/20">
+                        {% csrf_token %}
+                        {% if esp.estado_turno == 'Presente' %}
+                            <button type="submit" class="w-full py-1 px-2 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] rounded-lg transition flex items-center justify-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs">logout</span>
+                                <span>Marcar Ausente</span>
+                            </button>
+                        {% else %}
+                            <button type="submit" class="w-full py-1 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg transition flex items-center justify-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs">how_to_reg</span>
+                                <span>Marcar Check-in (Presente)</span>
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            {% empty %}
+                <p class="text-xs text-gray-500 col-span-4 py-4 text-center">No hay médicos registrados en el sistema.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- DIV DE AGENDA OPERATIVA DEL DÍA (Alineación perfecta estilo Administrador) -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm space-y-4">
+        <div class="pb-3 border-b border-outline-variant/20">
+            <h2 class="font-heading text-lg font-bold text-primary">Agenda Operativa del Día</h2>
+            <p class="text-xs text-on-surface-variant">Control de recepción, tolerancia de 10 minutos y confirmación de llegada de pacientes</p>
+        </div>
+        
+        <!-- BUSCADOR Y SELECTORES ALINEADOS (Estilo Unificado Administrador) -->
+        <form method="GET" action="{% url 'dashboard_recepcion' %}" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            
+            <!-- Buscador de Paciente -->
+            <div class="sm:col-span-4 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3.5 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Buscar por paciente o documento..."
+                       oninput="autoSubmitFormDebounced(this.form)"
+                       class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-surface-container-low text-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-clinical-teal font-medium">
+            </div>
+
+            <!-- Select Especialidad -->
+            <div class="sm:col-span-3">
+                <select name="especialidad" onchange="this.form.submit()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-surface-container-low text-primary font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-clinical-teal">
+                    <option value="">Todas las Especialidades</option>
+                    {% for esp in especialidades %}
+                        <option value="{{ esp.id }}" {% if filtro_especialidad == esp.id|stringformat:"i" %}selected{% endif %}>
+                            {{ esp.nombre_especialidad }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Select Estado Cita -->
+            <div class="sm:col-span-3">
+                <select name="estado" onchange="this.form.submit()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-surface-container-low text-primary font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-clinical-teal">
+                    <option value="">Todos los Estados</option>
+                    {% for valor, etiqueta in estados_cita %}
+                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Fecha y Limpiar Filtros -->
+            <div class="sm:col-span-2 flex items-center gap-2">
+                <input type="date" name="fecha" value="{{ fecha_seleccionada }}" onchange="this.form.submit()"
+                       class="w-full px-3 py-2.5 rounded-xl border border-outline-variant text-xs bg-surface-container-low text-primary font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-clinical-teal">
+                
+                {% if search_query or filtro_especialidad or filtro_estado %}
+                    <a href="{% url 'dashboard_recepcion' %}" title="Limpiar Filtros"
+                       class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shrink-0">
+                        <span class="material-symbols-outlined text-lg">restart_alt</span>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Tabla de Citas Operativas -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-low text-primary uppercase font-bold tracking-wider text-[11px] border-b border-outline-variant/30">
+                        <th class="p-3">Hora</th>
+                        <th class="p-3">Paciente</th>
+                        <th class="p-3">Especialidad & Médico</th>
+                        <th class="p-3">Estado Check-in Médico</th>
+                        <th class="p-3">Estado Cita</th>
+                        <th class="p-3">Tolerancia (10 min)</th>
+                        <th class="p-3 text-right">Acción Recepción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/20">
+                    {% for item in citas_con_tolerancia %}
+                        {% with cita=item.cita tol=item.tolerancia %}
+                            <tr class="hover:bg-soft-sky/30 transition {% if cita.estado_cita == 'Pendiente_Reubicacion' %}bg-amber-50/50{% endif %}">
+                                <td class="p-3 font-bold text-primary">
+                                    {{ cita.fecha_hora_inicio|date:"h:i A" }}
+                                </td>
+                                <td class="p-3">
+                                    <p class="font-bold text-primary">{{ cita.paciente.usuario.nombre_completo }}</p>
+                                    <span class="text-[10px] text-on-surface-variant">
+                                        {{ cita.paciente.usuario.tipo_documento|default:"CC" }}: {{ cita.paciente.usuario.num_documento|default:"Sin doc" }}
+                                    </span>
+                                </td>
+                                <td class="p-3">
+                                    <p class="font-semibold text-secondary">{{ cita.especialista.especialidad.nombre_especialidad }}</p>
+                                    <span class="text-[11px] text-on-surface-variant">Dr/Dra. {{ cita.especialista.usuario.nombre_completo }} (Cons. {{ cita.consultorio.nombre_codigo|default:"N/A" }})</span>
+                                </td>
+
+                                <td class="p-3">
+                                    {% if cita.especialista.estado_turno == 'Presente' %}
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                            Presente
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 animate-pulse">
+                                            Sin Check-in
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="p-3">
+                                    {% if cita.estado_cita == 'Programada' %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Programada</span>
+                                    {% elif cita.estado_cita == 'En_Sala' %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">En Sala de Espera</span>
+                                    {% elif cita.estado_cita == 'Atendida' %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Atendida</span>
+                                    {% elif cita.estado_cita == 'No_Asistio' %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">No Asistió</span>
+                                    {% elif cita.estado_cita == 'Pendiente_Reubicacion' %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-600 text-white flex items-center gap-1 w-fit">
+                                            <span class="material-symbols-outlined text-xs">warning</span> Prioridad Reubicación
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">{{ cita.get_estado_cita_display }}</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="p-3 font-semibold">
+                                    {% if tol.estado == 'a_tiempo' %}
+                                        <span class="text-emerald-700 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">schedule</span> {{ tol.mensaje }}
+                                        </span>
+                                    {% elif tol.estado == 'en_tolerancia' %}
+                                        <span class="text-amber-700 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">timer</span> {{ tol.mensaje }}
+                                        </span>
+                                    {% elif tol.estado == 'fuera_tolerancia' %}
+                                        <span class="text-rose-700 font-bold flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">warning</span> {{ tol.mensaje }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-500">{{ tol.mensaje }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="p-3 text-right">
+                                    {% if cita.estado_cita == 'Programada' %}
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <form method="POST" action="{% url 'recepcion_anunciar_llegada' cita.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" title="Anunciar Llegada de Paciente"
+                                                        class="px-2.5 py-1 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-[11px] rounded-xl shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-sm">how_to_reg</span>
+                                                    <span>Anunciar</span>
+                                                </button>
+                                            </form>
+
+                                            <form method="POST" action="{% url 'recepcion_marcar_inasistencia' cita.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" title="Marcar Inasistencia (>10 min retraso)"
+                                                        onclick="return confirm('¿Confirmar inasistencia por superar los 10 minutos de tolerancia?');"
+                                                        class="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-bold text-[11px] rounded-xl border border-rose-200 transition flex items-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-sm">event_busy</span>
+                                                    <span>No Asistió</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% elif cita.estado_cita == 'En_Sala' %}
+                                        <span class="text-[11px] text-blue-700 font-bold flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-sm animate-bounce">check_circle</span> En Espera
+                                        </span>
+                                    {% elif cita.estado_cita == 'Pendiente_Reubicacion' %}
+                                        <a href="{% url 'recepcion_bandeja_reubicacion' %}" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded-xl shadow transition inline-flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">edit_calendar</span>
+                                            <span>Reubicar Ahora</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-[11px] text-gray-400 font-medium">Procesada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-on-surface-variant">
+                                <span class="material-symbols-outlined text-4xl text-gray-300 mb-1">event_busy</span>
+                                <p class="font-bold text-xs">No hay citas programadas para esta fecha o criterios de búsqueda.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let debouncedTimer;
+    function autoSubmitFormDebounced(form) {
+        clearTimeout(debouncedTimer);
+        debouncedTimer = setTimeout(() => {
+            form.submit();
+        }, 500);
+    }
+
+    // Filtrado en vivo e instantáneo de Médicos (Manejo de 100+ especialistas)
+    function filtrarMedicosAsistencia(val) {
+        const query = val.trim().toLowerCase();
+        const btnLimpiar = document.getElementById('btnLimpiarBusquedaMedico');
+        const cards = document.querySelectorAll('.card-medico-item');
+        const lblInfo = document.getElementById('lblInfoEscalabilidadMedicos');
+        let visCount = 0;
+
+        if (query.length > 0) {
+            btnLimpiar.classList.remove('hidden');
+            cards.forEach(card => {
+                const searchData = card.getAttribute('data-search') || '';
+                if (searchData.includes(query)) {
+                    card.classList.remove('hidden');
+                    visCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            lblInfo.innerText = `Se encontraron ${visCount} médicos coincidentes con "${val}".`;
+        } else {
+            btnLimpiar.classList.add('hidden');
+            cards.forEach((card, idx) => {
+                if (idx < 8) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            lblInfo.innerText = "Mostrando médicos principales. Escribe en la búsqueda para consultar cualquier especialista.";
+        }
+    }
+
+    function limpiarBusquedaMedico() {
+        const input = document.getElementById('inputBuscarMedicoAsistencia');
+        input.value = '';
+        filtrarMedicosAsistencia('');
+    }
+</script>
+{% endblock %}

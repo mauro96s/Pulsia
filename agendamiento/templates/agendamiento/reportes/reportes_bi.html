@@ -1,0 +1,329 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Tablero de Reportes | Pulsia Medical Systems{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Encabezado de Módulo (Header Card) -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Tablero de Reportes y Métricas Administrativas</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Análisis de la demanda médica, tasas de inasistencia y comportamiento operativo del centro médico.</p>
+        </div>
+
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'admin_exportar_reporte_csv' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}"
+               class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition">
+                <span class="material-symbols-outlined text-lg">download</span>
+                <span>Exportar Reporte (CSV)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros por Período de Tiempo -->
+    <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm">
+        <form method="GET" action="{% url 'admin_reportes_bi' %}" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">filter_alt</span>
+                <span class="font-heading text-xs font-bold text-primary uppercase tracking-wider">Filtrar por Período:</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Botones de Acceso Rápido -->
+                <div class="flex bg-surface-container-low p-1 rounded-xl border border-outline-variant/30 text-xs font-semibold">
+                    <a href="{% url 'admin_reportes_bi' %}?periodo=mes"
+                       class="px-3 py-1.5 rounded-lg transition {% if periodo == 'mes' %}bg-primary text-white shadow-sm{% else %}text-on-surface-variant hover:text-primary{% endif %}">
+                        Mes Actual
+                    </a>
+                    <a href="{% url 'admin_reportes_bi' %}?periodo=trimestre"
+                       class="px-3 py-1.5 rounded-lg transition {% if periodo == 'trimestre' %}bg-primary text-white shadow-sm{% else %}text-on-surface-variant hover:text-primary{% endif %}">
+                        Últimos 90 Días
+                    </a>
+                    <a href="{% url 'admin_reportes_bi' %}?periodo=ano"
+                       class="px-3 py-1.5 rounded-lg transition {% if periodo == 'ano' %}bg-primary text-white shadow-sm{% else %}text-on-surface-variant hover:text-primary{% endif %}">
+                        Año {{ fecha_inicio|slice:":4" }}
+                    </a>
+                </div>
+
+                <!-- Rango de Fechas Personalizado -->
+                <input type="hidden" name="periodo" value="personalizado">
+                <div class="flex items-center gap-2">
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="px-3 py-1.5 rounded-xl border border-outline-variant text-xs focus:ring-2 focus:ring-clinical-teal focus:outline-none">
+                    <span class="text-xs text-on-surface-variant">a</span>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="px-3 py-1.5 rounded-xl border border-outline-variant text-xs focus:ring-2 focus:ring-clinical-teal focus:outline-none">
+                </div>
+
+                <button type="submit" class="px-4 py-1.5 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary-container transition shadow-sm">
+                    Aplicar Rango
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tarjetas de Métricas BI Principales (KPIs) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- KPI 1: Total Citas -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Total Citas</span>
+                <span class="w-8 h-8 rounded-xl bg-sky-50 text-primary flex items-center justify-between justify-center">
+                    <span class="material-symbols-outlined text-lg">calendar_month</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-primary mt-2">{{ total_citas }}</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">Registradas en el rango</p>
+        </div>
+
+        <!-- KPI 2: Atendidas -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-emerald-800 font-bold uppercase tracking-wider">Atendidas</span>
+                <span class="w-8 h-8 rounded-xl bg-emerald-50 text-success-emerald flex items-center justify-center">
+                    <span class="material-symbols-outlined text-lg">check_circle</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-success-emerald mt-2">{{ total_atendidas }}</p>
+            <p class="text-[11px] text-emerald-700 font-semibold mt-1">Tasa: {{ tasa_atencion }}%</p>
+        </div>
+
+        <!-- KPI 3: Programadas -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-primary font-bold uppercase tracking-wider">Programadas</span>
+                <span class="w-8 h-8 rounded-xl bg-slate-100 text-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-lg">schedule</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-primary mt-2">{{ total_programadas }}</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">En agenda futura</p>
+        </div>
+
+        <!-- KPI 4: En Sala -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-secondary font-bold uppercase tracking-wider">En Sala</span>
+                <span class="w-8 h-8 rounded-xl bg-teal-50 text-secondary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-lg">hail</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-secondary mt-2">{{ total_en_sala }}</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">Esperando atención</p>
+        </div>
+
+        <!-- KPI 5: Inasistencias (No-Show) -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-error-red font-bold uppercase tracking-wider">No Asistió</span>
+                <span class="w-8 h-8 rounded-xl bg-rose-50 text-error-red flex items-center justify-center">
+                    <span class="material-symbols-outlined text-lg">event_busy</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-error-red mt-2">{{ total_inasistencias }}</p>
+            <p class="text-[11px] text-error-red font-bold mt-1">Inasistencia: {{ tasa_inasistencia }}%</p>
+        </div>
+
+        <!-- KPI 6: Pendiente Reubicación -->
+        <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-warning-amber font-bold uppercase tracking-wider">Reubicación</span>
+                <span class="w-8 h-8 rounded-xl bg-amber-50 text-warning-amber flex items-center justify-center">
+                    <span class="material-symbols-outlined text-lg">published_with_changes</span>
+                </span>
+            </div>
+            <p class="font-heading text-2xl font-black text-warning-amber mt-2">{{ total_reubicacion }}</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">Por imprevistos (RN08)</p>
+        </div>
+    </div>
+
+    <!-- Gráficas Visuales BI (Chart.js) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Gráfica 1: Demanda por Especialidad -->
+        <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
+                <div>
+                    <h3 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-clinical-teal">bar_chart</span>
+                        Demanda de Citas por Especialidad
+                    </h3>
+                    <p class="text-xs text-on-surface-variant">Comparativo de volumen de consultas registradas</p>
+                </div>
+            </div>
+            <div class="relative h-64 w-full flex items-center justify-center">
+                <canvas id="chartEspecialidades"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica 2: Distribución por Estado de Cita -->
+        <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
+                <div>
+                    <h3 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary">pie_chart</span>
+                        Distribución de Citas por Estado
+                    </h3>
+                    <p class="text-xs text-on-surface-variant">Porcentaje de cumplimiento y efectividad de la agenda</p>
+                </div>
+            </div>
+            <div class="relative h-64 w-full flex items-center justify-center">
+                <canvas id="chartEstados"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Detallada: Rendimiento Operativo por Especialista -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h3 class="font-heading text-base font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">badge</span>
+                    Rendimiento y Desempeño del Personal Médico
+                </h3>
+                <p class="text-xs text-on-surface-variant">Métricas por especialista en el período seleccionado</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-low text-primary uppercase text-[11px] font-bold tracking-wider border-b border-outline-variant/30">
+                        <th class="py-3.5 px-4">Especialista Médico</th>
+                        <th class="py-3.5 px-4">Especialidad</th>
+                        <th class="py-3.5 px-4 text-center">Consultorio</th>
+                        <th class="py-3.5 px-4 text-center">Total Citas</th>
+                        <th class="py-3.5 px-4 text-center">Atendidas</th>
+                        <th class="py-3.5 px-4 text-center">No Asistió</th>
+                        <th class="py-3.5 px-4 text-center">Canceladas</th>
+                        <th class="py-3.5 px-4 text-center">Tasa Inasistencia</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/20">
+                    {% for item in desempeno_especialistas %}
+                    <tr class="hover:bg-soft-sky/40 transition">
+                        <td class="py-3.5 px-4 font-bold text-primary flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                                {{ item.especialista.usuario.nombre_completo|slice:":1" }}
+                            </span>
+                            <span>Dr/Dra. {{ item.especialista.usuario.nombre_completo }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-on-surface-variant font-medium">
+                            {{ item.especialista.especialidad.nombre_especialidad|default:"Sin Especialidad" }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold text-secondary">
+                            {{ item.especialista.consultorio.nombre_codigo|default:"N/A" }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-extrabold text-primary">
+                            {{ item.total }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold text-success-emerald">
+                            {{ item.atendidas }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold text-error-red">
+                            {{ item.inasistencias }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center text-on-surface-variant">
+                            {{ item.canceladas }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if item.tasa_inasistencia > 20 %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-error-red border border-rose-200">
+                                    {{ item.tasa_inasistencia }}%
+                                </span>
+                            {% elif item.tasa_inasistencia > 10 %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-warning-amber border border-amber-200">
+                                    {{ item.tasa_inasistencia }}%
+                                </span>
+                            {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-success-emerald border border-emerald-200">
+                                    {{ item.tasa_inasistencia }}%
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-on-surface-variant">
+                            No se registraron datos de especialidades en el período seleccionado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Carga de Librería Chart.js para Renderizado de Gráficas Estadísticas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Datos de Especialidades
+    const labelsEsp = {{ chart_esp_labels_json|safe }};
+    const dataEsp = {{ chart_esp_data_json|safe }};
+
+    if (labelsEsp.length > 0) {
+        const ctxEsp = document.getElementById('chartEspecialidades').getContext('2d');
+        new Chart(ctxEsp, {
+            type: 'bar',
+            data: {
+                labels: labelsEsp,
+                datasets: [{
+                    label: 'Citas Registradas',
+                    data: dataEsp,
+                    backgroundColor: '#0D9488',
+                    borderRadius: 8,
+                    hoverBackgroundColor: '#059669'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    }
+
+    // Datos de Estados de Citas
+    const labelsEst = {{ chart_est_labels_json|safe }};
+    const dataEst = {{ chart_est_data_json|safe }};
+
+    const ctxEst = document.getElementById('chartEstados').getContext('2d');
+    new Chart(ctxEst, {
+        type: 'doughnut',
+        data: {
+            labels: labelsEst,
+            datasets: [{
+                data: dataEst,
+                backgroundColor: [
+                    '#059669', // Atendida (Emerald)
+                    '#2C4E60', // Programada (Navy)
+                    '#0E6877', // En Sala (Teal)
+                    '#BE123C', // No Asistio (Red)
+                    '#6B7280', // Cancelada (Gray)
+                    '#D97706'  // Pend. Reubicacion (Amber)
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { boxWidth: 12, font: { size: 11 } }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
