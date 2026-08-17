@@ -23,7 +23,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
+{% block content %}
 <div class="min-h-screen bg-surface">
 
     <!-- HEADER / TOPBAR -->
@@ -156,11 +156,8 @@
                     <!-- PASO 2: ESPECIALISTA -->
                     <div class="space-y-1.5">
                         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">Paso 2: Médico Especialista (Opcional)</label>
-                        <select id="select-especialista" onchange="filtrarPorEspecialista()" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
-                            <option value="">-- Cualquier Médico Disponible --</option>
-                            {% for e in especialistas %}
-                            <option value="{{ e.id }}" data-esp="{{ e.especialidad.id }}">{{ e.usuario.nombre_completo }} ({{ e.especialidad.nombre_especialidad }})</option>
-                            {% endfor %}
+                        <select id="select-especialista" onchange="filtrarPorEspecialista()" disabled class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                            <option value="">-- Selecciona primero una especialidad en el Paso 1 --</option>
                         </select>
                     </div>
                 </div>
@@ -244,9 +241,7 @@
         </form>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_scripts %}
 <script>
     const hoy = new Date();
     let selectedDate = new Date();
@@ -484,20 +479,41 @@
         });
     }
 
+    const TODOS_LOS_ESPECIALISTAS = [
+        {% for e in especialistas %}
+        { id: "{{ e.id }}", nombre: "{{ e.usuario.nombre_completo|escapejs }} ({{ e.especialidad.nombre_especialidad|escapejs }})", espId: "{{ e.especialidad.id }}" },
+        {% endfor %}
+    ];
+
     function filtrarPorEspecialidad() {
-        const espId = document.getElementById("select-especialidad").value;
+        const espSelect = document.getElementById("select-especialidad");
         const specSelect = document.getElementById("select-especialista");
-        
-        Array.from(specSelect.options).forEach(opt => {
-            if (!opt.value) return;
-            if (!espId || opt.getAttribute("data-esp") === espId) {
-                opt.style.display = "";
-            } else {
-                opt.style.display = "none";
-            }
-        });
-        specSelect.selectedIndex = 0;
-        selectedEspecialistaId = null;
+        if (!espSelect || !specSelect) return;
+
+        const espId = espSelect.value;
+
+        if (!espId) {
+            specSelect.innerHTML = '<option value="">-- Selecciona primero una especialidad en el Paso 1 --</option>';
+            specSelect.disabled = true;
+            specSelect.className = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed shadow-sm";
+            selectedEspecialistaId = "";
+        } else {
+            specSelect.disabled = false;
+            specSelect.className = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-ink bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm";
+            specSelect.innerHTML = '<option value="">Cualquier especialista</option>';
+
+            const medicosFiltrados = TODOS_LOS_ESPECIALISTAS.filter(m => String(m.espId) === String(espId));
+            medicosFiltrados.forEach(med => {
+                const opt = document.createElement("option");
+                opt.value = med.id;
+                opt.text = med.nombre;
+                specSelect.appendChild(opt);
+            });
+
+            specSelect.selectedIndex = 0;
+            selectedEspecialistaId = "";
+        }
+
         actualizarFichaResumen();
         renderTimeSlots();
     }

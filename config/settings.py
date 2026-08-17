@@ -137,3 +137,13 @@ LOGOUT_REDIRECT_URL = '/login/'
 # Auto field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Email Configuration (Gmail SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'brekapegi21082007@gmail.com'
+EMAIL_HOST_PASSWORD = 'rbpohgbhvyuruiyl'
+DEFAULT_FROM_EMAIL = 'Pulsia Médica <brekapegi21082007@gmail.com>'
+
+

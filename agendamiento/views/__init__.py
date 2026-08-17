@@ -1,7 +1,6 @@
 from .auth_views import login_view, register_view, logout_view
 from .dashboard_views import (
     dashboard_view,
-    recepcion_dashboard_view,
     paciente_dashboard_view
 )
 from .especialistas_views import (
@@ -9,6 +8,12 @@ from .especialistas_views import (
     especialista_checkin_turno_view,
     especialista_atender_cita_view,
     especialista_solicitar_permiso_view
+)
+from .paciente_views import (
+    paciente_agendar_view,
+    paciente_reprogramar_view,
+    paciente_cancelar_view,
+    paciente_unirse_espera_view
 )
 from .admin_views import (
     admin_dashboard_view,
@@ -50,12 +55,9 @@ from .citas_views import (
     api_buscar_citas_paciente_view,
     api_especialistas_por_especialidad_view,
     recepcion_bandeja_reubicacion_view,
-    recepcion_reubicar_cita_view
+    recepcion_reubicar_cita_view,
+    recepcion_auto_reubicar_lote_view
 )
-
-
-
-
 from .reportes_views import admin_reportes_bi_view, admin_exportar_reporte_csv
 
 __all__ = [
@@ -66,12 +68,15 @@ __all__ = [
     'admin_dashboard_view',
     'recepcion_dashboard_view',
     'recepcion_agenda_global_view',
-
     'especialista_dashboard_view',
     'especialista_checkin_turno_view',
     'especialista_atender_cita_view',
     'especialista_solicitar_permiso_view',
     'paciente_dashboard_view',
+    'paciente_agendar_view',
+    'paciente_reprogramar_view',
+    'paciente_cancelar_view',
+    'paciente_unirse_espera_view',
     'admin_usuarios_view',
     'admin_crear_usuario',
     'admin_editar_usuario',
@@ -103,13 +108,10 @@ __all__ = [
     'recepcion_buscar_paciente_api',
     'recepcion_crear_paciente_expres_view',
     'recepcion_agendar_reprogramar_view',
-
     'api_horarios_disponibles_view',
     'api_buscar_citas_paciente_view',
     'api_especialistas_por_especialidad_view',
     'recepcion_bandeja_reubicacion_view',
-    'recepcion_reubicar_cita_view'
+    'recepcion_reubicar_cita_view',
+    'recepcion_auto_reubicar_lote_view'
 ]
-
-
-

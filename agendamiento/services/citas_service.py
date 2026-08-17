@@ -81,8 +81,9 @@ def marcar_llegada_paciente(cita_id: int) -> tuple[Cita, bool, str]:
     """
     Registra el anuncio de llegada del paciente a recepción.
     - Si el médico asignado está PRESENTE: pasa la cita a 'EN_SALA'.
-    - Si el médico asignado está AUSENTE / SIN CHECK-IN: pasa la cita a 'PENDIENTE_REUBICACION'
-      otorgándole PRIORIDAD DE REUBICACIÓN.
+    - Si el médico asignado está AUSENTE / SIN CHECK-IN:
+      Ejecuta Auto-Reubicación Inteligente en tiempo real. Si encuentra a otro especialista presente hoy,
+      reasigna la cita de inmediato y pasa al paciente a 'EN_SALA' con el nuevo médico notificando por correo.
     """
     cita = Cita.objects.select_related(
         'paciente__usuario', 'especialista__usuario', 'especialista__especialidad'
@@ -92,15 +93,23 @@ def marcar_llegada_paciente(cita_id: int) -> tuple[Cita, bool, str]:
     if medico.estado_turno == EstadoTurno.PRESENTE:
         cita.estado_cita = EstadoCita.EN_SALA
         cita.save()
-        return cita, False, f"Llegada confirmada: {cita.paciente.usuario.nombre_completo} ha ingresado a Sala de Espera."
+        return cita, False, f"Llegada confirmada: {cita.paciente.usuario.nombre_completo} ha ingresado a Sala de Espera con Dr/Dra. {medico.usuario.nombre_completo}."
     else:
         cita.estado_cita = EstadoCita.PENDIENTE_REUBICACION
         cita.save()
-        msg = (
-            f"⚠️ El médico Dr/Dra. {medico.usuario.nombre_completo} no ha registrado asistencia (Sin Check-in). "
-            f"Se asignó PRIORIDAD DE REUBICACIÓN a la cita de {cita.paciente.usuario.nombre_completo}."
-        )
-        return cita, True, msg
+        
+        from agendamiento.services.ausencias_service import auto_reubicar_cita_inteligente
+        exito, cita_nueva, msg_reub = auto_reubicar_cita_inteligente(cita.id, priorizar_mismo_dia=True)
+        
+        if exito:
+            return cita_nueva, False, f"El médico original no asistió. {msg_reub} Se envió correo de notificación al paciente."
+        else:
+            msg = (
+                f"El médico Dr/Dra. {medico.usuario.nombre_completo} no ha registrado asistencia (Sin Check-in). "
+                f"La cita quedó registrada en la Bandeja de Reubicación. ({msg_reub})"
+            )
+            return cita, True, msg
+
 
 
 @transaction.atomic
@@ -165,33 +174,61 @@ def crear_paciente_expres(
 
 @transaction.atomic
 def agendar_cita_recepcion_balanceada(
-    paciente_id: int,
-    especialidad_id: int,
-    fecha_hora_inicio: datetime,
-    especialista_id: int = None,
-    duracion_minutos: int = 30
+    paciente_id=None,
+    especialidad_id=None,
+    fecha_hora_inicio: datetime = None,
+    especialista_id=None,
+    duracion_minutos: int = 30,
+    paciente=None,
+    especialidad=None,
+    especialista=None
 ) -> Cita:
     """
-    Agenda una cita desde recepción.
-    REGLA DE NEGOCIO (BALANCEO DE CARGA Y DESEMPATE ALEATORIO):
-    - Si se especifica especialista_id, valida y asigna a ese especialista.
-    - Si NO se especifica especialista_id (Asignación Automática / Cualquier Médico):
-      1. Identifica todos los médicos activos de la especialidad libres en la franja horaria.
-      2. Calcula la cantidad de citas de cada médico libre en el día.
-      3. Asigna la cita al médico que MENOS citas agendadas tenga en el día.
-      4. Si varios médicos están empatados en el mínimo número de citas, SE SELECCIONA UNO ALEATORIAMENTE.
+    Agenda una cita desde recepción o portal paciente.
+    Acepta tanto IDs como instancias de modelos para paciente, especialidad y especialista.
     """
-    paciente = Paciente.objects.get(id=paciente_id)
-    especialidad = Especialidad.objects.get(id=especialidad_id)
+    if paciente is None:
+        if isinstance(paciente_id, Paciente):
+            paciente = paciente_id
+        elif paciente_id is not None:
+            paciente = Paciente.objects.get(id=int(paciente_id))
+    elif isinstance(paciente, (int, str)) and str(paciente).isdigit():
+        paciente = Paciente.objects.get(id=int(paciente))
+
+    if paciente is None:
+        raise ValueError("Es necesario especificar un paciente válido para agendar la cita.")
+
+    if especialidad is None:
+        if isinstance(especialidad_id, Especialidad):
+            especialidad = especialidad_id
+        elif especialidad_id is not None:
+            especialidad = Especialidad.objects.get(id=int(especialidad_id))
+    elif isinstance(especialidad, (int, str)) and str(especialidad).isdigit():
+        especialidad = Especialidad.objects.get(id=int(especialidad))
+
+    if especialista is None and especialista_id is not None:
+        if isinstance(especialista_id, Especialista):
+            especialista = especialista_id
+        elif str(especialista_id).isdigit():
+            especialista = Especialista.objects.select_related('consultorio', 'consultorio_asignado', 'usuario').get(id=int(especialista_id))
+    elif isinstance(especialista, (int, str)) and str(especialista).isdigit():
+        especialista = Especialista.objects.select_related('consultorio', 'consultorio_asignado', 'usuario').get(id=int(especialista))
+
+    if not especialidad and especialista:
+        especialidad = especialista.especialidad
+
+    if not especialidad:
+        raise ValueError("Es necesario seleccionar una especialidad médica.")
+
     fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion_minutos)
 
     fecha_dia = fecha_hora_inicio.date()
     inicio_dia = timezone.make_aware(datetime.combine(fecha_dia, time.min))
     fin_dia = timezone.make_aware(datetime.combine(fecha_dia, time.max))
 
-    if especialista_id:
-        especialista = Especialista.objects.select_related('consultorio', 'usuario').get(id=especialista_id)
-        if not especialista.consultorio:
+    if especialista:
+        consultorio = especialista.consultorio or especialista.consultorio_asignado
+        if not consultorio:
             raise ValueError(f"El especialista Dr/Dra. {especialista.usuario.nombre_completo} no tiene un consultorio asignado.")
 
         conflicto = Cita.objects.filter(
@@ -205,10 +242,11 @@ def agendar_cita_recepcion_balanceada(
             raise ValueError(f"El médico Dr/Dra. {especialista.usuario.nombre_completo} ya posee una cita en esa franja horaria.")
     else:
         # Asignación Automática por Menor Carga del Día con Desempate Aleatorio
-        medicos_especialidad = Especialista.objects.select_related('consultorio', 'usuario').filter(
+        from django.db.models import Q
+        medicos_especialidad = Especialista.objects.select_related('consultorio', 'consultorio_asignado', 'usuario').filter(
+            Q(consultorio__isnull=False) | Q(consultorio_asignado__isnull=False),
             especialidad=especialidad,
-            usuario__estado_cuenta=True,
-            consultorio__isnull=False
+            usuario__estado_cuenta=True
         )
 
         if not medicos_especialidad.exists():
@@ -244,15 +282,18 @@ def agendar_cita_recepcion_balanceada(
 
         # Si hay empate, seleccionar uno al azar (random)
         especialista = random.choice(candidatos_minimos)
+        consultorio = especialista.consultorio or especialista.consultorio_asignado
 
     cita = Cita.objects.create(
         paciente=paciente,
         especialista=especialista,
-        consultorio=especialista.consultorio,
+        consultorio=consultorio,
         fecha_hora_inicio=fecha_hora_inicio,
         fecha_hora_fin=fecha_hora_fin,
         estado_cita=EstadoCita.PROGRAMADA
     )
+    from agendamiento.services.notificaciones_service import enviar_correo_confirmacion_cita
+    enviar_correo_confirmacion_cita(cita)
     return cita
 
 
@@ -408,17 +449,21 @@ def reubicar_cita_contingencia(
     return cita
 
 
-def validar_reprogramacion(cita, fecha_nueva):
+def validar_reprogramacion(cita, nueva_fecha_hora):
     """
     RN01: Máximo 1 reprogramación desde autogestión web del paciente.
-    RN02: Anticipación mayor a 24 horas.
+    RN02: Anticipación mayor a 24 horas para la nueva fecha elegida.
     """
     if cita.contador_reprogramacion >= 1:
         return False, "Has alcanzado el límite de 1 reprogramación permitida."
 
     ahora = timezone.now()
-    if (cita.fecha_hora_inicio - ahora).total_seconds() < 86400:
-        return False, "La reprogramación debe realizarse con más de 24 horas de anticipación."
+    if timezone.is_naive(nueva_fecha_hora):
+        nueva_fecha_hora = timezone.make_aware(nueva_fecha_hora)
+
+    # La nueva fecha/hora elegida debe tener al menos 24h de anticipación desde el momento actual
+    if (nueva_fecha_hora - ahora).total_seconds() < 86400:
+        return False, "La nueva fecha y hora elegida debe ser con al menos 24 horas de anticipación."
 
     return True, "Reprogramación válida."
 
@@ -436,3 +481,72 @@ def atender_y_guardar_notas_cita(cita_id: int, especialista: Especialista, notas
         cita.notas_clinicas = notas_clinicas.strip()
     cita.save()
     return cita
+
+
+@transaction.atomic
+def agendar_cita_web(paciente, especialista, consultorio, fecha_hora_inicio, duracion_minutos=30):
+    """Agendamiento web autónomo del paciente (HU02)."""
+    fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion_minutos)
+    cita = Cita.objects.create(
+        paciente=paciente,
+        especialista=especialista,
+        consultorio=consultorio,
+        fecha_hora_inicio=fecha_hora_inicio,
+        fecha_hora_fin=fecha_hora_fin,
+        estado_cita=EstadoCita.PROGRAMADA
+    )
+    return cita
+
+
+@transaction.atomic
+def reprogramar_cita(cita, nueva_fecha_hora_inicio, es_recepcion=False):
+    """Reprogramación de citas web (HU03, RN01, RN02)."""
+    from django.core.exceptions import ValidationError
+    from agendamiento.services.notificaciones_service import enviar_correo_reprogramacion_cita
+    if not es_recepcion:
+        es_valido, msg = validar_reprogramacion(cita, nueva_fecha_hora_inicio)
+        if not es_valido:
+            raise ValidationError(msg)
+        cita.contador_reprogramacion += 1
+
+    duracion = cita.fecha_hora_fin - cita.fecha_hora_inicio
+    nueva_fecha_fin = nueva_fecha_hora_inicio + duracion
+
+    cita.fecha_hora_inicio = nueva_fecha_hora_inicio
+    cita.fecha_hora_fin = nueva_fecha_fin
+    cita.estado_cita = EstadoCita.PROGRAMADA
+    cita.save()
+
+    # Notificación por correo al paciente
+    enviar_correo_reprogramacion_cita(cita)
+    return cita
+
+
+@transaction.atomic
+def cancelar_cita(cita, es_recepcion=False):
+    """Cancelación de cita web (RN02)."""
+    from django.core.exceptions import ValidationError
+    from agendamiento.services.notificaciones_service import enviar_correo_cancelacion_cita
+    if not es_recepcion:
+        ahora = timezone.now()
+        if (cita.fecha_hora_inicio - ahora).total_seconds() < 86400:
+            raise ValidationError("Las cancelaciones deben realizarse con más de 24 horas de anticipación.")
+    cita.estado_cita = EstadoCita.CANCELADA
+    cita.save()
+
+    # Notificación por correo al paciente
+    enviar_correo_cancelacion_cita(cita)
+    return cita
+
+
+@transaction.atomic
+def unirse_lista_espera(paciente, especialista=None, especialidad=None):
+    """Inscripción en lista de espera (HU09)."""
+    from agendamiento.models import ListaEspera
+    espera = ListaEspera.objects.create(
+        paciente=paciente,
+        especialista=especialista,
+        especialidad=especialidad
+    )
+    return espera
+

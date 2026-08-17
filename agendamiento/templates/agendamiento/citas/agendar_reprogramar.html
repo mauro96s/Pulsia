@@ -152,7 +152,7 @@
                     <label class="block text-xs font-bold text-primary mb-1">3. Especialista (Opcional)</label>
                     <select name="especialista_id" id="selectEspecialistaAgendar" onchange="actualizarHorariosDisponibles()"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant text-xs bg-white text-primary focus:ring-2 focus:ring-clinical-teal">
-                        <option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>
+                        <option value="">Cualquier especialista</option>
                         {% for med in especialistas %}
                             <option value="{{ med.id }}" {% if cita_preCargada and cita_preCargada.especialista_id == med.id %}selected{% endif %}>
                                 Dr/Dra. {{ med.usuario.nombre_completo }}
@@ -306,7 +306,7 @@
         const preMedId = "{% if cita_preCargada %}{{ cita_preCargada.especialista_id }}{% endif %}";
 
         if (!espId) {
-            selectMed.innerHTML = '<option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>';
+            selectMed.innerHTML = '<option value="">Cualquier especialista</option>';
             document.getElementById('contenedorHorariosDisponibles').innerHTML = '<p class="text-xs text-gray-400 col-span-4 text-center py-4">Selecciona especialidad en la lista superior.</p>';
             return;
         }
@@ -314,7 +314,7 @@
         fetch(`/api/recepcion/especialistas-especialidad/?especialidad_id=${espId}`)
             .then(res => res.json())
             .then(data => {
-                let html = '<option value="">⚡ Asignación Automática (Médico con Menor Carga del Día)</option>';
+                let html = '<option value="">Cualquier especialista</option>';
                 if (data.success && data.especialistas && data.especialistas.length > 0) {
                     data.especialistas.forEach(m => {
                         const isSel = (String(m.id) === String(preMedId)) ? 'selected' : '';

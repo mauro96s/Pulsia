@@ -53,7 +53,7 @@ class Especialista(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='especialistas'
+        related_name='especialistas_asignados'
     )
 
     class Meta:

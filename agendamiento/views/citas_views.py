@@ -264,22 +264,23 @@ def recepcion_agendar_reprogramar_view(request):
 
 @login_required(login_url='login')
 def api_horarios_disponibles_view(request):
-    """API JSON que calcula y retorna franjas horarias disponibles para una fecha y especialidad."""
-    if not es_recepcionista_o_admin(request.user):
-        return JsonResponse({'success': False, 'error': 'No autorizado'}, status=403)
-
+    """API JSON que calcula y retorna franjas horarias disponibles para una fecha, especialidad o especialista."""
     fecha_str = request.GET.get('fecha')
-    especialidad_id = request.GET.get('especialidad_id')
+    especialidad_id = request.GET.get('especialidad_id') or None
     especialista_id = request.GET.get('especialista_id') or None
 
-    if not fecha_str or not especialidad_id:
+    if not fecha_str:
         return JsonResponse({'success': True, 'horarios': []})
-
 
     try:
         fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
-        esp_id = int(especialidad_id)
-        esp_med_id = int(especialista_id) if especialista_id and especialista_id.isdigit() else None
+        esp_med_id = int(especialista_id) if especialista_id and str(especialista_id).isdigit() else None
+        esp_id = int(especialidad_id) if especialidad_id and str(especialidad_id).isdigit() else None
+
+        if esp_med_id and not esp_id:
+            esp_med = Especialista.objects.filter(id=esp_med_id).first()
+            if esp_med:
+                esp_id = esp_med.especialidad_id
 
         horarios = obtener_horarios_disponibles(
             fecha=fecha_obj,
@@ -572,3 +573,28 @@ def recepcion_reubicar_cita_view(request, cita_id):
         messages.error(request, f"Error al reubicar la cita: {str(e)}")
 
     return redirect('recepcion_bandeja_reubicacion')
+
+
+@login_required(login_url='login')
+@require_POST
+def recepcion_auto_reubicar_lote_view(request):
+    """Acción POST para ejecutar la Auto-Reubicación Inteligente Masiva en Lote para todas las citas pendientes."""
+    if not es_recepcionista_o_admin(request.user):
+        messages.error(request, "Acceso no autorizado.")
+        return redirect('dashboard')
+
+    citas_pendientes = list(Cita.objects.filter(estado_cita=EstadoCita.PENDIENTE_REUBICACION))
+    if not citas_pendientes:
+        messages.info(request, "No hay citas pendientes de reubicación en la bandeja.")
+        return redirect('recepcion_bandeja_reubicacion')
+
+    from agendamiento.services.ausencias_service import procesar_auto_reubicacion_lote
+    exitosos, fallidos, msgs = procesar_auto_reubicacion_lote(citas_pendientes)
+
+    if exitosos > 0:
+        messages.success(request, f"¡Auto-Reubicación completada! Se reasignaron con éxito {exitosos} cita(s) y se enviaron las notificaciones por correo.")
+    if fallidos > 0:
+        messages.warning(request, f"No se pudo encontrar cupo automático para {fallidos} cita(s); permanecen en la bandeja para asignación manual.")
+
+    return redirect('recepcion_bandeja_reubicacion')
+

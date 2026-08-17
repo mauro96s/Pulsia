@@ -10,6 +10,7 @@ from agendamiento.models.citas import Cita, EstadoCita, ListaEspera
 from agendamiento.models.especialistas import Especialidad, Especialista, Consultorio, HorarioLaboral
 from agendamiento.services.citas_service import (
     agendar_cita_web,
+    agendar_cita_recepcion_balanceada,
     reprogramar_cita,
     cancelar_cita,
     unirse_lista_espera
@@ -41,58 +42,30 @@ def paciente_agendar_view(request):
             hora_dt = datetime.strptime(hora_str, '%H:%M').time()
             fecha_hora_inicio = timezone.make_aware(datetime.combine(fecha_dt, hora_dt))
 
-            if especialista_id:
-                especialista = get_object_or_404(Especialista, id=especialista_id)
-            else:
-                # Auto-asignar médico disponible para la especialidad y hora elegida
-                dia_semana = fecha_dt.isoweekday()
-                candidatos = Especialista.objects.all()
-                if especialidad_id:
-                    candidatos = candidatos.filter(especialidad_id=especialidad_id)
+            especialidad = Especialidad.objects.filter(id=especialidad_id).first() if especialidad_id else None
 
-                especialista_asignado = None
-                for cand in candidatos:
-                    horario = HorarioLaboral.objects.filter(especialista=cand, dia_semana=dia_semana).first()
-                    if not horario:
-                        continue
-                    if not (horario.hora_inicio <= hora_dt < horario.hora_fin):
-                        continue
-                    if horario.hora_inicio_descanso and horario.hora_fin_descanso:
-                        if horario.hora_inicio_descanso <= hora_dt < horario.hora_fin_descanso:
-                            continue
-
-                    ocupado = Cita.objects.filter(
-                        especialista=cand,
-                        fecha_hora_inicio=fecha_hora_inicio,
-                        estado_cita__in=['Programada', 'En_Sala']
-                    ).exists()
-
-                    if not ocupado:
-                        especialista_asignado = cand
-                        break
-
-                if not especialista_asignado:
-                    raise ValidationError(f"No hay ningún médico especialista disponible a las {hora_str}.")
-                especialista = especialista_asignado
-
-            consultorio = especialista.consultorio_asignado
-            if not consultorio:
-                consultorio = Consultorio.objects.filter(estado_operativo=True).first()
-                if not consultorio:
-                    raise ValidationError("No hay consultorios operativos disponibles.")
-
-            agendar_cita_web(
+            # Si no selecciona especialista (o deja "-- Cualquier Médico Disponible --"), 
+            # se asigna automáticamente un médico con agenda libre de esa especialidad.
+            cita_creada = agendar_cita_recepcion_balanceada(
                 paciente=paciente,
-                especialista=especialista,
-                consultorio=consultorio,
-                fecha_hora_inicio=fecha_hora_inicio
+                especialidad=especialidad,
+                especialista_id=especialista_id if especialista_id else None,
+                fecha_hora_inicio=fecha_hora_inicio,
+                duracion_minutos=30
             )
-            messages.success(request, f"¡Tu cita médica ha sido agendada con éxito con {especialista.usuario.nombre_completo}!")
+
+            messages.success(
+                request,
+                f"¡Tu cita de {cita_creada.especialista.especialidad.nombre_especialidad} ha sido agendada con éxito con Dr/Dra. {cita_creada.especialista.usuario.nombre_completo} (Consultorio {cita_creada.consultorio.nombre_codigo})!"
+            )
             return redirect('dashboard_paciente')
-        except ValidationError as ve:
-            messages.error(request, str(ve.message if hasattr(ve, 'message') else ve))
+        except (ValidationError, ValueError) as ve:
+            msg = str(ve.message if hasattr(ve, 'message') else ve)
+            messages.error(request, msg)
             return redirect('paciente_agendar')
         except Exception as e:
+            messages.error(request, f"Error al procesar el agendamiento: {e}")
+            return redirect('paciente_agendar')
             messages.error(request, f"Error al procesar el agendamiento: {e}")
             return redirect('paciente_agendar')
 
@@ -103,14 +76,16 @@ def paciente_agendar_view(request):
     import json
     citas_ocupadas = Cita.objects.select_related('paciente__usuario', 'especialista__usuario', 'especialista__especialidad', 'consultorio').all()
     horarios_data = {}
-    for h in HorarioLaboral.objects.select_related('especialista__usuario', 'especialista__especialidad', 'especialista__consultorio_asignado').all():
+    for h in HorarioLaboral.objects.select_related('especialista__usuario', 'especialista__especialidad', 'especialista__consultorio', 'especialista__consultorio_asignado').all():
         s_id = str(h.especialista_id)
         esp_id = str(h.especialista.especialidad_id)
+        c_obj = h.especialista.consultorio or h.especialista.consultorio_asignado
+        consultorio_nombre = c_obj.nombre_codigo if c_obj else 'Sin Asignar'
         if s_id not in horarios_data:
             horarios_data[s_id] = {
                 'especialidad_id': esp_id,
                 'nombre_medico': h.especialista.usuario.nombre_completo,
-                'consultorio': h.especialista.consultorio_asignado.nombre_codigo if h.especialista.consultorio_asignado else 'Sin Asignar',
+                'consultorio': consultorio_nombre,
                 'horarios': {}
             }
         horarios_data[s_id]['horarios'][str(h.dia_semana)] = {
