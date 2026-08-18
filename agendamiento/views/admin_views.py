@@ -740,6 +740,7 @@ def api_eventos_citas(request):
     especialidad_id = request.GET.get('especialidad')
     especialista_id = request.GET.get('especialista')
     paciente_id = request.GET.get('paciente')
+    estado = request.GET.get('estado')
 
     citas_qs = Cita.objects.select_related('paciente__usuario', 'especialista__usuario', 'consultorio')
 
@@ -755,6 +756,8 @@ def api_eventos_citas(request):
         citas_qs = citas_qs.filter(especialista_id=especialista_id)
     if paciente_id:
         citas_qs = citas_qs.filter(paciente_id=paciente_id)
+    if estado:
+        citas_qs = citas_qs.filter(estado_cita=estado)
 
 
     color_map = {

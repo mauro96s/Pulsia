@@ -1,0 +1,137 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Inicio | Panel del Especialista | Pulsia{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-clinical-teal text-white uppercase tracking-wider">
+                    Especialista Médico
+                </span>
+                <span class="text-xs text-on-surface-variant font-medium">
+                    {{ especialista.especialidad.nombre_especialidad }}
+                </span>
+            </div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary mt-1">
+                Bienvenido, Dr/Dra. {{ especialista.usuario.nombre_completo }}
+            </h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                Panel de inicio y resumen de actividad del día.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-primary bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30">
+                {{ fecha_actual|date:"l, d \d\e F Y" }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Indicadores Rápidos -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Total Citas Hoy -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Citas para Hoy</p>
+                <p class="font-heading text-3xl font-extrabold text-primary mt-1">{{ cant_total }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">event_available</span>
+            </div>
+        </div>
+
+        <!-- Citas Pendientes -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Pendientes</p>
+                <p class="font-heading text-3xl font-extrabold text-amber-600 mt-1">{{ cant_pendientes }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">pending_actions</span>
+            </div>
+        </div>
+
+        <!-- Citas Atendidas -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Atendidas</p>
+                <p class="font-heading text-3xl font-extrabold text-emerald-600 mt-1">{{ cant_atendidas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">check_circle</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Próxima Cita & Accesos Rápidos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Próxima Cita Destacada -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+            <div class="bg-primary-container text-white p-4 border-b border-primary flex items-center justify-between">
+                <h2 class="font-heading font-bold text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary-container">notifications_active</span>
+                    <span>Próxima Cita a Atender</span>
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if proxima_cita %}
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-clinical-teal text-white flex items-center justify-center font-bold text-xl shadow-inner">
+                            {{ proxima_cita.paciente.usuario.nombre_completo|slice:":1"|upper }}
+                        </div>
+                        <div class="flex-1 text-center sm:text-left">
+                            <h3 class="font-extrabold text-lg text-primary">{{ proxima_cita.paciente.usuario.nombre_completo }}</h3>
+                            <p class="text-sm text-secondary font-semibold mt-0.5">
+                                Hoy a las {{ proxima_cita.fecha_hora_inicio|date:"h:i A" }}
+                            </p>
+                            <p class="text-xs text-on-surface-variant mt-1">
+                                Consultorio: {{ proxima_cita.consultorio.nombre_codigo|default:"N/A" }}
+                            </p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <a href="{% url 'dashboard_especialista' %}" class="px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow transition flex items-center gap-2">
+                                <span>Ir a Agenda</span>
+                                <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-6 text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2">done_all</span>
+                        <p class="text-sm font-bold">No hay citas pendientes próximas.</p>
+                        <p class="text-xs mt-1">Has atendido todas tus citas o no tienes programadas más por hoy.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Accesos Rápidos -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm p-6">
+            <h2 class="font-heading font-bold text-primary mb-4">Accesos Rápidos</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{% url 'dashboard_especialista' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">schedule</span>
+                    <span class="text-xs font-bold text-primary">Mi Agenda Diaria</span>
+                </a>
+                <a href="{% url 'especialista_agenda_completa' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">calendar_month</span>
+                    <span class="text-xs font-bold text-primary">Agenda Completa</span>
+                </a>
+                <a href="{% url 'especialista_pacientes' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">folder_shared</span>
+                    <span class="text-xs font-bold text-primary">Mis Pacientes</span>
+                </a>
+                <a href="{% url 'especialista_permisos' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">event_busy</span>
+                    <span class="text-xs font-bold text-primary">Mis Permisos</span>
+                </a>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

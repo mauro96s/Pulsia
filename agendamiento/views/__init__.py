@@ -7,7 +7,11 @@ from .especialistas_views import (
     especialista_dashboard_view,
     especialista_checkin_turno_view,
     especialista_atender_cita_view,
-    especialista_solicitar_permiso_view
+    especialista_solicitar_permiso_view,
+    especialista_inicio_view,
+    especialista_agenda_completa_view,
+    especialista_pacientes_view,
+    especialista_permisos_view
 )
 from .paciente_views import (
     paciente_agendar_view,
@@ -72,6 +76,10 @@ __all__ = [
     'especialista_checkin_turno_view',
     'especialista_atender_cita_view',
     'especialista_solicitar_permiso_view',
+    'especialista_inicio_view',
+    'especialista_agenda_completa_view',
+    'especialista_pacientes_view',
+    'especialista_permisos_view',
     'paciente_dashboard_view',
     'paciente_agendar_view',
     'paciente_reprogramar_view',

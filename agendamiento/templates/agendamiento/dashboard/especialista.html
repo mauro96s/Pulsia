@@ -1,352 +1,423 @@
 {% extends 'agendamiento/base.html' %}
 
-{% block title %}Panel del Especialista | Pulsia Medical Systems{% endblock %}
+{% block title %}Mi Agenda | Panel del Especialista | Pulsia{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<style>
+    .fc {
+        font-family: 'Inter', sans-serif;
+    }
+    .fc-header-toolbar {
+        margin-bottom: 1.25rem !important;
+    }
+    .fc-toolbar-title {
+        font-family: 'Geist', sans-serif;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #123748 !important;
+    }
+    .fc-button-primary {
+        background-color: #2c4e60 !important;
+        border-color: #2c4e60 !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.5rem !important;
+        text-transform: capitalize !important;
+    }
+    .fc-button-primary:hover {
+        background-color: #0e6877 !important;
+        border-color: #0e6877 !important;
+    }
+    .fc-button-active {
+        background-color: #0D9488 !important;
+        border-color: #0D9488 !important;
+    }
+    .fc-daygrid-day-number {
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        color: #123748;
+        font-size: 0.85rem;
+    }
+    .fc-event {
+        border-radius: 0.375rem !important;
+        font-size: 0.75rem !important;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+    .fc-event:hover {
+        transform: scale(1.01);
+    }
+    .fc-timegrid-event {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .fc-timegrid-event .fc-event-main {
+        padding: 0 !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    /* Estilo para el día de hoy: Verde biche suave */
+    .fc .fc-day-today,
+    .fc .fc-timegrid-col.fc-day-today {
+        background-color: #DCFCE7 !important; /* Verde biche suave */
+    }
+    .fc .fc-day-today .fc-daygrid-day-number {
+        color: #047857 !important;
+        font-weight: 800 !important;
+    }
+    .pulsia-holiday-badge {
+        background-color: #F97316 !important;
+        border-color: #EA580C !important;
+        color: #FFFFFF !important;
+    }
+</style>
 
-    <!-- Header Card -->
+<div class="space-y-6">
+
+    <!-- Header Module Card -->
     <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-clinical-teal text-white uppercase tracking-wider">
-                    Especialista Médico
-                </span>
-                <span class="text-xs text-on-surface-variant font-medium">
-                    {{ especialista.especialidad.nombre_especialidad }}
-                </span>
-            </div>
-            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary mt-1">
-                Dr/Dra. {{ especialista.usuario.nombre_completo }}
-            </h1>
-            <p class="text-xs text-on-surface-variant mt-1">
-                Consultorio: <strong class="text-primary">{{ especialista.consultorio.nombre_codigo|default:"Sin Asignar" }}</strong>
-                • Estado de Turno:
-                {% if especialista.estado_turno == EstadoTurno.PRESENTE %}
-                    <span class="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-[11px]">
-                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Presente (Turno Activo)
-                    </span>
-                {% else %}
-                    <span class="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full text-[11px]">
-                        <span class="w-2 h-2 rounded-full bg-rose-600"></span> Ausente (Sin Check-in)
-                    </span>
-                {% endif %}
-            </p>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Mi Agenda</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Visualización de tu programación médica. Filtra por paciente para una búsqueda rápida.</p>
         </div>
-
-        <!-- Botones de Acción (RN-ESP-04: Check-in exclusivo por Recepción) -->
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="text-[11px] text-on-surface-variant bg-surface-container-low px-3 py-2 rounded-xl border border-outline-variant/30 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-sm text-clinical-teal">info</span>
-                <span>Check-in registrado exclusivamente por Recepción (RN-ESP-04)</span>
-            </div>
-
-            <!-- Botón Modal Solicitar Permiso (HU04 / RN-ESP-02) -->
-            <button type="button" onclick="openModal('modal-permiso')" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-surface-container-low hover:bg-outline-variant/30 text-primary font-semibold text-xs rounded-xl border border-outline-variant transition">
-                <span class="material-symbols-outlined text-lg">event_busy</span>
-                <span>Solicitar Permiso (Min 24h)</span>
+        <div id="wrapper-btn-volver-mes" class="hidden">
+            <button type="button" onclick="window.pulsiaCal.volverAMes()" 
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">calendar_month</span>
+                <span>Volver a Vista Mes</span>
             </button>
         </div>
     </div>
 
-    <!-- Barra de Búsqueda de Citas por Fecha -->
-    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <form method="get" action="" class="flex items-center gap-3 w-full sm:w-auto">
-            <label for="fecha" class="text-xs font-bold text-primary flex items-center gap-1 shrink-0">
-                <span class="material-symbols-outlined text-base">calendar_today</span>
-                <span>Fecha de Consulta:</span>
-            </label>
-            <input type="date" id="fecha" name="fecha" value="{{ fecha_seleccionada }}"
-                onchange="this.form.submit()"
-                class="px-3 py-1.5 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary outline-none focus:ring-2 focus:ring-secondary">
-        </form>
-
-        <div class="flex items-center gap-2 text-xs">
-            <span class="px-3 py-1 rounded-full bg-soft-sky text-primary font-bold">Total: {{ cant_total }}</span>
-            <span class="px-3 py-1 rounded-full bg-teal-100 text-teal-900 font-bold">En Sala: {{ cant_en_sala }}</span>
-            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold">Atendidas: {{ cant_atendidas }}</span>
-        </div>
-    </div>
-
-    <!-- Citas del Día (HU05 / RN-ESP-04) -->
-    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-6">
-            <div>
-                <h2 class="font-heading text-lg font-bold text-primary">Pacientes Agendados</h2>
-                <p class="text-xs text-on-surface-variant">Los pacientes ingresan a Sala de Espera al anunciarse en recepción. Presiona "Finalizar Atención" para concluir.</p>
-            </div>
-            <span class="text-xs font-semibold bg-soft-sky text-primary px-3 py-1 rounded-full">
-                {{ fecha_actual_display|date:"d \d\e F \d\e Y" }}
-            </span>
-        </div>
-
-        {% if citas %}
-            <div class="space-y-4">
-                {% for cita in citas %}
-                    <div class="p-4 rounded-xl border transition duration-200 
-                        {% if cita.estado_cita == EstadoCita.EN_SALA %}
-                            border-clinical-teal bg-teal-50/20 shadow-sm
-                        {% elif cita.estado_cita == EstadoCita.ATENDIDA %}
-                            border-emerald-300 bg-emerald-50/10
-                        {% else %}
-                            border-outline-variant/40 bg-surface-container-low/20
-                        {% endif %}
-                        flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        
-                        <!-- Información del Paciente -->
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white shadow-sm shrink-0
-                                {% if cita.estado_cita == EstadoCita.EN_SALA %} bg-clinical-teal
-                                {% elif cita.estado_cita == EstadoCita.ATENDIDA %} bg-emerald-600
-                                {% else %} bg-slate-400 {% endif %}">
-                                {{ forloop.counter }}
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h3 class="font-bold text-sm text-primary">{{ cita.paciente.usuario.nombre_completo }}</h3>
-                                    
-                                    <!-- Pastilla de Estado -->
-                                    {% if cita.estado_cita == EstadoCita.EN_SALA %}
-                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 border-2 border-teal-700 text-teal-950 animate-pulse">
-                                            En Sala de Espera (Listo para Consulta)
-                                        </span>
-                                    {% elif cita.estado_cita == EstadoCita.ATENDIDA %}
-                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 border-2 border-emerald-700 text-emerald-950">
-                                            Atendida
-                                        </span>
-                                    {% elif cita.estado_cita == EstadoCita.NO_ASISTIO %}
-                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 border-2 border-rose-700 text-rose-950">
-                                            No Asistió
-                                        </span>
-                                    {% elif cita.estado_cita == EstadoCita.CANCELADA %}
-                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 border-2 border-gray-600 text-gray-800">
-                                            Cancelada
-                                        </span>
-                                    {% else %}
-                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 border-2 border-sky-700 text-sky-950">
-                                            Programada (Pendiente Anuncio)
-                                        </span>
-                                    {% endif %}
-                                </div>
-
-                                <p class="text-xs text-on-surface-variant mt-1">
-                                    Hora: <strong>{{ cita.fecha_hora_inicio|date:"h:i A" }} - {{ cita.fecha_hora_fin|date:"h:i A" }}</strong>
-                                    • Documento: {{ cita.paciente.usuario.num_documento|default:"No registrado" }}
-                                </p>
-
-                                {% if cita.notas_clinicas %}
-                                    <div class="mt-2 text-xs bg-white p-2.5 rounded-lg border border-emerald-200 text-emerald-900">
-                                        <strong>📝 Anotación Clínica:</strong> {{ cita.notas_clinicas }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Botones de Acción (RN-ESP-04, RN-ESP-09) -->
-                        <div class="flex items-center gap-2 shrink-0">
-                            {% if cita.estado_cita == EstadoCita.EN_SALA %}
-                                <button type="button"
-                                    onclick="abrirModalAtencion('{{ cita.id }}', '{{ cita.paciente.usuario.nombre_completo|escapejs }}', '{{ cita.fecha_hora_inicio|date:"h:i A" }}', '')"
-                                    class="px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-base">task_alt</span>
-                                    <span>Finalizar Atención</span>
-                                </button>
-                            {% elif cita.estado_cita == EstadoCita.PROGRAMADA %}
-                                <span class="text-xs text-gray-500 italic bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
-                                    Esperando anuncio en Recepción
-                                </span>
-                            {% elif cita.estado_cita == EstadoCita.ATENDIDA %}
-                                {% if cita.puede_editar_notas %}
-                                    <button type="button"
-                                        onclick="abrirModalAtencion('{{ cita.id }}', '{{ cita.paciente.usuario.nombre_completo|escapejs }}', '{{ cita.fecha_hora_inicio|date:"h:i A" }}', '{{ cita.notas_clinicas|default:""|escapejs }}')"
-                                        class="px-3.5 py-2 bg-soft-sky text-primary hover:bg-sky-100 font-semibold text-xs rounded-xl border border-secondary-container transition flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-base">edit</span>
-                                        <span>Editar Notas (<48h)</span>
-                                    </button>
-                                {% else %}
-                                    <span class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-300 flex items-center gap-1" title="RN-ESP-09: Cumplidas 48 horas la nota pasa a solo lectura">
-                                        <span class="material-symbols-outlined text-sm">lock</span>
-                                        <span>Nota Sellada (Solo Lectura)</span>
-                                    </span>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-12 text-on-surface-variant">
-                <span class="material-symbols-outlined text-4xl text-outline mb-2">event_available</span>
-                <p class="text-sm font-semibold">No tienes citas agendadas para esta fecha.</p>
-                <p class="text-xs mt-1">Usa el selector de fecha superior para consultar otros días de tu agenda.</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Historial de Solicitudes de Permiso (HU04 / RN-ESP-02) -->
-    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
-            <div>
-                <h2 class="font-heading text-base font-bold text-primary">Mis Solicitudes de Permisos / Ausencias (HU04)</h2>
-                <p class="text-xs text-on-surface-variant">Solicitudes de permiso enviadas con al menos 24 horas de anticipación (RN-ESP-02).</p>
-            </div>
-            <button type="button" onclick="openModal('modal-permiso')" class="text-xs font-bold text-secondary hover:text-primary transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">add_circle</span>
-                <span>Nueva Solicitud (Min 24h)</span>
-            </button>
-        </div>
-
-        {% if permisos %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left">
-                    <thead class="bg-surface-container-low text-primary uppercase font-bold tracking-wider">
-                        <tr>
-                            <th class="p-3 rounded-l-xl">Fecha / Hora Inicio</th>
-                            <th class="p-3">Fecha / Hora Fin</th>
-                            <th class="p-3">Motivo / Justificación</th>
-                            <th class="p-3 rounded-r-xl">Estado Aprobación</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant/20">
-                        {% for p in permisos %}
-                            <tr class="hover:bg-soft-sky/30 transition">
-                                <td class="p-3 font-semibold text-primary">{{ p.fecha_hora_inicio|date:"Y-m-d h:i A" }}</td>
-                                <td class="p-3">{{ p.fecha_hora_fin|date:"Y-m-d h:i A" }}</td>
-                                <td class="p-3 max-w-xs truncate">{{ p.motivo_solicitud }}</td>
-                                <td class="p-3">
-                                    {% if p.estado_aprobacion == EstadoAprobacion.APROBADO %}
-                                        <span class="px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Aprobado</span>
-                                    {% elif p.estado_aprobacion == EstadoAprobacion.RECHAZADO %}
-                                        <span class="px-2.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800">Rechazado</span>
-                                    {% else %}
-                                        <span class="px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">Pendiente</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="text-xs text-on-surface-variant italic py-4">No has registrado ninguna solicitud de permiso recientemente.</p>
-        {% endif %}
-    </div>
-
-</div>
-
-<!-- MODAL: Finalizar Atención & Ingresar Anotaciones Clínicas (HU05 / RN-ESP-04 / RN-ESP-10) -->
-<div id="modal-atencion" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-outline-variant/30">
-        <div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
-            <h3 class="font-heading font-bold text-lg text-primary flex items-center gap-2">
-                <span class="material-symbols-outlined text-clinical-teal">task_alt</span>
-                <span>Finalizar Atención Médica & Notas Clínicas</span>
-            </h3>
-            <button type="button" onclick="closeModal('modal-atencion')" class="text-gray-400 hover:text-gray-600">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <form id="form-atender-cita" method="post" action="" class="space-y-4 text-xs">
-            {% csrf_token %}
-
-            <div class="bg-soft-sky/50 p-3.5 rounded-xl border border-secondary-container/40">
-                <p class="text-[11px] uppercase font-bold text-secondary tracking-wider">Paciente en Consulta</p>
-                <p class="font-heading font-extrabold text-base text-primary mt-0.5" id="modal-paciente-nombre">-</p>
-                <p class="text-xs text-on-surface-variant" id="modal-paciente-hora">-</p>
-            </div>
-
-            <div>
-                <label for="notas_clinicas" class="block font-semibold text-primary mb-1">
-                    Notas Clínicas / Observaciones / Recomendaciones *
+    <!-- BARRA DE FILTROS -->
+    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
+        <form class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <!-- Filtro Paciente Searchable Combobox -->
+            <div class="sm:col-span-6 lg:col-span-5 relative space-y-1" id="wrapperComboPaciente">
+                <label class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-clinical-teal">person</span>
+                    Paciente
                 </label>
-                <textarea id="notas_clinicas" name="notas_clinicas" rows="4" required
-                    placeholder="Escribe el resumen médico de la atención, recomendaciones y medicamentos formulados..."
-                    class="w-full px-3 py-2 rounded-xl border border-outline-variant text-xs outline-none focus:ring-2 focus:ring-secondary transition"></textarea>
+                <div class="relative">
+                    <input type="text" id="inputSearchPaciente" placeholder="Todos los Pacientes"
+                           onfocus="toggleCombobox('dropdownPaciente', true)"
+                           onkeyup="filtrarComboboxOpciones('inputSearchPaciente', 'dropdownPaciente')"
+                           class="w-full pl-3 pr-8 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary font-semibold focus:bg-white focus:ring-2 focus:ring-clinical-teal cursor-pointer">
+                    <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-gray-400 text-base pointer-events-none">expand_more</span>
+                    <input type="hidden" id="selectFiltroPaciente" value="">
+                </div>
+                <div id="dropdownPaciente" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-outline-variant shadow-xl hidden py-1 text-xs space-y-0.5">
+                    <div onclick="seleccionarComboOption('inputSearchPaciente', 'selectFiltroPaciente', '', 'Todos los Pacientes', 'dropdownPaciente')"
+                         class="px-3 py-2 hover:bg-teal-50 cursor-pointer font-bold text-primary transition flex items-center justify-between">
+                        <span>Todos los Pacientes</span>
+                    </div>
+                    {% for pac in pacientes %}
+                        <div data-text="{{ pac.usuario.nombre_completo }} {{ pac.usuario.num_documento }}"
+                             onclick="seleccionarComboOption('inputSearchPaciente', 'selectFiltroPaciente', '{{ pac.id }}', '{{ pac.usuario.nombre_completo|escapejs }} (Doc: {{ pac.usuario.num_documento|default:"N/A" }})', 'dropdownPaciente')"
+                             class="combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer font-medium text-gray-700 hover:text-primary transition flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-primary">{{ pac.usuario.nombre_completo }}</p>
+                                <p class="text-[10px] text-gray-400">Doc: {{ pac.usuario.num_documento|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- RN-ESP-10: Cita de Control Directo al Finalizar para especialidades de seguimiento -->
-            {% if es_seguimiento_control %}
-                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-                    <label class="flex items-center gap-2 font-bold text-amber-900 cursor-pointer">
-                        <input type="checkbox" id="agendar_control" name="agendar_control" onchange="toggleCitaControl(this.checked)" class="rounded border-amber-400 text-clinical-teal focus:ring-teal-500">
-                        <span>📅 Agendamiento Directo de Cita de Control (RN-ESP-10)</span>
-                    </label>
-                    <div id="secCitaControl" class="hidden grid grid-cols-2 gap-2 pt-2 border-t border-amber-200/60">
-                        <div>
-                            <label class="block text-[11px] font-semibold text-amber-900 mb-0.5">Fecha de Control</label>
-                            <input type="date" name="fecha_control" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-amber-300 bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-semibold text-amber-900 mb-0.5">Hora de Control</label>
-                            <input type="time" name="hora_control" value="09:00" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-amber-300 bg-white">
-                        </div>
-                    </div>
+            <!-- Filtro Estado Searchable Combobox -->
+            <div class="sm:col-span-4 lg:col-span-5 relative space-y-1" id="wrapperComboEstado">
+                <label class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-clinical-teal">check_circle</span>
+                    Estado de Cita
+                </label>
+                <div class="relative">
+                    <input type="text" id="inputSearchEstado" placeholder="Todos los Estados"
+                           onfocus="toggleCombobox('dropdownEstado', true)"
+                           onkeyup="filtrarComboboxOpciones('inputSearchEstado', 'dropdownEstado')"
+                           class="w-full pl-3 pr-8 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-primary font-semibold focus:bg-white focus:ring-2 focus:ring-clinical-teal cursor-pointer">
+                    <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-gray-400 text-base pointer-events-none">expand_more</span>
+                    <input type="hidden" id="selectFiltroEstado" value="">
                 </div>
-            {% endif %}
+                <div id="dropdownEstado" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-outline-variant shadow-xl hidden py-1 text-xs space-y-0.5">
+                    <div onclick="seleccionarComboOption('inputSearchEstado', 'selectFiltroEstado', '', 'Todos los Estados', 'dropdownEstado')"
+                         class="px-3 py-2 hover:bg-teal-50 cursor-pointer font-bold text-primary transition flex items-center justify-between">
+                        <span>Todos los Estados</span>
+                    </div>
+                    {% for key, label in EstadoCita.choices %}
+                        <div data-text="{{ label }}"
+                             onclick="seleccionarComboOption('inputSearchEstado', 'selectFiltroEstado', '{{ key }}', '{{ label|escapejs }}', 'dropdownEstado')"
+                             class="combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer font-medium text-gray-700 hover:text-primary transition flex items-center justify-between">
+                            <span>{{ label }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
 
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="closeModal('modal-atencion')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl shadow flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-base">task_alt</span>
-                    <span>Finalizar Atención</span>
+            <!-- Botón Limpiar Filtros -->
+            <div class="sm:col-span-2 lg:col-span-2">
+                <button type="button" onclick="limpiarFiltrosAgenda()" title="Limpiar Filtros"
+                        class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-[9px] px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
                 </button>
             </div>
         </form>
     </div>
+
+    <!-- Contenedor del Calendario -->
+    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden p-4 sm:p-6">
+        <div id="calendar" class="w-full text-sm"></div>
+    </div>
 </div>
 
-<!-- MODAL: Solicitar Permiso / Ausencia (HU04 / RN-ESP-02) -->
-<div id="modal-permiso" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-outline-variant/30">
-        <div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
-            <h3 class="font-heading font-bold text-lg text-primary flex items-center gap-2">
-                <span class="material-symbols-outlined text-clinical-teal">event_busy</span>
-                <span>Solicitar Permiso (Min 24h Anticipación)</span>
+<!-- MODAL ATENDER CITA -->
+<div id="modal-atencion" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col border border-outline-variant/30 animate-fade-in-up">
+        
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined">task_alt</span>
+                Finalizar Atención Médica
             </h3>
-            <button type="button" onclick="closeModal('modal-permiso')" class="text-gray-400 hover:text-gray-600">
+            <button type="button" onclick="closeModal('modal-atencion')" class="text-gray-300 hover:text-white transition cursor-pointer">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
 
-        <form method="post" action="{% url 'especialista_solicitar_permiso' %}" class="space-y-4 text-xs">
-            {% csrf_token %}
+        <div class="p-6">
+            <form id="form-atender-cita" method="post" action="" class="space-y-4 text-xs">
+                {% csrf_token %}
+                
+                <div class="bg-soft-sky/50 p-4 rounded-xl border border-secondary-container/40">
+                    <p class="text-[11px] uppercase font-bold text-secondary tracking-wider">Paciente en Consulta</p>
+                    <p class="font-heading font-extrabold text-base text-primary mt-0.5" id="modal-paciente-nombre">-</p>
+                    <p class="text-xs text-on-surface-variant" id="modal-paciente-hora">-</p>
+                </div>
 
-            <div class="p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-[11px] text-sky-900">
-                ℹ️ <strong>RN-ESP-02:</strong> Selecciona el día exacto en el que te ausentarás. Debe registrarse con al menos 24 horas de anticipación.
-            </div>
+                <div>
+                    <label for="notas_clinicas" class="block font-semibold text-primary mb-1">
+                        Notas Clínicas / Observaciones / Recomendaciones *
+                    </label>
+                    <textarea id="notas_clinicas" name="notas_clinicas" rows="4" required
+                        placeholder="Escribe el resumen médico de la atención, recomendaciones y medicamentos formulados..."
+                        class="w-full px-3 py-2 rounded-xl border border-outline-variant text-xs outline-none focus:ring-2 focus:ring-secondary transition"></textarea>
+                </div>
 
-            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200 flex items-center justify-between text-xs">
-                <span class="font-semibold text-gray-600">Fecha de Solicitud (Hoy):</span>
-                <span class="font-bold text-primary">{{ fecha_actual_display|date:"d/m/Y" }}</span>
-            </div>
-
-            <div>
-                <label class="block font-semibold text-primary mb-1">Día de Ausencia Solicitado *</label>
-                <input type="date" name="fecha_ausencia" required value="{{ fecha_seleccionada }}" class="w-full px-3 py-2 rounded-lg border border-outline-variant text-xs outline-none focus:ring-2 focus:ring-secondary">
-            </div>
-
-            <div>
-                <label class="block font-semibold text-primary mb-1">Motivo o Justificación *</label>
-                <textarea name="motivo_solicitud" rows="3" required placeholder="Describe la razón del permiso o ausencia..." class="w-full px-3 py-2 rounded-lg border border-outline-variant text-xs outline-none focus:ring-2 focus:ring-secondary"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="closeModal('modal-permiso')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-5 py-2 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
-                    Enviar Solicitud de Permiso
-                </button>
-            </div>
-        </form>
+                <!-- Botones de Acción -->
+                <div class="flex justify-end gap-3 pt-4 mt-6 border-t border-outline-variant/20">
+                    <button type="button" onclick="closeModal('modal-atencion')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px]">task_alt</span>
+                        <span>Finalizar Atención</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+
+        let calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                day: 'Día',
+                list: 'Lista'
+            },
+            slotMinTime: '07:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: true,
+            allDayText: 'Festivos',
+            height: 'auto',
+            nowIndicator: true,
+            navLinks: true,
+            editable: false,
+            selectable: false,
+            dayMaxEvents: true,
+            events: '/api/citas/eventos/', // El backend ya filtra por usuario en sesión
+
+            eventContent: function(arg) {
+                const props = arg.event.extendedProps;
+                
+                // Renderizado para Días Festivos (All Day)
+                if (arg.event.allDay && props.es_festivo) {
+                    return {
+                        html: `<div class="px-2 py-0.5 text-[10px] font-bold text-center pulsia-holiday-badge rounded truncate" title="Festivo: ${props.nombre_festivo}">
+                                   🇨🇴 ${props.nombre_festivo}
+                               </div>`
+                    };
+                }
+
+                // Renderizado de Citas Normales
+                const estado = props.estado_cita || 'Programada';
+                let hora = '';
+                if (arg.event.start) {
+                    const d = new Date(arg.event.start);
+                    hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                }
+                const paciente = props.paciente || arg.event.title || '';
+
+                const stylesMap = {
+                    'Programada': 'bg-sky-50 border-2 border-sky-700 text-sky-950',
+                    'En_Sala': 'bg-teal-50 border-2 border-teal-700 text-teal-950',
+                    'Atendida': 'bg-emerald-50 border-2 border-emerald-700 text-emerald-950',
+                    'No_Asistio': 'bg-rose-50 border-2 border-rose-700 text-rose-950',
+                    'Pendiente_Reubicacion': 'bg-amber-50 border-2 border-amber-700 text-amber-950',
+                    'Cancelada': 'bg-gray-100 border-2 border-gray-600 text-gray-800'
+                };
+                const styleCls = stylesMap[estado] || 'bg-slate-50 border-2 border-slate-700 text-slate-900';
+
+                return {
+                    html: `
+                        <div class="w-full h-full ${styleCls} px-2 py-0.5 rounded-lg flex items-center justify-between font-sans text-[11px] leading-none overflow-hidden select-none cursor-pointer shadow-2xs" title="${paciente} (${hora})">
+                            <div class="flex items-center gap-1.5 truncate w-full">
+                                <span class="font-extrabold text-[10px] opacity-85 shrink-0">${hora}</span>
+                                <span class="opacity-40">|</span>
+                                <span class="font-extrabold truncate text-primary">${paciente}</span>
+                            </div>
+                        </div>
+                    `
+                };
+            },
+
+            eventClick: function(info) {
+                info.jsEvent.preventDefault();
+                const props = info.event.extendedProps;
+                if(props.es_festivo) return;
+
+                if (props.estado_cita === 'En_Sala') {
+                    // Abrir modal de atención para finalizar
+                    abrirModalAtencion(info.event.id, props.paciente, info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), props.notas_clinicas);
+                } else if (props.estado_cita === 'Atendida') {
+                    // Quizá mostrar notas, si se necesita
+                    abrirModalDetalleCita({
+                        id: info.event.id,
+                        paciente: props.paciente,
+                        especialista: 'Mi Agenda',
+                        consultorio: props.consultorio,
+                        inicio: info.event.start.toLocaleString(),
+                        estado: props.estado_cita,
+                        notas: props.notas_clinicas
+                    });
+                } else {
+                    abrirModalDetalleCita({
+                        id: info.event.id,
+                        paciente: props.paciente,
+                        especialista: 'Mi Agenda',
+                        consultorio: props.consultorio,
+                        inicio: info.event.start.toLocaleString(),
+                        estado: props.estado_cita,
+                        notas: props.notas_clinicas
+                    });
+                }
+            }
+        });
+
+        calendar.render();
+
+        // Filtro
+        const inputPaciente = document.getElementById('selectFiltroPaciente');
+        const inputEstado = document.getElementById('selectFiltroEstado');
+
+        function recargarEventos() {
+            let url = '/api/citas/eventos/?';
+            if (inputPaciente && inputPaciente.value) url += `paciente=${inputPaciente.value}&`;
+            if (inputEstado && inputEstado.value) url += `estado=${inputEstado.value}&`;
+            calendar.removeAllEventSources();
+            calendar.addEventSource(url);
+        }
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === "attributes" && mutation.attributeName === "value") {
+                    recargarEventos();
+                }
+            });
+        });
+
+        if(inputPaciente) observer.observe(inputPaciente, { attributes: true });
+        if(inputEstado) observer.observe(inputEstado, { attributes: true });
+
+        window.pulsiaCal = {
+            volverAMes: function() {
+                calendar.changeView('dayGridMonth');
+            }
+        };
+    });
+
+    // Comboboxes interactions
+    function toggleCombobox(id, forceOpen=null) {
+        const el = document.getElementById(id);
+        if(!el) return;
+        if(forceOpen === true) el.classList.remove('hidden');
+        else if(forceOpen === false) el.classList.add('hidden');
+        else el.classList.toggle('hidden');
+    }
+
+    function filtrarComboboxOpciones(inputId, dropdownId) {
+        const query = document.getElementById(inputId).value.toLowerCase();
+        const items = document.querySelectorAll(`#${dropdownId} .combo-item`);
+        items.forEach(item => {
+            const text = item.getAttribute('data-text').toLowerCase();
+            item.style.display = text.includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    function seleccionarComboOption(inputId, selectId, value, label, dropdownId) {
+        document.getElementById(inputId).value = label;
+        const select = document.getElementById(selectId);
+        select.value = value;
+        // manually dispatch change event for the observer
+        select.dispatchEvent(new Event('change')); 
+        toggleCombobox(dropdownId, false);
+    }
+
+    document.addEventListener('click', function(e) {
+        const pDropdown = document.getElementById('dropdownPaciente');
+        const pWrapper = document.getElementById('wrapperComboPaciente');
+        if (pDropdown && !pDropdown.classList.contains('hidden') && !pWrapper.contains(e.target)) {
+            pDropdown.classList.add('hidden');
+        }
+
+        const eDropdown = document.getElementById('dropdownEstado');
+        const eWrapper = document.getElementById('wrapperComboEstado');
+        if (eDropdown && !eDropdown.classList.contains('hidden') && !eWrapper.contains(e.target)) {
+            eDropdown.classList.add('hidden');
+        }
+    });
+
+    function limpiarFiltrosAgenda() {
+        document.getElementById('inputSearchPaciente').value = '';
+        document.getElementById('selectFiltroPaciente').value = '';
+        seleccionarComboOption('inputSearchPaciente', 'selectFiltroPaciente', '', 'Todos los Pacientes', 'dropdownPaciente');
+
+        const inputSearchEstado = document.getElementById('inputSearchEstado');
+        if(inputSearchEstado) {
+            inputSearchEstado.value = '';
+            document.getElementById('selectFiltroEstado').value = '';
+            seleccionarComboOption('inputSearchEstado', 'selectFiltroEstado', '', 'Todos los Estados', 'dropdownEstado');
+        }
+    }
+
+    // Modal
     function openModal(id) {
         document.getElementById(id).classList.remove('hidden');
     }
@@ -364,17 +435,6 @@
         document.getElementById('notas_clinicas').value = notasPrevias || '';
 
         openModal('modal-atencion');
-    }
-
-    function toggleCitaControl(chequeado) {
-        const sec = document.getElementById('secCitaControl');
-        if (sec) {
-            if (chequeado) {
-                sec.classList.remove('hidden');
-            } else {
-                sec.classList.add('hidden');
-            }
-        }
     }
 </script>
 {% endblock %}

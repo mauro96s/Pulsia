@@ -45,6 +45,7 @@ Todos los módulos de la aplicación utilizan un contenedor con **resaltado clí
 ## 🔍 4. Buscadores y Filtros Automáticos en Tiempo Real
 
 Para maximizar la agilidad administrativa:
+- **Estructura de Cuadrícula (12 Columnas)**: Las barras de filtros y búsqueda deben usar una cuadrícula responsiva (`<form class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">`) para alinear perfectamente el buscador principal y los campos de filtro secundarios.
 - **Filtrado Automático**: Los campos de texto filtran al escribir mediante el helper `oninput="autoSubmitFormDebounced(this.form)"`. Los desplegables `<select>` filtran automáticamente al cambiar de opción (`onchange="this.form.submit()"`).
 - **Alineación Vertical del Icono de Lupa**: Todos los inputs de búsqueda encierran la lupa con `relative flex items-center` y la etiqueta `<span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>`, garantizando un centrado vertical 100% perfecto.
 - **Botón "Limpiar Filtros"**: En lugar de un botón tradicional de "Buscar", se ofrece un botón/enlace de **Limpiar Filtros** (`restart_alt` icon, `bg-slate-100 hover:bg-slate-200`) que reinicia todos los campos con un solo clic.

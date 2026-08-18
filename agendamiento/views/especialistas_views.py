@@ -98,6 +98,14 @@ def especialista_dashboard_view(request):
     especialidad_nombre = especialista.especialidad.nombre_especialidad if especialista.especialidad else ''
     es_seguimiento_control = especialidad_nombre in ['Ginecología', 'Psicología', 'Medicina General', 'Pediatría']
 
+    # Pacientes para el filtro de la agenda (Calendario)
+    from agendamiento.models import Paciente
+    pacientes_ids = Cita.objects.filter(especialista=especialista).values_list('paciente_id', flat=True).distinct()
+    pacientes = Paciente.objects.select_related('usuario').filter(
+        id__in=pacientes_ids,
+        usuario__estado_cuenta=True
+    ).order_by('usuario__nombre_completo')
+
     context = {
         'especialista': especialista,
         'fecha_seleccionada': fecha_sel.strftime('%Y-%m-%d'),
@@ -108,6 +116,7 @@ def especialista_dashboard_view(request):
         'cant_atendidas': cant_atendidas,
         'permisos': permisos,
         'es_seguimiento_control': es_seguimiento_control,
+        'pacientes': pacientes,
         'EstadoCita': EstadoCita,
         'EstadoTurno': EstadoTurno,
         'EstadoAprobacion': EstadoAprobacion,
@@ -177,19 +186,24 @@ def especialista_solicitar_permiso_view(request):
         messages.error(request, "Perfil médico no encontrado.")
         return redirect('dashboard_especialista')
 
-    fecha_ausencia_str = request.POST.get('fecha_ausencia', '').strip() or request.POST.get('fecha_inicio', '').strip()
+    fecha_inicio_str = request.POST.get('fecha_hora_inicio', '').strip()
+    fecha_fin_str = request.POST.get('fecha_hora_fin', '').strip()
     motivo = request.POST.get('motivo_solicitud', '').strip()
 
-    if not fecha_ausencia_str or not motivo:
-        messages.error(request, "Por favor selecciona el día de ausencia y escribe el motivo de la solicitud.")
-        return redirect('dashboard_especialista')
+    if not fecha_inicio_str or not fecha_fin_str or not motivo:
+        messages.error(request, "Por favor completa las fechas y el motivo de la solicitud.")
+        return redirect('especialista_permisos')
 
     try:
-        dt_inicio_raw = datetime.strptime(f"{fecha_ausencia_str} 00:00", "%Y-%m-%d %H:%M")
-        dt_fin_raw = datetime.strptime(f"{fecha_ausencia_str} 23:59", "%Y-%m-%d %H:%M")
+        dt_inicio_raw = datetime.strptime(fecha_inicio_str, "%Y-%m-%dT%H:%M")
+        dt_fin_raw = datetime.strptime(fecha_fin_str, "%Y-%m-%dT%H:%M")
 
         inicio_dt = timezone.make_aware(dt_inicio_raw)
         fin_dt = timezone.make_aware(dt_fin_raw)
+
+        if fin_dt <= inicio_dt:
+            messages.error(request, "La fecha y hora de fin debe ser posterior a la fecha de inicio.")
+            return redirect('especialista_permisos')
 
         # RN-ESP-02: Anticipación Mínima para Solicitud de Ausencias (24 Horas)
         ahora = timezone.now()
@@ -199,18 +213,141 @@ def especialista_solicitar_permiso_view(request):
                 "RN-ESP-02: Toda solicitud de permiso o ausencia programada debe registrarse con al menos 24 horas de anticipación. "
                 "Las inasistencias imprevistas del mismo día deben tramitarse exclusivamente como 'Ausencia de Emergencia' a través de Recepción o Administrador."
             )
-            return redirect('dashboard_especialista')
+            return redirect('especialista_permisos')
 
         solicitar_permiso_especialista(especialista, inicio_dt, fin_dt, motivo)
         messages.success(
             request,
-            f"Solicitud registrada exitosamente para el día {fecha_ausencia_str}. Queda en estado Pendiente para aprobación de administración."
+            f"Solicitud registrada exitosamente desde {inicio_dt.strftime('%d/%m/%Y %I:%M %p')}. Queda en estado Pendiente para aprobación."
         )
     except ValueError:
-        messages.error(request, "Formato de fecha u hora inválido.")
+        messages.error(request, "Formato de fecha u hora inválido. Usa el selector del calendario.")
     except Exception as e:
         messages.error(request, str(e))
 
-    return redirect('dashboard_especialista')
+    return redirect('especialista_permisos')
 
 
+
+
+@login_required(login_url='login')
+def especialista_inicio_view(request):
+    """
+    Dashboard de Inicio del Especialista Médico.
+    Muestra un resumen rápido de su estado y estadísticas de citas.
+    """
+    if not es_especialista_o_admin(request.user):
+        messages.error(request, "Acceso no autorizado al panel del especialista.")
+        return redirect('dashboard')
+
+    especialista = obtener_perfil_especialista(request.user)
+    if not especialista:
+        messages.warning(request, "Tu cuenta no tiene un perfil médico asignado. Contacta al administrador.")
+        return redirect('dashboard')
+
+    ahora = timezone.now()
+    inicio_dia = timezone.make_aware(datetime.combine(ahora.date(), datetime.min.time()))
+    fin_dia = timezone.make_aware(datetime.combine(ahora.date(), datetime.max.time()))
+
+    citas_hoy = Cita.objects.filter(
+        especialista=especialista,
+        fecha_hora_inicio__gte=inicio_dia,
+        fecha_hora_inicio__lte=fin_dia
+    )
+
+    cant_total = citas_hoy.count()
+    cant_atendidas = citas_hoy.filter(estado_cita=EstadoCita.ATENDIDA).count()
+    cant_pendientes = citas_hoy.filter(estado_cita__in=[EstadoCita.PROGRAMADA, EstadoCita.EN_SALA]).count()
+    
+    proxima_cita = citas_hoy.filter(
+        fecha_hora_inicio__gte=ahora,
+        estado_cita__in=[EstadoCita.PROGRAMADA, EstadoCita.EN_SALA]
+    ).order_by('fecha_hora_inicio').first()
+
+    context = {
+        'especialista': especialista,
+        'cant_total': cant_total,
+        'cant_atendidas': cant_atendidas,
+        'cant_pendientes': cant_pendientes,
+        'proxima_cita': proxima_cita,
+        'fecha_actual': ahora.date()
+    }
+    return render(request, 'agendamiento/dashboard/especialista_inicio.html', context)
+
+
+@login_required(login_url='login')
+def especialista_agenda_completa_view(request):
+    """
+    Vista de Agenda Completa (Calendario) para el Especialista.
+    """
+    if not es_especialista_o_admin(request.user):
+        return redirect('dashboard')
+
+    especialista = obtener_perfil_especialista(request.user)
+    if not especialista:
+        return redirect('dashboard')
+
+    context = {
+        'especialista': especialista,
+        'EstadoCita': EstadoCita
+    }
+    return render(request, 'agendamiento/citas/especialista_agenda_completa.html', context)
+
+
+@login_required(login_url='login')
+def especialista_pacientes_view(request):
+    """
+    Vista para listar de forma cronológica todas las citas atendidas por el especialista
+    y ver los historiales clínicos.
+    """
+    if not es_especialista_o_admin(request.user):
+        return redirect('dashboard')
+
+    especialista = obtener_perfil_especialista(request.user)
+    if not especialista:
+        return redirect('dashboard')
+
+    query = request.GET.get('q', '').strip()
+    citas_atendidas = Cita.objects.select_related('paciente__usuario').filter(
+        especialista=especialista,
+        estado_cita=EstadoCita.ATENDIDA
+    ).order_by('-fecha_hora_inicio')
+
+    if query:
+        citas_atendidas = citas_atendidas.filter(
+            paciente__usuario__nombre_completo__icontains=query
+        ) | citas_atendidas.filter(
+            paciente__usuario__num_documento__icontains=query
+        )
+
+    context = {
+        'especialista': especialista,
+        'citas': citas_atendidas.distinct(),
+        'query': query,
+        'EstadoCita': EstadoCita
+    }
+    return render(request, 'agendamiento/citas/especialista_pacientes.html', context)
+
+
+@login_required(login_url='login')
+def especialista_permisos_view(request):
+    """
+    Vista dedicada para ver y solicitar permisos del especialista.
+    """
+    if not es_especialista_o_admin(request.user):
+        return redirect('dashboard')
+
+    especialista = obtener_perfil_especialista(request.user)
+    if not especialista:
+        return redirect('dashboard')
+
+    permisos = AusenciasPermisos.objects.filter(especialista=especialista).order_by('-fecha_hora_inicio')
+
+    context = {
+        'especialista': especialista,
+        'permisos': permisos,
+        'fecha_actual_display': timezone.now(),
+        'fecha_seleccionada': timezone.now().strftime('%Y-%m-%d'),
+        'EstadoAprobacion': EstadoAprobacion
+    }
+    return render(request, 'agendamiento/citas/especialista_permisos.html', context)

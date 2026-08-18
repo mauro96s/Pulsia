@@ -1,0 +1,111 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Mis Pacientes | Panel del Especialista | Pulsia{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Mis Pacientes Clínicos</h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                Listado cronológico de las citas atendidas. Filtra por nombre o documento para consultar el historial de un paciente.
+            </p>
+        </div>
+    </div>
+
+    <!-- Buscador y Filtros -->
+    <div class="bg-white p-4 rounded-2xl border border-outline-variant/30 shadow-sm space-y-3">
+        <form method="get" action="" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            <div class="sm:col-span-10 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o documento..." 
+                       oninput="autoSubmitFormDebounced(this.form)"
+                       class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-outline-variant focus:border-clinical-teal focus:ring-clinical-teal">
+            </div>
+            <div class="sm:col-span-2">
+                <a href="{% url 'especialista_pacientes' %}" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-[9px] px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition shadow-2xs border border-slate-200 cursor-pointer" title="Limpiar Filtros">
+                    <span class="material-symbols-outlined text-base text-slate-500">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Pacientes y Citas Atendidas -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-surface-container-low text-primary uppercase font-bold tracking-wider">
+                    <tr>
+                        <th class="p-4">Fecha de Atención</th>
+                        <th class="p-4">Paciente</th>
+                        <th class="p-4">Documento</th>
+                        <th class="p-4">Consultorio</th>
+                        <th class="p-4">Estado</th>
+                        <th class="p-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/20">
+                    {% for cita in citas %}
+                        <tr class="hover:bg-soft-sky/30 transition group">
+                            <td class="p-4 font-semibold text-primary">
+                                {{ cita.fecha_hora_inicio|date:"Y-m-d h:i A" }}
+                            </td>
+                            <td class="p-4 font-bold text-primary">
+                                {{ cita.paciente.usuario.nombre_completo }}
+                            </td>
+                            <td class="p-4 text-on-surface-variant">
+                                {{ cita.paciente.usuario.num_documento|default:"N/A" }}
+                            </td>
+                            <td class="p-4 text-on-surface-variant">
+                                {{ cita.consultorio.nombre_codigo|default:"N/A" }}
+                            </td>
+                            <td class="p-4">
+                                {% if cita.estado_cita == EstadoCita.ATENDIDA %}
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 border border-emerald-700 text-emerald-950">
+                                        Atendida
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 border border-gray-600 text-gray-800">
+                                        {{ cita.get_estado_cita_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" 
+                                            onclick="abrirModalDetalleCita({
+                                                id: '{{ cita.id }}',
+                                                paciente: '{{ cita.paciente.usuario.nombre_completo|escapejs }}',
+                                                especialista: '{{ cita.especialista.usuario.nombre_completo|escapejs }}',
+                                                consultorio: '{{ cita.consultorio.nombre_codigo|default:"N/A"|escapejs }}',
+                                                inicio: '{{ cita.fecha_hora_inicio|date:"Y-m-d h:i A" }}',
+                                                estado: '{{ cita.estado_cita }}',
+                                                notas: '{{ cita.notas_clinicas|escapejs|default:"Sin notas registradas" }}'
+                                            })"
+                                            class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white flex items-center justify-center transition shadow-sm" 
+                                            title="Ver Detalle Clínico">
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-on-surface-variant">
+                                <span class="material-symbols-outlined text-4xl text-outline mb-2">folder_off</span>
+                                <p class="text-sm font-semibold">No se encontraron citas atendidas.</p>
+                                {% if query %}
+                                    <p class="text-xs mt-1">Intenta con otro término de búsqueda.</p>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Agenda Completa | Panel del Especialista | Pulsia{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Mi Agenda Completa</h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                Vista de calendario mensual y semanal con todos los turnos asignados. (RN-ESP-01: Privacidad estricta de agenda)
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard_especialista' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-surface-container-low hover:bg-outline-variant/30 text-primary font-semibold text-xs rounded-xl border border-outline-variant transition shadow-sm">
+                <span class="material-symbols-outlined text-lg">view_list</span>
+                <span>Ver Agenda Diaria</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Calendario FullCalendar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
+        <div id="calendar" class="p-4 sm:p-6 w-full text-sm"></div>
+    </div>
+
+</div>
+
+<!-- Carga de FullCalendar (Versión 6.1.15) -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es',
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+            },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                day: 'Día',
+                list: 'Lista'
+            },
+            slotMinTime: '07:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: true,
+            allDayText: 'Citas',
+            height: 'auto',
+            nowIndicator: true,
+            navLinks: true,
+            editable: false,
+            selectable: true,
+            dayMaxEvents: true,
+            events: '/api/citas/eventos/?medico_id={{ especialista.id }}',
+
+            // Personalización visual de los eventos
+            eventContent: function(arg) {
+                const props = arg.event.extendedProps;
+                
+                if (arg.event.allDay && arg.event.title.includes('Festivo')) {
+                    return {
+                        html: `<div class="px-2 py-0.5 text-[10px] font-bold text-orange-800 truncate" title="${arg.event.title}">${arg.event.title}</div>`
+                    };
+                }
+
+                if (arg.event.allDay) {
+                    return {
+                        html: `<div class="px-2 py-0.5 text-[10px] font-bold text-gray-700 bg-gray-100 rounded border border-gray-300 truncate">${arg.event.title}</div>`
+                    };
+                }
+
+                return {
+                    html: `
+                        <div class="p-1.5 h-full flex flex-col justify-between" title="Paciente: ${props.paciente} | Estado: ${props.estado}">
+                            <div>
+                                <div class="text-[10px] font-extrabold leading-tight truncate uppercase mb-0.5">
+                                    ${props.paciente}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${arg.event.backgroundColor}"></div>
+                                <span class="text-[9px] font-semibold truncate uppercase">${props.estado}</span>
+                            </div>
+                        </div>
+                    `
+                };
+            },
+
+            // Interacción: Ver Detalles (Usa el modal global de base.html)
+            eventClick: function(info) {
+                info.jsEvent.preventDefault();
+                const e = info.event;
+                const p = e.extendedProps;
+
+                // Solo abrir modal si es una cita válida (no festivo ni allday)
+                if (e.allDay) return;
+
+                const citaData = {
+                    id: e.id,
+                    paciente: p.paciente,
+                    especialista: '{{ especialista.usuario.nombre_completo|escapejs }}',
+                    consultorio: p.consultorio,
+                    inicio: e.start,
+                    estado: p.estado,
+                    notas: ''
+                };
+                
+                if (typeof abrirModalDetalleCita === 'function') {
+                    abrirModalDetalleCita(citaData);
+                } else {
+                    alert(`Cita: ${p.paciente}\nEstado: ${p.estado}\nFecha: ${e.start.toLocaleString('es-ES')}`);
+                }
+            }
+        });
+
+        calendar.render();
+        
+        // Estilos para hacer el calendario más limpio y acorde al diseño
+        setTimeout(() => {
+            const btnClasses = 'capitalize bg-surface-container-low hover:bg-slate-200 text-primary border-outline-variant font-bold shadow-sm transition';
+            document.querySelectorAll('.fc-button-primary').forEach(btn => {
+                btn.className = `fc-button fc-button-primary px-3 py-1.5 text-xs rounded-lg ${btnClasses}`;
+            });
+        }, 100);
+    });
+</script>
+
+<style>
+    .fc-theme-standard .fc-scrollgrid { border-color: #e2e8f0; border-radius: 1rem; overflow: hidden; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: #f1f5f9; }
+    .fc-col-header-cell { background-color: #f8fafc; padding: 8px 0; }
+    .fc-col-header-cell-cushion { color: #1e293b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; text-decoration: none; }
+    .fc-day-today { background-color: #f0fdf4 !important; }
+    
+    .fc-event {
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        border: 2px solid transparent;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    
+    /* Variables inyectadas por el event json de la API */
+    .fc-event[style*="background-color: #3B82F6"] { background-color: #e0f2fe !important; border-color: #0369a1 !important; color: #082f49 !important; }
+    .fc-event[style*="background-color: #10B981"] { background-color: #ecfdf5 !important; border-color: #047857 !important; color: #064e3b !important; }
+    .fc-event[style*="background-color: #EF4444"] { background-color: #fff1f2 !important; border-color: #be123c !important; color: #881337 !important; }
+    .fc-event[style*="background-color: #6B7280"] { background-color: #f3f4f6 !important; border-color: #4b5563 !important; color: #1f2937 !important; }
+    .fc-event[style*="background-color: #F59E0B"] { background-color: #f0fdfa !important; border-color: #0f766e !important; color: #134e4a !important; }
+    .fc-event[style*="background-color: #8B5CF6"] { background-color: #fffbeb !important; border-color: #b45309 !important; color: #78350f !important; }
+</style>
+{% endblock %}

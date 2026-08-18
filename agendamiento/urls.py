@@ -15,6 +15,10 @@ from .views import (
     especialista_checkin_turno_view,
     especialista_atender_cita_view,
     especialista_solicitar_permiso_view,
+    especialista_inicio_view,
+    especialista_agenda_completa_view,
+    especialista_pacientes_view,
+    especialista_permisos_view,
     admin_usuarios_view,
     admin_crear_usuario,
     admin_editar_usuario,
@@ -70,6 +74,10 @@ urlpatterns = [
     path('dashboard/paciente/', paciente_dashboard_view, name='dashboard_paciente'),
 
     # Acciones del Especialista Médico
+    path('dashboard/especialista/inicio/', especialista_inicio_view, name='dashboard_especialista_inicio'),
+    path('especialista/pacientes/', especialista_pacientes_view, name='especialista_pacientes'),
+    path('especialista/permisos/', especialista_permisos_view, name='especialista_permisos'),
+    path('especialista/agenda-completa/', especialista_agenda_completa_view, name='especialista_agenda_completa'),
     path('especialista/checkin/', especialista_checkin_turno_view, name='especialista_checkin_turno'),
     path('especialista/checkin-turno/', especialista_checkin_turno_view, name='especialista_checkin'),
     path('especialista/cambiar-estado/', especialista_checkin_turno_view, name='especialista_cambiar_estado'),

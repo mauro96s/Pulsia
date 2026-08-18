@@ -164,16 +164,16 @@ psql -U tu_usuario_postgres -d pulsia_db -f pulsia_datos_prueba.sql
 
 #### Usuarios de prueba disponibles
 
-| Rol            | Correo / Usuario         | Contraseña | Dashboard                   |
-| :------------- | :----------------------- | :--------- | :-------------------------- |
-| Administrador  | `andi@pulsia.com`        | `123456`   | `/dashboard/admin/`         |
-| Recepcionista  | `roca@pulsia.com`        | `123456`   | `/dashboard/recepcion/`     |
-| Recepcionista  | `luga@pulsia.com`        | `123456`   | `/dashboard/recepcion/`     |
-| Especialista   | `cape@pulsia.com`        | `123456`   | `/dashboard/especialista/`  |
-| Especialista   | `sato@pulsia.com`        | `123456`   | `/dashboard/especialista/`  |
-| Especialista   | `anso@pulsia.com`        | `123456`   | `/dashboard/especialista/`  |
-| Paciente       | `pema@pulsia.com`        | `123456`   | `/dashboard/paciente/`      |
-| Paciente       | `luna001@pulsia.com`     | `123456`   | `/dashboard/paciente/`      |
+| Rol           | Correo / Usuario       | Contraseña | Dashboard                    |
+| :------------ | :--------------------- | :---------- | :--------------------------- |
+| Administrador | `andi@pulsia.com`    | `123456`  | `/dashboard/admin/`        |
+| Recepcionista | `roca@pulsia.com`    | `123456`  | `/dashboard/recepcion/`    |
+| Recepcionista | `luga@pulsia.com`    | `123456`  | `/dashboard/recepcion/`    |
+| Especialista  | `cape@pulsia.com`    | `123456`  | `/dashboard/especialista/` |
+| Especialista  | `sato@pulsia.com`    | `123456`  | `/dashboard/especialista/` |
+| Especialista  | `anso@pulsia.com`    | `123456`  | `/dashboard/especialista/` |
+| Paciente      | `pema@pulsia.com`    | `123456`  | `/dashboard/paciente/`     |
+| Paciente      | `luna001@pulsia.com` | `123456`  | `/dashboard/paciente/`     |
 
 > 📄 La lista completa de los 21 especialistas y los 100 pacientes se encuentra en [`credenciales_prueba.md`](credenciales_prueba.md).
 
