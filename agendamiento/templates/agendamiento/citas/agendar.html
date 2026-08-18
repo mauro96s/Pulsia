@@ -51,6 +51,26 @@
 
     <div class="max-w-7xl mx-auto px-6 py-8 space-y-7">
 
+        <!-- BANNER MODO REAGENDAMIENTO -->
+        {% if cita_reagendar %}
+        <div class="bg-gradient-to-r from-teal-700 to-teal-800 text-white p-5 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
+                    <span class="material-symbols-outlined text-2xl">edit_calendar</span>
+                </div>
+                <div>
+                    <h2 class="font-extrabold text-sm uppercase tracking-wide">Modo Reagendamiento de Cita Médica</h2>
+                    <p class="text-xs text-teal-100 mt-0.5">
+                        Estás modificando únicamente la fecha y la hora para tu cita de <strong>{{ cita_reagendar.especialista.especialidad.nombre_especialidad }}</strong> con <strong>Dr/Dra. {{ cita_reagendar.especialista.usuario.nombre_completo }}</strong>.
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'paciente_agenda' %}" class="px-3.5 py-2 bg-white text-teal-900 font-bold text-xs rounded-xl shadow hover:bg-teal-50 transition shrink-0">
+                Cancelar Reagendamiento
+            </a>
+        </div>
+        {% endif %}
+
         <!-- MENSAJES DE ALERTAS -->
         {% if messages %}
         <div class="space-y-2">
@@ -202,6 +222,9 @@
 
         <form id="form-confirmar-cita" method="POST" action="{% url 'paciente_agendar' %}" class="space-y-4">
             {% csrf_token %}
+            {% if cita_reagendar %}
+                <input type="hidden" name="reagendar_cita_id" id="form-reagendar-cita-id" value="{{ cita_reagendar.id }}"/>
+            {% endif %}
             <input type="hidden" name="especialidad_id" id="form-especialidad-id"/>
             <input type="hidden" name="especialista_id" id="form-especialista-id"/>
             <input type="hidden" name="fecha" id="form-fecha"/>
@@ -258,6 +281,25 @@
     document.addEventListener("DOMContentLoaded", function() {
         renderMonthCalendar();
         updateSelectedDayLabel();
+        
+        {% if cita_reagendar %}
+            const espSelect = document.getElementById("select-especialidad");
+            if (espSelect) {
+                espSelect.value = "{{ cita_reagendar.especialista.especialidad.id }}";
+                filtrarPorEspecialidad();
+                const specSelect = document.getElementById("select-especialista");
+                if (specSelect) {
+                    specSelect.value = "{{ cita_reagendar.especialista.id }}";
+                    selectedEspecialistaId = "{{ cita_reagendar.especialista.id }}";
+                    specSelect.disabled = true;
+                    specSelect.className = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 cursor-not-allowed shadow-sm";
+                }
+                espSelect.disabled = true;
+                espSelect.className = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 cursor-not-allowed shadow-sm";
+                actualizarFichaResumen();
+            }
+        {% endif %}
+
         renderTimeSlots();
     });
 

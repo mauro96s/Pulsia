@@ -158,7 +158,10 @@ def declarar_ausencia_emergencia(especialista_id: int, fecha: date = None) -> tu
     if fecha is None:
         fecha = timezone.now().date()
 
-    especialista = Especialista.objects.get(id=especialista_id)
+    if isinstance(especialista_id, Especialista):
+        especialista = especialista_id
+    else:
+        especialista = Especialista.objects.get(id=especialista_id)
     especialista.estado_turno = EstadoTurno.AUSENTE
     especialista.save()
 

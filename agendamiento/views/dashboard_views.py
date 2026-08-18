@@ -53,11 +53,13 @@ def _generar_eventos_fullcalendar(citas_qs):
     return json.dumps(eventos)
 
 
+from django.db.models import Q
+
 @login_required(login_url='login')
 def paciente_dashboard_view(request):
     """
-    Dashboard del Paciente (HU02, HU03, HU09, HU07, RN01, RN02, RN04).
-    Carga dinámicamente las citas activas, el historial clínico, contadores de inasistencia y formularios de lista de espera.
+    Vista 'Mis Citas' del Paciente.
+    Muestra el encabezado de módulo, barra de búsqueda y filtros en 12 columnas, y la tabla completa de citas.
     """
     if request.user.rol != RolUsuario.PACIENTE:
         return redirect_by_role(request.user)
@@ -70,44 +72,52 @@ def paciente_dashboard_view(request):
         messages.error(request, "Perfil de paciente no encontrado. Contacta a soporte.")
         return redirect('login')
 
-    # 1. Citas Próximas Activas
-    citas_activas = Cita.objects.select_related(
+    query = request.GET.get('q', '').strip()
+    estado_filtro = request.GET.get('estado', '').strip()
+
+    citas_qs = Cita.objects.select_related(
         'especialista__usuario', 'especialista__especialidad', 'consultorio'
-    ).filter(
+    ).filter(paciente=paciente).order_by('-fecha_hora_inicio')
+
+    if query:
+        citas_qs = citas_qs.filter(
+            Q(especialista__usuario__nombre_completo__icontains=query) |
+            Q(especialista__especialidad__nombre_especialidad__icontains=query)
+        )
+
+    if estado_filtro:
+        citas_qs = citas_qs.filter(estado_cita=estado_filtro)
+
+    # 1. Citas Próximas Activas (sin filtro) para contadores
+    citas_activas = Cita.objects.filter(
         paciente=paciente,
         estado_cita__in=[EstadoCita.PROGRAMADA, EstadoCita.EN_SALA, EstadoCita.PENDIENTE_REUBICACION]
-    ).order_by('fecha_hora_inicio')
+    )
 
-    # 2. Historial de Citas Pasadas
-    citas_historial = Cita.objects.select_related(
-        'especialista__usuario', 'especialista__especialidad', 'consultorio'
-    ).filter(
-        paciente=paciente,
-        estado_cita__in=[EstadoCita.ATENDIDA, EstadoCita.CANCELADA, EstadoCita.NO_ASISTIO]
-    ).order_by('-fecha_hora_inicio')
-
-    # 3. Lista de Espera del Paciente
+    # 2. Lista de Espera del Paciente
     listas_espera = ListaEspera.objects.select_related(
         'especialidad', 'especialista__usuario'
     ).filter(paciente=paciente).order_by('-fecha_registro')
 
-    # 4. Catálogos para Modales
+    # 3. Catálogos para Modales
     especialidades = Especialidad.objects.all()
     especialistas = Especialista.objects.select_related('usuario', 'especialidad').filter(usuario__estado_cuenta=True)
 
-    inasistencias = getattr(paciente, 'inasistencias_acumuladas', 0)
+    inasistencias = getattr(paciente, 'contador_inasistencias', 0)
     bloqueado = getattr(paciente, 'bloqueado_agendamiento_web', False) or (inasistencias >= 3)
 
     context = {
         'paciente': paciente,
+        'citas': citas_qs,
         'citas_activas': citas_activas,
-        'citas_historial': citas_historial,
-        'listas_espera': listas_espera,
         'cant_activas': citas_activas.count(),
+        'listas_espera': listas_espera,
         'especialidades': especialidades,
         'especialistas': especialistas,
         'inasistencias_acumuladas': inasistencias,
         'bloqueado_agendamiento_web': bloqueado,
+        'query': query,
+        'estado_filtro': estado_filtro,
         'EstadoCita': EstadoCita
     }
 

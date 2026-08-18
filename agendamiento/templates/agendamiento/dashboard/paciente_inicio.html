@@ -1,0 +1,199 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Inicio | Portal del Paciente | Pulsia{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-clinical-teal text-white uppercase tracking-wider">
+                    Paciente
+                </span>
+                <span class="text-xs text-on-surface-variant font-medium">
+                    Portal de Salud
+                </span>
+            </div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary mt-1">
+                Bienvenido(a), {{ paciente.usuario.nombre_completo }}
+            </h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                Panel de inicio y resumen general de tu actividad médica en Pulsia.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-primary bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/30">
+                {{ fecha_actual|date:"l, d \d\e F Y" }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Barra de Estado de Agendamiento Web (RN04) -->
+    <div class="p-4 rounded-2xl border {% if bloqueado_agendamiento_web %}border-rose-300 bg-rose-50/70{% else %}border-sky-200 bg-soft-sky/40{% endif %} flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl {% if bloqueado_agendamiento_web %}bg-rose-600{% else %}bg-clinical-teal{% endif %} text-white flex items-center justify-center shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-xl">{% if bloqueado_agendamiento_web %}warning{% else %}verified{% endif %}</span>
+            </div>
+            <div>
+                <p class="font-bold text-xs {% if bloqueado_agendamiento_web %}text-rose-900{% else %}text-primary{% endif %}">
+                    Estado de Agendamiento Web: {% if bloqueado_agendamiento_web %}SANCIONADO / BLOQUEADO{% else %}HABILITADO{% endif %}
+                </p>
+                <p class="text-[11px] text-on-surface-variant">
+                    Has acumulado <strong>{{ inasistencias_acumuladas }} de 3 inasistencias</strong>. 
+                    {% if bloqueado_agendamiento_web %}
+                        Has alcanzado el límite de 3 inasistencias. Debes agendar tus próximas citas de forma presencial en recepción.
+                    {% else %}
+                        Recuerda cancelar o reprogramar tus citas con más de 24 horas de anticipación para evitar inasistencias.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <span class="px-3 py-1 text-xs font-bold rounded-full {% if bloqueado_agendamiento_web %}bg-rose-100 text-rose-800 border border-rose-300{% else %}bg-emerald-100 text-emerald-800 border border-emerald-300{% endif %}">
+            {% if bloqueado_agendamiento_web %}Bloqueado{% else %}Sin Sanciones{% endif %}
+        </span>
+    </div>
+
+    <!-- Indicadores Rápidos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Citas Próximas -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Citas Próximas</p>
+                <p class="font-heading text-3xl font-extrabold text-primary mt-1">{{ cant_activas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">event_upcoming</span>
+            </div>
+        </div>
+
+        <!-- Citas Atendidas -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Consultas Atendidas</p>
+                <p class="font-heading text-3xl font-extrabold text-emerald-600 mt-1">{{ cant_atendidas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">check_circle</span>
+            </div>
+        </div>
+
+        <!-- Inasistencias Acumuladas -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Inasistencias</p>
+                <p class="font-heading text-3xl font-extrabold {% if inasistencias_acumuladas >= 3 %}text-rose-600{% elif inasistencias_acumuladas > 0 %}text-amber-600{% else %}text-slate-600{% endif %} mt-1">
+                    {{ inasistencias_acumuladas }} <span class="text-xs text-gray-400 font-normal">/ 3</span>
+                </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl {% if inasistencias_acumuladas >= 3 %}bg-rose-50 text-rose-600{% else %}bg-slate-100 text-slate-600{% endif %} flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">event_busy</span>
+            </div>
+        </div>
+
+        <!-- Lista de Espera -->
+        <div class="bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Lista de Espera</p>
+                <p class="font-heading text-3xl font-extrabold text-amber-600 mt-1">{{ cant_espera }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl">hourglass_top</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Próxima Cita & Accesos Rápidos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Próxima Cita Médica Destacada -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+            <div class="bg-primary-container text-white p-4 border-b border-primary flex items-center justify-between">
+                <h2 class="font-heading font-bold text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary-container">notifications_active</span>
+                    <span>Tu Próxima Cita Médica</span>
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if proxima_cita %}
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-clinical-teal text-white flex items-center justify-center font-bold text-xl shadow-inner shrink-0">
+                            {{ proxima_cita.especialista.usuario.nombre_completo|slice:":1"|upper }}
+                        </div>
+                        <div class="flex-1 text-center sm:text-left">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 uppercase">
+                                {{ proxima_cita.especialista.especialidad.nombre_especialidad }}
+                            </span>
+                            <h3 class="font-extrabold text-lg text-primary mt-1">
+                                Dr/Dra. {{ proxima_cita.especialista.usuario.nombre_completo }}
+                            </h3>
+                            <p class="text-sm text-secondary font-semibold mt-0.5">
+                                {{ proxima_cita.fecha_hora_inicio|date:"l, d \d\e F \a \l\a\s h:i A" }}
+                            </p>
+                            <p class="text-xs text-on-surface-variant mt-1">
+                                Consultorio: {{ proxima_cita.consultorio.nombre_codigo|default:"Por Asignar" }}
+                            </p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <a href="{% url 'paciente_agenda' %}" class="px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow transition flex items-center gap-2">
+                                <span>Ver en Agenda</span>
+                                <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-6 text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2">event_available</span>
+                        <p class="text-sm font-bold">No tienes citas médicas próximas programadas.</p>
+                        <p class="text-xs mt-1">Haz clic en "Agendar Nueva Cita" para programar tu consulta médica autónoma.</p>
+                        <div class="mt-4">
+                            {% if not bloqueado_agendamiento_web %}
+                                <a href="{% url 'paciente_agendar' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+                                    <span class="material-symbols-outlined text-base">calendar_add_on</span>
+                                    <span>Agendar Nueva Cita</span>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Accesos Rápidos -->
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm p-6">
+            <h2 class="font-heading font-bold text-primary mb-4">Accesos Rápidos</h2>
+            <div class="grid grid-cols-2 gap-4">
+                {% if not bloqueado_agendamiento_web %}
+                    <a href="{% url 'paciente_agendar' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                        <span class="material-symbols-outlined text-3xl text-clinical-teal group-hover:scale-110 transition mb-2">calendar_add_on</span>
+                        <span class="text-xs font-bold text-primary">Agendar Cita Web</span>
+                    </a>
+                {% else %}
+                    <div class="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-xl border border-gray-200 text-center opacity-60 cursor-not-allowed">
+                        <span class="material-symbols-outlined text-3xl text-gray-400 mb-2">block</span>
+                        <span class="text-xs font-bold text-gray-500">Agendamiento Bloqueado</span>
+                    </div>
+                {% endif %}
+
+                <a href="{% url 'paciente_agenda' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">calendar_month</span>
+                    <span class="text-xs font-bold text-primary">Mi Agenda (Calendario)</span>
+                </a>
+
+                <a href="{% url 'dashboard_paciente' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">event_upcoming</span>
+                    <span class="text-xs font-bold text-primary">Mis Citas Activas</span>
+                </a>
+
+                <a href="{% url 'paciente_historial' %}" class="flex flex-col items-center justify-center p-4 bg-surface-container-low hover:bg-soft-sky/50 rounded-xl border border-outline-variant/30 transition text-center group">
+                    <span class="material-symbols-outlined text-3xl text-secondary group-hover:text-clinical-teal transition mb-2">folder_shared</span>
+                    <span class="text-xs font-bold text-primary">Mi Historial Clínico</span>
+                </a>
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+{% endblock %}

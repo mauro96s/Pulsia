@@ -8,6 +8,9 @@ from .views import (
     recepcion_dashboard_view,
     especialista_dashboard_view,
     paciente_dashboard_view,
+    paciente_inicio_view,
+    paciente_agenda_view,
+    paciente_historial_view,
     paciente_agendar_view,
     paciente_reprogramar_view,
     paciente_cancelar_view,
@@ -86,6 +89,9 @@ urlpatterns = [
     path('especialista/solicitar-ausencia/', especialista_solicitar_permiso_view, name='especialista_solicitar_ausencia'),
 
     # Acciones del Paciente
+    path('dashboard/paciente/inicio/', paciente_inicio_view, name='dashboard_paciente_inicio'),
+    path('paciente/agenda/', paciente_agenda_view, name='paciente_agenda'),
+    path('paciente/historial/', paciente_historial_view, name='paciente_historial'),
     path('paciente/agendar/', paciente_agendar_view, name='paciente_agendar'),
     path('paciente/agendar-cita-web/', paciente_agendar_view, name='paciente_agendar_cita_web'),
     path('paciente/reprogramar/<int:cita_id>/', paciente_reprogramar_view, name='paciente_reprogramar'),

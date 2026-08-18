@@ -455,7 +455,7 @@ def validar_reprogramacion(cita, nueva_fecha_hora):
     RN02: Anticipación mayor a 24 horas para la nueva fecha elegida.
     """
     if cita.contador_reprogramacion >= 1:
-        return False, "Has alcanzado el límite de 1 reprogramación permitida."
+        return False, "RN01: Has alcanzado el límite de 1 reprogramación permitida."
 
     ahora = timezone.now()
     if timezone.is_naive(nueva_fecha_hora):
@@ -469,23 +469,44 @@ def validar_reprogramacion(cita, nueva_fecha_hora):
 
 
 @transaction.atomic
-def atender_y_guardar_notas_cita(cita_id: int, especialista: Especialista, notas_clinicas: str = "") -> Cita:
+def atender_y_guardar_notas_cita(cita_id, especialista, notas_clinicas: str = "") -> Cita:
     """
     HU05: Pasa el estado de la cita a 'Atendida' y registra las notas clínicas/observaciones del paciente.
     """
-    cita = Cita.objects.select_related('paciente__usuario', 'especialista').get(id=cita_id)
-    if cita.especialista_id != especialista.id:
+    from django.core.exceptions import ValidationError
+
+    if isinstance(cita_id, Cita):
+        cita_obj = cita_id
+    else:
+        cita_obj = Cita.objects.select_related('paciente__usuario', 'especialista').get(id=cita_id)
+
+    if hasattr(especialista, 'perfil_especialista'):
+        esp_obj = especialista.perfil_especialista
+    else:
+        esp_obj = especialista
+
+    if cita_obj.especialista_id != esp_obj.id:
         raise PermissionError("Esta cita no pertenece a tu agenda médica.")
-    cita.estado_cita = EstadoCita.ATENDIDA
+
+    if cita_obj.estado_cita != EstadoCita.ATENDIDA and cita_obj.estado_cita != EstadoCita.EN_SALA:
+        raise ValidationError("Solo se pueden registrar notas clínicas en citas Atendidas o En Sala.")
+
+    cita_obj.estado_cita = EstadoCita.ATENDIDA
     if notas_clinicas is not None:
-        cita.notas_clinicas = notas_clinicas.strip()
-    cita.save()
-    return cita
+        cita_obj.notas_clinicas = notas_clinicas.strip()
+    cita_obj.save()
+    return cita_obj
 
 
 @transaction.atomic
 def agendar_cita_web(paciente, especialista, consultorio, fecha_hora_inicio, duracion_minutos=30):
     """Agendamiento web autónomo del paciente (HU02)."""
+    from django.core.exceptions import ValidationError
+
+    inasistencias = getattr(paciente, 'contador_inasistencias', 0)
+    if inasistencias >= 3 or getattr(paciente, 'bloqueado_agendamiento_web', False):
+        raise ValidationError("RN04: Tu agendamiento web ha sido bloqueado por haber acumulado 3 inasistencias.")
+
     fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion_minutos)
     cita = Cita.objects.create(
         paciente=paciente,

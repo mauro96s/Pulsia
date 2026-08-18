@@ -8,13 +8,13 @@ from agendamiento.models import (
     Consultorio, Especialista, EstadoTurno, Cita,
     EstadoCita, AusenciasPermisos, EstadoAprobacion
 )
-from agendamiento.services.citas_service import (
+from agendamiento.services import (
     agendar_cita_web,
     reprogramar_cita,
     cancelar_cita,
     registrar_inasistencia,
-    registrar_notas_clinicas,
-    activar_contingencia_emergencia
+    atender_y_guardar_notas_cita as registrar_notas_clinicas,
+    declarar_ausencia_emergencia as activar_contingencia_emergencia
 )
 
 
@@ -128,7 +128,8 @@ class ReglasNegocioTestCase(TestCase):
             estado_cita=EstadoCita.PROGRAMADA
         )
 
-        citas_afectadas = activar_contingencia_emergencia(self.especialista, None)
+        cant_afectadas, citas_afectadas, _ = activar_contingencia_emergencia(self.especialista, None)
+        self.assertEqual(cant_afectadas, 1)
         self.assertEqual(len(citas_afectadas), 1)
 
         cita.refresh_from_db()

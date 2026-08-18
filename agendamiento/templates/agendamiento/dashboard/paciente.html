@@ -1,30 +1,24 @@
 {% extends 'agendamiento/base.html' %}
 
-{% block title %}Mi Portal de Salud | Pulsia Medical Systems{% endblock %}
+{% block title %}Mis Citas | Portal del Paciente | Pulsia{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<div class="space-y-6">
 
-    <!-- Header & Quick Agendar Button -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/30">
+    <!-- Header Module Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary text-white uppercase tracking-wider">Portal del Paciente</span>
-                <span class="text-xs text-on-surface-variant font-medium">HU02 / HU03 / HU09</span>
-            </div>
-            <h1 class="font-heading text-2xl font-bold text-primary mt-1">¡Hola, {{ request.user.nombre_completo }}!</h1>
-            <p class="text-xs text-on-surface-variant">Gestiona tus reservas médicas, reprogramaciones y consulta tus recomendaciones de salud.</p>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Mis Citas</h1>
+            <p class="text-xs text-on-surface-variant mt-1">Gestiona y consulta el estado de tus citas médicas programadas, atenciones y solicitudes.</p>
         </div>
-
-        <div class="flex gap-2">
-            <!-- Botón Agendar Nueva Cita -->
+        <div class="flex items-center gap-3">
             {% if bloqueado_agendamiento_web %}
-                <button disabled class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gray-300 text-gray-600 font-bold text-xs rounded-xl cursor-not-allowed shadow-none" title="Agendamiento bloqueado por inasistencias (RN04)">
+                <button disabled class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-300 text-gray-600 font-bold text-xs rounded-xl cursor-not-allowed shadow-none" title="Agendamiento bloqueado por inasistencias (RN04)">
                     <span class="material-symbols-outlined text-lg">block</span>
                     <span>Agendamiento Web Bloqueado</span>
                 </button>
             {% else %}
-                <a href="{% url 'paciente_agendar' %}" class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+                <a href="{% url 'paciente_agendar' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-clinical-teal hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
                     <span class="material-symbols-outlined text-lg">calendar_add_on</span>
                     <span>Agendar Nueva Cita</span>
                 </a>
@@ -32,230 +26,201 @@
         </div>
     </div>
 
-    <!-- Indicador de Estado / Penalización por Inasistencias (RN04) -->
-    <div class="p-4 rounded-2xl border {% if bloqueado_agendamiento_web %}border-rose-300 bg-rose-50/60{% else %}border-blue-200 bg-soft-sky/40{% endif %} flex flex-col sm:flex-row items-center justify-between gap-4">
+    <!-- Indicador de Estado de Agendamiento Web (RN04) -->
+    {% if bloqueado_agendamiento_web or inasistencias_acumuladas > 0 %}
+    <div class="p-4 rounded-2xl border {% if bloqueado_agendamiento_web %}border-rose-300 bg-rose-50/70{% else %}border-amber-200 bg-amber-50/50{% endif %} flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl {% if bloqueado_agendamiento_web %}bg-rose-600{% else %}bg-primary{% endif %} text-white flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-xl">{% if bloqueado_agendamiento_web %}warning{% else %}verified{% endif %}</span>
+            <div class="w-10 h-10 rounded-xl {% if bloqueado_agendamiento_web %}bg-rose-600{% else %}bg-amber-600{% endif %} text-white flex items-center justify-center shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-xl">{% if bloqueado_agendamiento_web %}warning{% else %}info{% endif %}</span>
             </div>
             <div>
-                <p class="font-bold text-xs {% if bloqueado_agendamiento_web %}text-rose-900{% else %}text-primary{% endif %}">
-                    Estado de Agendamiento Web: {% if bloqueado_agendamiento_web %}SANCIONADO / BLOQUEADO (RN04){% else %}HABILITADO{% endif %}
+                <p class="font-bold text-xs {% if bloqueado_agendamiento_web %}text-rose-900{% else %}text-amber-900{% endif %}">
+                    Estado de Agendamiento Web: {% if bloqueado_agendamiento_web %}SANCIONADO / BLOQUEADO{% else %}HABILITADO{% endif %}
                 </p>
                 <p class="text-[11px] text-on-surface-variant">
                     Has acumulado <strong>{{ inasistencias_acumuladas }} de 3 inasistencias</strong>. 
                     {% if bloqueado_agendamiento_web %}
-                        Has alcanzado el límite de 3 inasistencias. Debes agendar tus próximas citas en la recepción de la clínica.
+                        Has alcanzado el límite de 3 inasistencias. Debes agendar tus próximas citas en recepción.
                     {% else %}
-                        Recuerda cancelar o reprogramar tus citas con más de 24 horas de anticipación.
+                        Recuerda cancelar o reprogramar con más de 24 horas de anticipación para evitar bloqueos.
                     {% endif %}
                 </p>
             </div>
         </div>
-        <span class="px-3 py-1 text-xs font-bold rounded-full {% if bloqueado_agendamiento_web %}bg-rose-100 text-rose-800{% else %}bg-emerald-100 text-emerald-800{% endif %}">
-            {% if bloqueado_agendamiento_web %}Bloqueado{% else %}Sin Sanciones{% endif %}
+        <span class="px-3 py-1 text-xs font-bold rounded-full {% if bloqueado_agendamiento_web %}bg-rose-100 text-rose-800 border border-rose-300{% else %}bg-amber-100 text-amber-800 border border-amber-300{% endif %}">
+            {% if bloqueado_agendamiento_web %}Bloqueado{% else %}{{ inasistencias_acumuladas }} Inasistencia(s){% endif %}
         </span>
     </div>
+    {% endif %}
 
-    <!-- Grid Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        <!-- Left 2 Cols: Mis Citas Programadas -->
-        <div class="lg:col-span-2 space-y-6">
+    <!-- Buscador y Filtros Automáticos en Tiempo Real (guia_estilos.md: 12 columnas) -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-outline-variant/30">
+        <form method="GET" action="{% url 'dashboard_paciente' %}" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             
-            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-                <div class="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
-                    <h2 class="font-heading text-lg font-bold text-primary">Mis Citas Próximas</h2>
-                    <span class="text-xs font-bold text-secondary">{{ cant_activas }} Cita(s) Activas</span>
-                </div>
-
-                {% if citas_activas %}
-                    <div class="space-y-4">
-                        {% for cita in citas_activas %}
-                            <div class="p-5 rounded-2xl border border-outline-variant/40 bg-surface-container-low/20 space-y-4">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 uppercase">
-                                            {{ cita.especialista.especialidad.nombre_especialidad }}
-                                        </span>
-                                        <h3 class="font-bold text-base text-primary mt-1">Dr/Dra. {{ cita.especialista.usuario.nombre_completo }}</h3>
-                                        <p class="text-xs text-on-surface-variant">Consultorio: {{ cita.consultorio.nombre_codigo|default:"Por Asignar" }}</p>
-                                    </div>
-                                    <div class="text-left sm:text-right">
-                                        <p class="font-bold text-sm text-primary">{{ cita.fecha_hora_inicio|date:"d/m/Y" }}</p>
-                                        <p class="text-xs text-clinical-teal font-semibold">{{ cita.fecha_hora_inicio|date:"h:i A" }} - {{ cita.fecha_hora_fin|date:"h:i A" }}</p>
-                                    </div>
-                                </div>
-
-                                <!-- Estado de Reprogramación -->
-                                <div class="p-3 rounded-xl bg-white border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                                    <div class="flex items-center gap-2 text-on-surface-variant">
-                                        <span class="material-symbols-outlined text-base text-secondary">info</span>
-                                        <span>Reprogramaciones realizadas: <strong>{{ cita.contador_reprogramacion }} / 1</strong></span>
-                                    </div>
-
-                                    <!-- Botones Reprogramar & Cancelar -->
-                                    <div class="flex items-center gap-2">
-                                        {% if cita.contador_reprogramacion < 1 and not bloqueado_agendamiento_web %}
-                                            <button onclick="openReprogramarModal('{{ cita.id }}', '{{ cita.especialista.usuario.nombre_completo|escapejs }}', '{{ cita.especialista.id }}', '{{ cita.especialista.especialidad.id }}')"
-                                                    class="px-3 py-1.5 bg-secondary hover:bg-primary text-white font-semibold text-xs rounded-lg shadow transition">
-                                                Reprogramar Cita
-                                            </button>
-                                        {% else %}
-                                            <span class="text-[11px] text-gray-500 italic bg-gray-100 px-2.5 py-1 rounded-lg">Reprogramación Agotada</span>
-                                        {% endif %}
-
-                                        <form method="POST" action="{% url 'paciente_cancelar' cita.id %}" onsubmit="return confirm('¿Estás seguro de cancelar tu cita? Recuerda que debe hacerse con 24h de anticipación.');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-rose-700 font-semibold text-xs rounded-lg transition">
-                                                Cancelar
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-8 text-on-surface-variant">
-                        <span class="material-symbols-outlined text-4xl text-outline mb-1">event_available</span>
-                        <p class="text-sm font-semibold">No tienes citas activas agendadas.</p>
-                        <p class="text-xs mt-1">Haz clic en "Agendar Nueva Cita" para separar tu consulta médica.</p>
-                    </div>
-                {% endif %}
+            <!-- Campo de Búsqueda con Lupa Alineada -->
+            <div class="sm:col-span-7 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" 
+                       name="q" 
+                       value="{{ query }}" 
+                       placeholder="Buscar por médico o especialidad..." 
+                       oninput="autoSubmitFormDebounced(this.form)"
+                       class="w-full pl-10 pr-4 py-2 text-xs border border-outline-variant rounded-xl bg-surface focus:bg-white focus:ring-2 focus:ring-secondary transition"/>
             </div>
 
-            <!-- Recomendaciones Históricas del Médico -->
-            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-                <h2 class="font-heading text-lg font-bold text-primary mb-4">Historial de Consultas y Recomendaciones</h2>
-
-                {% if citas_historial %}
-                    <div class="space-y-3">
-                        {% for cita in citas_historial %}
-                            <div class="p-4 rounded-xl border border-outline-variant/30 bg-surface-container-low/20 space-y-2">
-                                <div class="flex justify-between text-xs font-bold text-primary">
-                                    <span>{{ cita.especialista.especialidad.nombre_especialidad }} — Dr/Dra. {{ cita.especialista.usuario.nombre_completo }}</span>
-                                    <span class="text-on-surface-variant">{{ cita.fecha_hora_inicio|date:"d/m/Y" }}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full
-                                        {% if cita.estado_cita == 'Atendida' %} bg-emerald-100 text-emerald-800
-                                        {% elif cita.estado_cita == 'Cancelada' %} bg-gray-100 text-gray-700
-                                        {% else %} bg-rose-100 text-rose-800 {% endif %}">
-                                        {{ cita.get_estado_cita_display }}
-                                    </span>
-                                </div>
-                                {% if cita.notas_clinicas %}
-                                    <p class="text-xs text-on-surface-variant bg-white p-2.5 rounded-lg border border-outline-variant/30 mt-1">
-                                        "{{ cita.notas_clinicas }}"
-                                    </p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-xs text-on-surface-variant italic py-4">Aún no cuentas con registros en tu historial de consultas pasadas.</p>
-                {% endif %}
+            <!-- Filtro Desplegable por Estado -->
+            <div class="sm:col-span-3">
+                <select name="estado" 
+                        onchange="this.form.submit()" 
+                        class="w-full py-2 px-3 text-xs border border-outline-variant rounded-xl bg-surface focus:bg-white focus:ring-2 focus:ring-secondary transition font-semibold text-primary">
+                    <option value="">-- Todos los Estados --</option>
+                    {% for key, label in EstadoCita.choices %}
+                        <option value="{{ key }}" {% if estado_filtro == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
-        </div>
-
-        <!-- Right Col: Lista de Espera -->
-        <div class="space-y-6">
-            
-            <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-                <div class="flex items-center gap-2 mb-3 text-primary">
-                    <span class="material-symbols-outlined text-2xl text-amber-600">hourglass_top</span>
-                    <h3 class="font-heading font-bold text-base">Lista de Espera (HU09)</h3>
-                </div>
-                <p class="text-xs text-on-surface-variant mb-4">
-                    Si no encuentras disponibilidad cercana con tu especialista, inscríbete para tomar un cupo liberado por cancelación.
-                </p>
-
-                <button onclick="openEsperaModal()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
-                    <span class="material-symbols-outlined text-base">queue</span>
-                    <span>Unirme a Lista de Espera</span>
-                </button>
+            <!-- Botón Limpiar Filtros -->
+            <div class="sm:col-span-2">
+                <a href="{% url 'dashboard_paciente' %}" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-2xs">
+                    <span class="material-symbols-outlined text-base">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
             </div>
 
-            {% if listas_espera %}
-                <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm">
-                    <h4 class="font-heading font-bold text-xs text-primary uppercase tracking-wider mb-3">Mis Solicitudes en Espera</h4>
-                    <div class="space-y-2 text-xs">
-                        {% for le in listas_espera %}
-                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                                <p class="font-bold text-amber-900">{{ le.especialidad.nombre_especialidad|default:"Cualquier Especialidad" }}</p>
-                                {% if le.especialista %}
-                                    <p class="text-[11px] text-amber-800">Dr/Dra. {{ le.especialista.usuario.nombre_completo }}</p>
-                                {% endif %}
-                                <span class="text-[10px] font-semibold text-amber-700">Registrado el {{ le.fecha_registro|date:"d/m/Y" }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- MODAL REPROGRAMAR CITA -->
-<div id="modal-reprogramar" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-outline-variant/30 space-y-4">
-        <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
-            <h3 class="text-base font-bold text-primary">Reprogramar Cita Web (HU03)</h3>
-            <button onclick="closeModal('modal-reprogramar')" class="text-gray-400 hover:text-gray-600">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <p class="text-xs text-on-surface-variant">Recuerda: Máximo 1 reprogramación permitida desde la web y con más de 24h de anticipación (RN01, RN02).</p>
-        
-        <form id="form-reprogramar" method="POST" action="" class="space-y-4 text-xs">
-            {% csrf_token %}
-            <p id="reprogramar-medico-info" class="font-bold text-primary text-xs bg-soft-sky/40 p-2.5 rounded-xl border border-secondary-container/30"></p>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block font-bold text-primary mb-1">Nueva Fecha *</label>
-                    <input type="date" name="nueva_fecha" id="reprogramar-fecha" onchange="cargarHorariosReprogramacionPaciente()" required class="w-full border border-outline-variant rounded-xl px-3 py-2 text-xs bg-white focus:ring-2 focus:ring-secondary"/>
-                </div>
-                <div>
-                    <label class="block font-bold text-primary mb-1">Nueva Hora *</label>
-                    <select name="nueva_hora" id="reprogramar-select-hora" required class="w-full border border-outline-variant rounded-xl px-3 py-2 text-xs bg-white focus:ring-2 focus:ring-secondary">
-                        <option value="">-- Selecciona hora disponible --</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/20">
-                <button type="button" onclick="closeModal('modal-reprogramar')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs">Cancelar</button>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-secondary hover:bg-primary text-white font-bold text-xs shadow transition">Guardar Cambio</button>
-            </div>
         </form>
     </div>
+
+    <!-- Tabla Principal de Mis Citas -->
+    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
+        {% if citas %}
+            <div class="overflow-x-auto p-4">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-100 text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
+                            <th class="py-3 px-4">Fecha & Hora</th>
+                            <th class="py-3 px-4">Médico Especialista</th>
+                            <th class="py-3 px-4">Especialidad</th>
+                            <th class="py-3 px-4">Consultorio</th>
+                            <th class="py-3 px-4">Estado</th>
+                            <th class="py-3 px-4">Reprogramaciones</th>
+                            <th class="py-3 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 font-medium">
+                        {% for cita in citas %}
+                            <tr class="hover:bg-soft-sky/30 transition">
+                                <td class="py-3.5 px-4 font-bold text-primary whitespace-nowrap">
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}
+                                </td>
+                                <td class="py-3.5 px-4 text-secondary font-bold whitespace-nowrap">
+                                    Dr/Dra. {{ cita.especialista.usuario.nombre_completo }}
+                                </td>
+                                <td class="py-3.5 px-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                        {{ cita.especialista.especialidad.nombre_especialidad }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                                    {{ cita.consultorio.nombre_codigo|default:"Por Asignar" }}
+                                </td>
+                                <td class="py-3.5 px-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                                        {% if cita.estado_cita == 'Atendida' %} bg-emerald-100 text-emerald-800 border border-emerald-300
+                                        {% elif cita.estado_cita == 'En_Sala' %} bg-teal-100 text-teal-800 border border-teal-300
+                                        {% elif cita.estado_cita == 'Programada' %} bg-sky-100 text-sky-800 border border-sky-300
+                                        {% elif cita.estado_cita == 'Pendiente_Reubicacion' %} bg-amber-100 text-amber-800 border border-amber-300
+                                        {% elif cita.estado_cita == 'Cancelada' %} bg-gray-100 text-gray-700 border border-gray-300
+                                        {% else %} bg-rose-100 text-rose-800 border border-rose-300 {% endif %}">
+                                        {{ cita.get_estado_cita_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                                    {{ cita.contador_reprogramacion }} / 1
+                                </td>
+                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <!-- Ver Detalle (guia_estilos.md: 32x32px w-8 h-8) -->
+                                        <button type="button" 
+                                                onclick="abrirModalDetalleCitaPaciente('{{ cita.id }}', '{{ cita.especialista.usuario.nombre_completo|escapejs }}', '{{ cita.especialista.especialidad.nombre_especialidad|escapejs }}', '{{ cita.consultorio.nombre_codigo|escapejs }}', '{{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}', '{{ cita.estado_cita|escapejs }}', '{{ cita.notas_clinicas|escapejs }}')"
+                                                class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                                title="Ver Detalle de Cita">
+                                            <span class="material-symbols-outlined text-base">visibility</span>
+                                        </button>
+
+                                        <!-- Reagendar Cita -->
+                                        {% if cita.estado_cita == 'Programada' or cita.estado_cita == 'Pendiente_Reubicacion' %}
+                                            {% if cita.contador_reprogramacion < 1 and not bloqueado_agendamiento_web %}
+                                                <a href="{% url 'paciente_agendar' %}?cita_id={{ cita.id }}&modo=reprogramar" 
+                                                   class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                                   title="Reagendar Cita">
+                                                    <span class="material-symbols-outlined text-base">edit_calendar</span>
+                                                </a>
+                                            {% endif %}
+
+                                            <!-- Cancelar Cita -->
+                                            <form method="POST" action="{% url 'paciente_cancelar' cita.id %}" onsubmit="return confirm('¿Estás seguro de cancelar esta cita? Esta acción liberará el turno.');" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" 
+                                                        class="w-8 h-8 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                                        title="Cancelar Cita">
+                                                    <span class="material-symbols-outlined text-base">event_busy</span>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-10 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl text-outline mb-2">event_busy</span>
+                <p class="text-sm font-bold">No se encontraron citas con los filtros aplicados.</p>
+                <p class="text-xs mt-1">Haz clic en "Limpiar Filtros" o programa una nueva cita médica.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- SECCIÓN SECUNDARIA: LISTA DE ESPERA (HU09) -->
+    <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
+                <span class="material-symbols-outlined text-xl">hourglass_top</span>
+            </div>
+            <div>
+                <h3 class="font-heading font-bold text-sm text-primary">¿No encuentras disponibilidad cercana?</h3>
+                <p class="text-xs text-on-surface-variant">Inscríbete en la Lista de Espera para ser notificado inmediatamente ante cancelaciones.</p>
+            </div>
+        </div>
+        <button type="button" onclick="openEsperaModal()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer shrink-0">
+            <span class="material-symbols-outlined text-base">queue</span>
+            <span>Unirme a Lista de Espera</span>
+        </button>
+    </div>
+
 </div>
 
 <!-- MODAL LISTA ESPERA -->
 <div id="modal-espera" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-outline-variant/30 space-y-4">
         <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
-            <h3 class="text-base font-bold text-primary">Unirse a Lista de Espera (HU09)</h3>
+            <h3 class="text-base font-bold text-primary">Unirse a Lista de Espera</h3>
             <button onclick="closeModal('modal-espera')" class="text-gray-400 hover:text-gray-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
 
-        <p class="text-xs text-on-surface-variant">Si tu especialidad o especialista no tiene cupos disponibles, inscríbete para tomar un turno libre.</p>
+        <p class="text-xs text-on-surface-variant">Si tu especialista no tiene cupos cercanos, inscríbete para tomar un turno liberado por cancelación.</p>
         
         <form method="POST" action="{% url 'paciente_unirse_espera' %}" class="space-y-4 text-xs">
             {% csrf_token %}
             <div>
-                <label class="block font-bold text-primary mb-1">Especialidad Requerida</label>
-                <select id="modal-espera-especialidad" name="especialidad_id" onchange="filtrarEsperaEspecialistas()" class="w-full border border-outline-variant rounded-xl px-3 py-2 text-xs bg-white focus:ring-2 focus:ring-secondary">
-                    <option value="">-- Cualquiera de la especialidad --</option>
+                <label class="block font-bold text-primary mb-1">Especialidad Requerida *</label>
+                <select id="modal-espera-especialidad" name="especialidad_id" onchange="filtrarEsperaEspecialistas()" required class="w-full border border-outline-variant rounded-xl px-3 py-2 text-xs bg-white focus:ring-2 focus:ring-secondary">
+                    <option value="">-- Seleccionar Especialidad --</option>
                     {% for esp in especialidades %}
                         <option value="{{ esp.id }}">{{ esp.nombre_especialidad }}</option>
                     {% endfor %}
@@ -271,118 +236,30 @@
                 </select>
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/20">
-                <button type="button" onclick="closeModal('modal-espera')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs">Cancelar</button>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow transition">Inscribirme</button>
+                <button type="button" onclick="closeModal('modal-espera')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer">Cancelar</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow transition cursor-pointer">Inscribirme</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    let TODOS_ESPECIALISTAS_ESPERA = [];
-    let currentReprogramarEspId = null;
-    let currentReprogramarEspecialidadId = null;
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const specSelect = document.getElementById("modal-espera-especialista");
-        if (specSelect) {
-            TODOS_ESPECIALISTAS_ESPERA = Array.from(specSelect.options)
-                .filter(opt => opt.value !== "")
-                .map(opt => ({
-                    id: opt.value,
-                    nombre: opt.text,
-                    espId: opt.getAttribute("data-esp")
-                }));
+    function abrirModalDetalleCitaPaciente(id, medico, especialidad, consultorio, fecha, estado, notas) {
+        if (typeof abrirModalDetalleCita === 'function') {
+            abrirModalDetalleCita({
+                id: id,
+                paciente: '{{ paciente.usuario.nombre_completo|escapejs }}',
+                especialista: 'Dr/Dra. ' + medico + ' (' + especialidad + ')',
+                consultorio: consultorio || 'Por Asignar',
+                inicio: fecha,
+                estado: estado,
+                notas: notas
+            });
         }
-    });
-
-    function filtrarEsperaEspecialistas() {
-        const espId = document.getElementById("modal-espera-especialidad").value;
-        const specSelect = document.getElementById("modal-espera-especialista");
-        if (!specSelect) return;
-
-        specSelect.innerHTML = '<option value="">-- Cualquier especialista disponible --</option>';
-
-        TODOS_ESPECIALISTAS_ESPERA.forEach(med => {
-            if (!espId || String(med.espId) === String(espId)) {
-                const opt = document.createElement("option");
-                opt.value = med.id;
-                opt.text = med.nombre;
-                opt.setAttribute("data-esp", med.espId);
-                specSelect.appendChild(opt);
-            }
-        });
     }
 
     function openEsperaModal() {
         document.getElementById('modal-espera').classList.remove('hidden');
-    }
-
-    function openReprogramarModal(citaId, medicoNombre, especialistaId, especialidadId) {
-        const form = document.getElementById('form-reprogramar');
-        form.action = "/paciente/reprogramar/" + citaId + "/";
-        document.getElementById('reprogramar-medico-info').textContent = "Médico: Dr/Dra. " + medicoNombre;
-        
-        currentReprogramarEspId = especialistaId || '';
-        currentReprogramarEspecialidadId = especialidadId || '';
-
-        const fechaInput = document.getElementById('reprogramar-fecha');
-        const minDate = new Date();
-        minDate.setDate(minDate.getDate() + 1);
-        const yyyy = minDate.getFullYear();
-        const mm = String(minDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(minDate.getDate()).padStart(2, '0');
-        const minDateStr = `${yyyy}-${mm}-${dd}`;
-        fechaInput.min = minDateStr;
-
-        if (!fechaInput.value || fechaInput.value < minDateStr) {
-            fechaInput.value = minDateStr;
-        }
-
-        document.getElementById('modal-reprogramar').classList.remove('hidden');
-        cargarHorariosReprogramacionPaciente();
-    }
-
-    function cargarHorariosReprogramacionPaciente() {
-        const fecha = document.getElementById('reprogramar-fecha').value;
-        const selectHora = document.getElementById('reprogramar-select-hora');
-        if (!selectHora) return;
-
-        if (!fecha) {
-            selectHora.innerHTML = '<option value="">Selecciona primero una fecha...</option>';
-            return;
-        }
-
-        selectHora.innerHTML = '<option value="">Cargando horarios laborales disponibles...</option>';
-
-        let url = `/api/recepcion/horarios-disponibles/?fecha=${fecha}`;
-        if (currentReprogramarEspId) url += `&especialista_id=${currentReprogramarEspId}`;
-        if (currentReprogramarEspecialidadId) url += `&especialidad_id=${currentReprogramarEspecialidadId}`;
-
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.horarios && data.horarios.length > 0) {
-                    let html = '<option value="">-- Selecciona hora disponible --</option>';
-                    let contDisponibles = 0;
-                    data.horarios.forEach(h => {
-                        if (h.disponible) {
-                            contDisponibles++;
-                            html += `<option value="${h.hora}">${h.hora_display} (${h.hora})</option>`;
-                        }
-                    });
-                    if (contDisponibles === 0) {
-                        html = '<option value="">No hay horarios disponibles para esta fecha</option>';
-                    }
-                    selectHora.innerHTML = html;
-                } else {
-                    selectHora.innerHTML = '<option value="">No hay atención médica en esta fecha</option>';
-                }
-            })
-            .catch(err => {
-                console.error("Error al cargar horarios de reprogramación:", err);
-                selectHora.innerHTML = '<option value="">Error al cargar horarios</option>';
-            });
     }
 
     function closeModal(modalId) {

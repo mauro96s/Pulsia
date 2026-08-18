@@ -111,5 +111,5 @@ def redirect_by_role(user):
     elif user.rol == RolUsuario.ESPECIALISTA:
         return redirect('dashboard_especialista_inicio')
     elif user.rol == RolUsuario.PACIENTE:
-        return redirect('dashboard_paciente')
+        return redirect('dashboard_paciente_inicio')
     return redirect('dashboard')

@@ -1,0 +1,273 @@
+{% extends 'agendamiento/base.html' %}
+
+{% block title %}Mi Historial Clínico | Portal del Paciente | Pulsia{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-r from-teal-50/50 via-sky-50/30 to-white p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-xl md:text-2xl font-extrabold text-primary">Mi Historial Clínico y Citas</h1>
+            <p class="text-xs text-on-surface-variant mt-1">
+                Consulta tu registro cronológico de atenciones médicas, notas clínicas, diagnósticos e historial de reservas.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-secondary bg-soft-sky/60 px-3.5 py-2 rounded-xl border border-secondary-container/30 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">folder_shared</span>
+                <span>{{ citas_todas.count }} Registro(s) en total</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Buscador y Filtros Automáticos en Tiempo Real (guia_estilos.md) -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-outline-variant/30">
+        <form method="GET" action="{% url 'paciente_historial' %}" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            
+            <!-- Campo de Búsqueda con Lupa Alineada y Debounce -->
+            <div class="sm:col-span-7 relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-gray-400 text-lg pointer-events-none">search</span>
+                <input type="text" 
+                       name="q" 
+                       value="{{ query }}" 
+                       placeholder="Buscar por médico o especialidad..." 
+                       oninput="autoSubmitFormDebounced(this.form)"
+                       class="w-full pl-10 pr-4 py-2 text-xs border border-outline-variant rounded-xl bg-surface focus:bg-white focus:ring-2 focus:ring-secondary transition"/>
+            </div>
+
+            <!-- Filtro Desplegable por Estado de Cita -->
+            <div class="sm:col-span-3">
+                <select name="estado" 
+                        onchange="this.form.submit()" 
+                        class="w-full py-2 px-3 text-xs border border-outline-variant rounded-xl bg-surface focus:bg-white focus:ring-2 focus:ring-secondary transition font-semibold text-primary">
+                    <option value="">-- Todos los Estados --</option>
+                    <option value="Atendida" {% if estado_filtro == 'Atendida' %}selected{% endif %}>Atendida (Historial Clínico)</option>
+                    <option value="Programada" {% if estado_filtro == 'Programada' %}selected{% endif %}>Programada</option>
+                    <option value="En_Sala" {% if estado_filtro == 'En_Sala' %}selected{% endif %}>En Sala</option>
+                    <option value="Cancelada" {% if estado_filtro == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+                    <option value="No_Asistio" {% if estado_filtro == 'No_Asistio' %}selected{% endif %}>No Asistió</option>
+                </select>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <div class="sm:col-span-2">
+                <a href="{% url 'paciente_historial' %}" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-2xs">
+                    <span class="material-symbols-outlined text-base">restart_alt</span>
+                    <span>Limpiar</span>
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- SECCIÓN 1: HISTORIAL CLINICO (NOTAS Y DIAGNÓSTICOS DE CONSULTAS ATENDIDAS) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden space-y-4">
+        <div class="bg-primary-container text-white p-4 flex items-center justify-between">
+            <h2 class="font-heading font-bold text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined text-teal-300">clinical_notes</span>
+                <span>Historial de Consultas Atendidas y Recomendaciones Médicas</span>
+            </h2>
+            <span class="text-xs bg-clinical-teal text-white font-bold px-2.5 py-0.5 rounded-full">
+                {{ citas_atendidas.count }} Atendida(s)
+            </span>
+        </div>
+
+        {% if citas_atendidas %}
+            <div class="overflow-x-auto p-4">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-100 text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
+                            <th class="py-3 px-4">Fecha & Hora</th>
+                            <th class="py-3 px-4">Médico Especialista</th>
+                            <th class="py-3 px-4">Especialidad</th>
+                            <th class="py-3 px-4">Consultorio</th>
+                            <th class="py-3 px-4">Notas / Observaciones Clínicas</th>
+                            <th class="py-3 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 font-medium">
+                        {% for cita in citas_atendidas %}
+                            <tr class="hover:bg-soft-sky/30 transition">
+                                <td class="py-3 px-4 font-bold text-primary whitespace-nowrap">
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}
+                                </td>
+                                <td class="py-3 px-4 text-secondary font-bold whitespace-nowrap">
+                                    Dr/Dra. {{ cita.especialista.usuario.nombre_completo }}
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                        {{ cita.especialista.especialidad.nombre_especialidad }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-gray-600 whitespace-nowrap">
+                                    {{ cita.consultorio.nombre_codigo|default:"N/A" }}
+                                </td>
+                                <td class="py-3 px-4 max-w-md">
+                                    {% if cita.notas_clinicas %}
+                                        <p class="text-xs text-gray-700 bg-surface p-2 rounded-xl border border-outline-variant/30 line-clamp-2 italic">
+                                            "{{ cita.notas_clinicas }}"
+                                        </p>
+                                    {% else %}
+                                        <span class="text-gray-400 italic text-[11px]">Sin observaciones adicionales.</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-center whitespace-nowrap">
+                                    <!-- Botón de Icono Ver Detalle (guia_estilos.md: 32x32px w-8 h-8) -->
+                                    <button type="button" 
+                                            onclick="verDetalleNotaHistorial('{{ cita.id }}', '{{ cita.especialista.usuario.nombre_completo|escapejs }}', '{{ cita.especialista.especialidad.nombre_especialidad|escapejs }}', '{{ cita.consultorio.nombre_codigo|escapejs }}', '{{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}', '{{ cita.notas_clinicas|escapejs }}')"
+                                            class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white inline-flex items-center justify-center transition shadow-2xs"
+                                            title="Ver Detalle Completo">
+                                        <span class="material-symbols-outlined text-base">visibility</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl text-outline mb-1">find_in_page</span>
+                <p class="text-sm font-semibold">No se encontraron consultas atendidas en tu historial.</p>
+                <p class="text-xs mt-1">Una vez que tus médicos finalicen la atención y registren las notas clínicas, aparecerán en este panel.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- SECCIÓN 2: HISTORIAL GENERAL DE CITAS -->
+    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden space-y-4">
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="font-heading font-bold text-sm text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">history</span>
+                <span>Historial Registro Completo de Citas</span>
+            </h2>
+        </div>
+
+        {% if citas_todas %}
+            <div class="overflow-x-auto p-4">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-100 text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
+                            <th class="py-3 px-4">Fecha & Hora</th>
+                            <th class="py-3 px-4">Médico</th>
+                            <th class="py-3 px-4">Especialidad</th>
+                            <th class="py-3 px-4">Consultorio</th>
+                            <th class="py-3 px-4">Estado</th>
+                            <th class="py-3 px-4">Reprogramaciones</th>
+                            <th class="py-3 px-4 text-center">Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 font-medium">
+                        {% for cita in citas_todas %}
+                            <tr class="hover:bg-soft-sky/20 transition">
+                                <td class="py-3 px-4 font-bold text-primary whitespace-nowrap">
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}
+                                </td>
+                                <td class="py-3 px-4 text-gray-800 whitespace-nowrap">
+                                    Dr/Dra. {{ cita.especialista.usuario.nombre_completo }}
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    {{ cita.especialista.especialidad.nombre_especialidad }}
+                                </td>
+                                <td class="py-3 px-4 text-gray-600 whitespace-nowrap">
+                                    {{ cita.consultorio.nombre_codigo|default:"Por Asignar" }}
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                                        {% if cita.estado_cita == 'Atendida' %} bg-emerald-100 text-emerald-800 border border-emerald-300
+                                        {% elif cita.estado_cita == 'En_Sala' %} bg-teal-100 text-teal-800 border border-teal-300
+                                        {% elif cita.estado_cita == 'Programada' %} bg-sky-100 text-sky-800 border border-sky-300
+                                        {% elif cita.estado_cita == 'Pendiente_Reubicacion' %} bg-amber-100 text-amber-800 border border-amber-300
+                                        {% elif cita.estado_cita == 'Cancelada' %} bg-gray-100 text-gray-700 border border-gray-300
+                                        {% else %} bg-rose-100 text-rose-800 border border-rose-300 {% endif %}">
+                                        {{ cita.get_estado_cita_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-gray-600 whitespace-nowrap">
+                                    {{ cita.contador_reprogramacion }} / 1
+                                </td>
+                                <td class="py-3 px-4 text-center whitespace-nowrap">
+                                    <button type="button" 
+                                            onclick="verDetalleNotaHistorial('{{ cita.id }}', '{{ cita.especialista.usuario.nombre_completo|escapejs }}', '{{ cita.especialista.especialidad.nombre_especialidad|escapejs }}', '{{ cita.consultorio.nombre_codigo|escapejs }}', '{{ cita.fecha_hora_inicio|date:"d/m/Y h:i A" }}', '{{ cita.notas_clinicas|escapejs }}')"
+                                            class="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white inline-flex items-center justify-center transition shadow-2xs"
+                                            title="Ver Detalle">
+                                        <span class="material-symbols-outlined text-base">info</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-xs text-on-surface-variant italic py-6 text-center">No hay registros de citas en el historial.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- MODAL VER DETALLE DE HISTORIAL CLINICO -->
+<div id="modal-detalle-historial" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-outline-variant/30 animate-fade-in-up">
+        <div class="bg-primary text-white p-4 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined text-teal-400">medical_information</span>
+                <span>Detalle de la Consulta e Historial Clínico</span>
+            </h3>
+            <button type="button" onclick="cerrarModalGeneral('modal-detalle-historial')" class="text-gray-300 hover:text-white transition cursor-pointer">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-4 text-xs">
+            <div class="grid grid-cols-2 gap-4 bg-surface p-4 rounded-xl border border-outline-variant/30">
+                <div>
+                    <p class="font-bold text-gray-400 uppercase text-[10px]">Médico Especialista:</p>
+                    <p id="hmodal-medico" class="font-extrabold text-primary text-sm mt-0.5"></p>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-400 uppercase text-[10px]">Especialidad:</p>
+                    <p id="hmodal-especialidad" class="font-bold text-secondary text-xs mt-0.5"></p>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-400 uppercase text-[10px]">Consultorio:</p>
+                    <p id="hmodal-consultorio" class="font-semibold text-gray-700 mt-0.5"></p>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-400 uppercase text-[10px]">Fecha & Hora:</p>
+                    <p id="hmodal-fecha" class="font-bold text-primary mt-0.5"></p>
+                </div>
+            </div>
+
+            <div>
+                <p class="font-bold text-gray-500 uppercase text-[10px] mb-1">Notas Clínicas / Indicaciones Médicas:</p>
+                <div id="hmodal-notas" class="p-4 bg-teal-50/50 rounded-xl text-gray-800 text-xs leading-relaxed border border-teal-200/60 font-medium"></div>
+            </div>
+        </div>
+        <div class="bg-slate-50 p-4 border-t border-gray-100 flex items-center justify-end">
+            <button type="button" onclick="cerrarModalGeneral('modal-detalle-historial')" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function verDetalleNotaHistorial(id, medico, especialidad, consultorio, fecha, notas) {
+        document.getElementById('hmodal-medico').innerText = 'Dr/Dra. ' + medico;
+        document.getElementById('hmodal-especialidad').innerText = especialidad;
+        document.getElementById('hmodal-consultorio').innerText = consultorio || 'N/A';
+        document.getElementById('hmodal-fecha').innerText = fecha;
+        
+        const elNotas = document.getElementById('hmodal-notas');
+        if (notas && notas.trim() !== '') {
+            elNotas.innerHTML = `<p class="italic">"${notas}"</p>`;
+        } else {
+            elNotas.innerHTML = `<p class="text-gray-400 italic">Sin observaciones o notas clínicas registradas para esta cita.</p>`;
+        }
+
+        const modal = document.getElementById('modal-detalle-historial');
+        if (modal) modal.classList.remove('hidden');
+    }
+</script>
+{% endblock %}

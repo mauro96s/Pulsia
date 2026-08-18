@@ -14,6 +14,9 @@ from .especialistas_views import (
     especialista_permisos_view
 )
 from .paciente_views import (
+    paciente_inicio_view,
+    paciente_agenda_view,
+    paciente_historial_view,
     paciente_agendar_view,
     paciente_reprogramar_view,
     paciente_cancelar_view,
@@ -81,6 +84,9 @@ __all__ = [
     'especialista_pacientes_view',
     'especialista_permisos_view',
     'paciente_dashboard_view',
+    'paciente_inicio_view',
+    'paciente_agenda_view',
+    'paciente_historial_view',
     'paciente_agendar_view',
     'paciente_reprogramar_view',
     'paciente_cancelar_view',
